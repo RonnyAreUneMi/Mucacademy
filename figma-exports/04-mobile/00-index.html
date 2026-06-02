@@ -47,18 +47,22 @@
       radial-gradient(circle at 75% 80%,rgba(124,58,237,.06),transparent 40%),
       repeating-linear-gradient(45deg,transparent,transparent 18px,rgba(255,255,255,.012) 18px,rgba(255,255,255,.012) 19px),
       var(--bg)}
+  /* El iframe NO lleva marco: cada pantalla ya trae su propio frame de iPhone.
+     Lo dejamos transparente y con el tamaño justo para mostrar el teléfono
+     interno (390 + el padding propio de cada página) sin recortar. */
   .framewrap{transition:transform .2s;transform-origin:top center}
-  iframe{width:390px;height:844px;border:0;border-radius:48px;background:#0A1535;
-    box-shadow:0 40px 100px -20px rgba(0,0,0,.6),0 0 0 12px #05091a,0 0 0 13px rgba(255,255,255,.05)}
+  iframe{width:486px;height:940px;border:0;background:transparent;display:block}
 
-  /* Grid view (todas a la vez) */
-  .grid{display:none;flex-wrap:wrap;gap:40px;padding:40px;overflow:auto;justify-content:center;align-content:flex-start;height:100%}
+  /* Grid view (todas a la vez) — escalamos el iframe completo con transform */
+  .grid{display:none;flex-wrap:wrap;gap:28px;padding:40px;overflow:auto;justify-content:center;align-content:flex-start;height:100%}
   .grid.on{display:flex}
   .viewport.off{display:none}
   .gcard{cursor:pointer;transition:transform .2s}
   .gcard:hover{transform:translateY(-6px)}
-  .gcard iframe{width:234px;height:506px;border-radius:30px;pointer-events:none;box-shadow:0 24px 60px -16px rgba(0,0,0,.6),0 0 0 7px #05091a}
-  .gcard .gl{text-align:center;font-size:12px;font-weight:800;color:#94A3B8;margin-top:12px;letter-spacing:.5px}
+  /* Caja que contiene el iframe escalado (486×940 → 47%) */
+  .gframe{width:229px;height:442px;overflow:hidden;border-radius:24px}
+  .gframe iframe{width:486px;height:940px;transform:scale(.47);transform-origin:top left;pointer-events:none}
+  .gcard .gl{text-align:center;font-size:12px;font-weight:800;color:#94A3B8;margin-top:10px;letter-spacing:.5px}
 </style>
 </head>
 <body>
@@ -157,7 +161,7 @@
       items.forEach(it=>{
         const card = document.createElement('div');
         card.className='gcard';
-        card.innerHTML = `<iframe src="${it.dataset.src}" loading="lazy"></iframe><div class="gl">${it.textContent.trim()}</div>`;
+        card.innerHTML = `<div class="gframe"><iframe src="${it.dataset.src}" loading="lazy"></iframe></div><div class="gl">${it.textContent.trim()}</div>`;
         card.onclick = ()=>{ select(it); };
         grid.appendChild(card);
       });
