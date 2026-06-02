@@ -18,19 +18,19 @@ import {
 } from '@/components/ui';
 
 type Status = 'asisti' | 'inscrito' | 'no_asisti' | 'disponible';
-type EventoDetail = {
+type EventDetail = {
   id: number;
-  titulo: string;
+  title: string;
   titulo_display: string;
-  descripcion: string;
-  fecha: string;
-  dia_semana: string;
-  hora_inicio: string;
-  hora_fin: string;
-  modalidad: string;
+  description: string;
+  date: string;
+  day_of_week: string;
+  start_time: string;
+  end_time: string;
+  modality: string;
   es_virtual: boolean;
-  enlace_virtual: string;
-  lugar: string;
+  meeting_url: string;
+  location: string;
   banner_url: string | null;
   status: Status;
   lote_nombre: string | null;
@@ -49,7 +49,7 @@ const STATUS_LABEL: Record<Status, string> = {
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [data, setData] = useState<EventoDetail | null>(null);
+  const [data, setData] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -60,7 +60,7 @@ export default function EventDetailScreen() {
 
   const load = useCallback(async () => {
     try {
-      const res = await api.get<EventoDetail>(`/api/v1/public/account/events/${id}/`);
+      const res = await api.get<EventDetail>(`/api/v1/public/account/events/${id}/`);
       setData(res);
     } catch (e: any) {
       toast.error(e?.message ?? 'No pudimos cargar el evento.', 'Error');
@@ -94,9 +94,9 @@ export default function EventDetailScreen() {
   }
   if (!data) return null;
 
-  const formattedDate = formatDate(data.fecha);
-  const horaInicio = data.hora_inicio.slice(0, 5);
-  const horaFin = data.hora_fin.slice(0, 5);
+  const formattedDate = formatDate(data.date);
+  const horaInicio = data.start_time.slice(0, 5);
+  const horaFin = data.end_time.slice(0, 5);
   const showInscribirCTA = data.status === 'disponible';
   const isInscrito = data.status === 'inscrito';
 
@@ -211,7 +211,7 @@ export default function EventDetailScreen() {
               {data.status !== 'asisti' ? (
                 <>
                   {/* MEET — para virtuales que aún no asistieron */}
-                  {data.es_virtual && data.enlace_virtual ? (
+                  {data.es_virtual && data.meeting_url ? (
                     <Button
                       tone="info"
                       variant="filled"
@@ -219,7 +219,7 @@ export default function EventDetailScreen() {
                       fullWidth
                       iconLeft={<MeetLogo size={20} />}
                       iconRight={<Ionicons name="open-outline" size={16} color="#FFFFFF" />}
-                      onPress={() => Linking.openURL(data.enlace_virtual)}
+                      onPress={() => Linking.openURL(data.meeting_url)}
                     >
                       Abrir reunión Meet
                     </Button>
@@ -249,7 +249,7 @@ export default function EventDetailScreen() {
           <InfoTile
             icon={data.es_virtual ? 'globe-outline' : 'location-outline'}
             label={data.es_virtual ? 'Plataforma' : 'Lugar'}
-            value={data.es_virtual ? 'En línea' : (data.lugar || 'Por confirmar')}
+            value={data.es_virtual ? 'En línea' : (data.location || 'Por confirmar')}
             tint={data.es_virtual ? '#3B82F6' : colors.brand}
           />
           <InfoTile
@@ -315,12 +315,12 @@ export default function EventDetailScreen() {
         </View>
 
         {/* DESCRIPCIÓN — render HTML real (negritas, listas, h2, etc.) */}
-        {data.descripcion ? (
+        {data.description ? (
           <View style={styles.section}>
             <Text style={[styles.sectionEyebrow, { color: colors.brand }]}>ACERCA DEL EVENTO</Text>
             <Text style={[styles.sectionTitle, { color: t.text }]}>Detalles</Text>
             <NeuCard style={{ marginTop: spacing.base }}>
-              <RichDescription html={data.descripcion} />
+              <RichDescription html={data.description} />
             </NeuCard>
           </View>
         ) : null}

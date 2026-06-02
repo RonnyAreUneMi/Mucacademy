@@ -42,7 +42,7 @@ export default function PerfilScreen() {
           </View>
           <Text style={[styles.nombre, { color: t.text }]}>{participante.nombre_completo}</Text>
           <Text style={[styles.email, { color: t.textMuted }]}>{participante.email}</Text>
-          {participante.es_lider ? (
+          {participante.is_leader ? (
             <View style={{ marginTop: spacing.sm }}>
               <Badge tone="brand" variant="soft" size="md" dot>Líder</Badge>
             </View>
@@ -52,9 +52,9 @@ export default function PerfilScreen() {
         {/* Datos */}
         <View style={styles.section}>
           <NeuCard padded={false}>
-            <DataRow icon="card-outline"     label="Cédula"  value={participante.cedula  || '—'} themeColor={t.text} mutedColor={t.textMuted} />
+            <DataRow icon="card-outline"     label="Cédula"  value={participante.national_id || '—'} themeColor={t.text} mutedColor={t.textMuted} />
             <View style={[styles.divider, { backgroundColor: t.border }]} />
-            <DataRow icon="call-outline"     label="Celular" value={participante.celular || '—'} themeColor={t.text} mutedColor={t.textMuted} />
+            <DataRow icon="call-outline"     label="Celular" value={participante.phone || '—'} themeColor={t.text} mutedColor={t.textMuted} />
             <View style={[styles.divider, { backgroundColor: t.border }]} />
             <DataRow
               icon="time-outline"
