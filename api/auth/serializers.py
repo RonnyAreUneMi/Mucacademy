@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from core.models import Usuario
+from core.models import User
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -9,7 +9,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token['rol'] = getattr(user, 'rol', '')
+        token['rol'] = getattr(user, 'role', '')
         token['is_staff'] = user.is_staff
         return token
 
@@ -22,7 +22,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'email': user.email,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'rol': getattr(user, 'rol', ''),
+            'rol': getattr(user, 'role', ''),
             'is_staff': user.is_staff,
             'is_superuser': user.is_superuser,
         }
@@ -31,9 +31,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class UsuarioMeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Usuario
+        model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
-            'rol', 'facultad', 'telefono', 'is_staff', 'is_superuser',
+            'role', 'faculty', 'phone', 'is_staff', 'is_superuser',
         ]
         read_only_fields = fields

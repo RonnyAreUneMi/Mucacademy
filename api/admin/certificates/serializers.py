@@ -1,30 +1,30 @@
 from rest_framework import serializers
 
-from core.models import Certificado
+from core.models import Certificate
 
 
 class CertificadoListSerializer(serializers.ModelSerializer):
-    lote_nombre = serializers.CharField(source='lote.nombre_lote', read_only=True)
-    lote_facultad = serializers.CharField(source='lote.facultad', read_only=True)
-    lote_facultad_display = serializers.CharField(source='lote.get_facultad_display', read_only=True)
+    lote_nombre = serializers.CharField(source='batch.name', read_only=True)
+    lote_facultad = serializers.CharField(source='batch.faculty', read_only=True)
+    lote_facultad_display = serializers.CharField(source='batch.get_faculty_display', read_only=True)
     participante_nombre = serializers.SerializerMethodField()
 
     class Meta:
-        model = Certificado
+        model = Certificate
         fields = [
-            'id', 'hash_verificacion', 'cedula', 'nombres', 'apellidos',
-            'email', 'curso', 'fecha_curso', 'horas',
-            'lote', 'lote_nombre', 'lote_facultad', 'lote_facultad_display',
-            'participante', 'participante_nombre',
-            'descargas_count', 'veces_buscado', 'fecha_ultima_descarga',
+            'id', 'verification_hash', 'national_id', 'first_name', 'last_name',
+            'email', 'course', 'course_date', 'hours',
+            'batch', 'lote_nombre', 'lote_facultad', 'lote_facultad_display',
+            'participant', 'participante_nombre',
+            'download_count', 'search_count', 'last_download_at',
             'created_at',
         ]
-        read_only_fields = ('hash_verificacion', 'descargas_count', 'veces_buscado',
-                            'fecha_ultima_descarga', 'created_at')
+        read_only_fields = ('verification_hash', 'download_count', 'search_count',
+                            'last_download_at', 'created_at')
 
     def get_participante_nombre(self, obj):
-        p = obj.participante
-        return f'{p.nombres} {p.apellidos}' if p else ''
+        p = obj.participant
+        return f'{p.first_name} {p.last_name}' if p else ''
 
 
 class CertificadoDetailSerializer(CertificadoListSerializer):
@@ -34,8 +34,8 @@ class CertificadoDetailSerializer(CertificadoListSerializer):
 
 class CertificadoWriteSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Certificado
+        model = Certificate
         fields = [
-            'lote', 'participante', 'cedula', 'nombres', 'apellidos',
-            'email', 'celular', 'curso', 'fecha_curso', 'horas',
+            'batch', 'participant', 'national_id', 'first_name', 'last_name',
+            'email', 'phone', 'course', 'course_date', 'hours',
         ]

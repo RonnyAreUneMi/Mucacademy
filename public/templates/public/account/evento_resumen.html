@@ -1,6 +1,6 @@
 {% extends 'public/account/_base.html' %}
 {% load static %}
-{% block page_title %}Resumen IA · {{ sesion.titulo|default:sesion.dia_semana }}{% endblock %}
+{% block page_title %}Resumen IA · {{ event.title|default:event.day_of_week }}{% endblock %}
 
 {% block content %}
 <style>
@@ -146,16 +146,16 @@
             </p>
             <h1 class="text-2xl sm:text-3xl font-black tracking-tight leading-tight mt-1
                        text-slate-900 dark:text-white">
-                {{ sesion.titulo|default:sesion.dia_semana }}
+                {{ event.title|default:event.day_of_week }}
             </h1>
             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-3 flex-wrap">
                 <span class="inline-flex items-center gap-1.5">
                     <i class="fa-solid fa-calendar-day text-[var(--ds-brand)]"></i>
-                    {{ sesion.fecha|date:"l, d \d\e F" }}
+                    {{ event.date|date:"l, d \d\e F" }}
                 </span>
                 <span class="inline-flex items-center gap-1.5">
                     <i class="fa-solid fa-clock text-[var(--ds-brand)]"></i>
-                    {{ sesion.hora_inicio|time:"H:i" }}–{{ sesion.hora_fin|time:"H:i" }}
+                    {{ event.start_time|time:"H:i" }}–{{ event.end_time|time:"H:i" }}
                 </span>
                 {% if asistio %}
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider
@@ -167,7 +167,7 @@
         </div>
     </div>
 
-    {% if not resumen or is_processing %}
+    {% if not summary or is_processing %}
     <!-- Estado: en proceso o sin resumen -->
     <div class="betto-card rounded-3xl p-8 text-center" id="processingPanel" data-auto-refresh="1">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--ds-brand)]/10 mb-3">
@@ -195,17 +195,17 @@
     </script>
     {% endif %}
 
-    {% elif resumen.estado == 'fallido' or resumen.estado == 'sin_transcript' %}
+    {% elif summary.status == 'failed' or summary.status == 'no_transcript' %}
     <!-- Estado: error -->
     <div class="betto-card rounded-3xl p-8 text-center">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 mb-3">
             <i class="fa-solid fa-triangle-exclamation text-amber-500 text-2xl"></i>
         </div>
         <h2 class="text-lg font-black text-slate-900 dark:text-white">
-            {% if resumen.estado == 'sin_transcript' %}El transcript todavía no aparece{% else %}No pudimos generar el resumen{% endif %}
+            {% if summary.status == 'no_transcript' %}El transcript todavía no aparece{% else %}No pudimos generar el resumen{% endif %}
         </h2>
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">
-            {% if resumen.estado == 'sin_transcript' %}
+            {% if summary.status == 'no_transcript' %}
             Google Meet tarda 5-30 minutos en publicar el transcript. Volvé a intentarlo en un rato.
             {% else %}
             Algo no salió bien. El admin puede reintentarlo desde el panel.
@@ -216,7 +216,7 @@
     {% else %}
     <!-- Estado: LISTO — layout 12-col ──────────────────────────────── -->
 
-    {{ resumen.cuestionario|json_script:"quizData" }}
+    {{ summary.quiz|json_script:"quizData" }}
 
     <!-- Grid principal: main (8/12) + sidebar (4/12) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
@@ -225,7 +225,7 @@
         <div class="lg:col-span-8 space-y-5 min-w-0">
 
             <!-- Resumen ejecutivo -->
-            {% if resumen.resumen_md %}
+            {% if summary.summary_md %}
             <div class="betto-card rounded-3xl p-6">
                 <div class="flex items-center gap-2 mb-1">
                     <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[var(--ds-brand)]/10 text-[var(--ds-brand)]">
@@ -234,13 +234,13 @@
                     <p class="text-[11px] font-black uppercase tracking-widest text-[var(--ds-brand)]">Resumen ejecutivo</p>
                 </div>
                 <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-4">De qué se habló</h2>
-                <div class="markdown" id="resumenMd" data-md="{{ resumen.resumen_md|escape }}"></div>
+                <div class="markdown" id="resumenMd" data-md="{{ summary.summary_md|escape }}"></div>
             </div>
             {% endif %}
 
             <!-- ═══ CUESTIONARIO: CTA y/o resultados de intentos previos ═══ -->
-            {% if resumen.cuestionario %}
-                {% if intentos %}
+            {% if summary.quiz %}
+                {% if attempts %}
                 <!-- Tarjeta de resultados con intentos previos -->
                 <div class="rounded-3xl p-6 sm:p-7 text-white relative overflow-hidden"
                      style="background:
@@ -258,62 +258,62 @@
                                 <p class="text-[10px] font-black uppercase tracking-[0.2em] text-white/85">Tus resultados</p>
                                 <h3 class="text-xl font-black tracking-tight leading-tight mt-0.5">Cuestionario · Repaso</h3>
                                 <p class="text-xs text-white/70 mt-1">
-                                    {{ intentos|length }} de {{ max_intentos }} intentos usados
-                                    {% if mejor_intento %}· Mejor: <strong>{{ mejor_intento.correctas }}/{{ mejor_intento.total }}</strong> ({{ mejor_intento.porcentaje }}%){% endif %}
+                                    {{ attempts|length }} de {{ max_attempts }} intentos usados
+                                    {% if best_attempt %}· Mejor: <strong>{{ best_attempt.correct }}/{{ best_attempt.total }}</strong> ({{ best_attempt.percentage }}%){% endif %}
                                 </p>
                             </div>
                         </div>
 
                         <!-- Lista de intentos -->
                         <div class="space-y-2 mb-5">
-                            {% for intento in intentos %}
+                            {% for intento in attempts %}
                             <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 ring-1 ring-white/10">
                                 <span class="flex-shrink-0 w-9 h-9 rounded-full bg-white/15 inline-flex items-center justify-center text-xs font-black">
                                     #{{ forloop.counter }}
                                 </span>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-black">
-                                        {{ intento.correctas }}/{{ intento.total }} correctas
-                                        <span class="text-[11px] font-bold text-white/70 ml-2">{{ intento.porcentaje }}%</span>
+                                        {{ intento.correct }}/{{ intento.total }} correctas
+                                        <span class="text-[11px] font-bold text-white/70 ml-2">{{ intento.percentage }}%</span>
                                     </p>
                                     <p class="text-[11px] text-white/60 mt-0.5">
-                                        <i class="fa-regular fa-clock"></i> {{ intento.tiempo_total_seg }}s ·
+                                        <i class="fa-regular fa-clock"></i> {{ intento.total_time_seconds }}s ·
                                         {{ intento.created_at|date:"d M, H:i" }}
                                     </p>
                                 </div>
                                 <!-- Mini barra de aciertos -->
                                 <div class="flex-shrink-0 w-20 sm:w-32 h-2 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full rounded-full transition-all"
-                                         style="width: {{ intento.porcentaje }}%;
+                                         style="width: {{ intento.percentage }}%;
                                                 background: linear-gradient(90deg,
-                                                  {% if intento.porcentaje >= 80 %}#10B981, #059669
-                                                  {% elif intento.porcentaje >= 50 %}#F59E0B, #D97706
+                                                  {% if intento.percentage >= 80 %}#10B981, #059669
+                                                  {% elif intento.percentage >= 50 %}#F59E0B, #D97706
                                                   {% else %}#EF4444, #DC2626{% endif %});"></div>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
 
-                        {% if intentos_disponibles > 0 %}
-                        <a href="{% url 'public:account_evento_cuestionario' sesion.id %}"
+                        {% if attempts_available > 0 %}
+                        <a href="{% url 'public:account_evento_cuestionario' event.id %}"
                            class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-full
                                   bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)]
                                   text-white font-black text-sm
                                   shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_18px_-4px_rgba(245,136,48,0.55)]
                                   hover:scale-[1.02] hover:brightness-110 transition-all">
                             <i class="fa-solid fa-rotate-right"></i>
-                            Volver a intentar ({{ intentos_disponibles }} restante{{ intentos_disponibles|pluralize:"s" }})
+                            Volver a intentar ({{ attempts_available }} restante{{ attempts_available|pluralize:"s" }})
                         </a>
                         {% else %}
                         <div class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/5 ring-1 ring-white/10 text-xs font-bold text-white/80">
-                            <i class="fa-solid fa-flag-checkered"></i> Completaste tus {{ max_intentos }} intentos
+                            <i class="fa-solid fa-flag-checkered"></i> Completaste tus {{ max_attempts }} intentos
                         </div>
                         {% endif %}
                     </div>
                 </div>
                 {% else %}
                 <!-- Sin intentos aún → CTA para empezar -->
-                <a href="{% url 'public:account_evento_cuestionario' sesion.id %}"
+                <a href="{% url 'public:account_evento_cuestionario' event.id %}"
                    class="block rounded-3xl p-6 sm:p-7 text-white relative overflow-hidden group transition-all hover:-translate-y-1"
                    style="background:
                        radial-gradient(circle at 80% 20%, rgba(245,136,48,0.45) 0%, transparent 50%),
@@ -332,7 +332,7 @@
                                 Probá lo que aprendiste
                             </h3>
                             <p class="text-xs sm:text-sm text-white/85 mt-1">
-                                {{ resumen.cuestionario|length }} preguntas · 30 seg c/u · {{ max_intentos }} intentos
+                                {{ summary.quiz|length }} preguntas · 30 seg c/u · {{ max_attempts }} intentos
                             </p>
                         </div>
                         <div class="hidden sm:inline-flex flex-shrink-0 w-12 h-12 rounded-full bg-white text-violet-700
@@ -345,7 +345,7 @@
                                      bg-white/15 backdrop-blur-md ring-1 ring-white/30">
                             <i class="fa-solid fa-bolt"></i> Empezar
                         </span>
-                        <span class="text-[11px] text-white/70">Tenés {{ max_intentos }} intentos · tu mejor resultado se guarda</span>
+                        <span class="text-[11px] text-white/70">Tenés {{ max_attempts }} intentos · tu mejor resultado se guarda</span>
                     </div>
                 </a>
                 {% endif %}
@@ -383,7 +383,7 @@
             {% endif %}
 
             <!-- Descargar PDF (siempre visible si hay resumen LISTO) -->
-            <a href="{% url 'public:account_evento_resumen_pdf' sesion.id %}"
+            <a href="{% url 'public:account_evento_resumen_pdf' event.id %}"
                target="_blank" rel="noopener"
                class="block rounded-3xl p-5 text-white relative overflow-hidden group transition-all hover:-translate-y-1"
                style="background:
@@ -413,7 +413,7 @@
             </a>
 
             <!-- Puntos clave -->
-            {% if resumen.puntos_clave %}
+            {% if summary.key_points %}
             <div class="betto-card rounded-3xl p-5">
                 <div class="flex items-center gap-2 mb-1">
                     <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-[var(--ds-brand)]/10 text-[var(--ds-brand)]">
@@ -423,7 +423,7 @@
                 </div>
                 <h3 class="text-base font-black text-slate-900 dark:text-white tracking-tight mb-3">Puntos clave</h3>
                 <ol class="space-y-2.5">
-                    {% for p in resumen.puntos_clave %}
+                    {% for p in summary.key_points %}
                     <li class="flex items-start gap-2.5">
                         <span class="flex-shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center
                                      bg-gradient-to-br from-[var(--ds-brand)] to-[var(--ds-brand-dark)] text-white
@@ -436,7 +436,7 @@
             {% endif %}
 
             <!-- Próximos pasos -->
-            {% if resumen.proximos_pasos %}
+            {% if summary.next_steps %}
             <div class="betto-card rounded-3xl p-5">
                 <div class="flex items-center gap-2 mb-1">
                     <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -446,7 +446,7 @@
                 </div>
                 <h3 class="text-base font-black text-slate-900 dark:text-white tracking-tight mb-3">Próximos pasos</h3>
                 <ul class="space-y-2.5">
-                    {% for p in resumen.proximos_pasos %}
+                    {% for p in summary.next_steps %}
                     <li class="flex items-start gap-2.5">
                         <span class="flex-shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center
                                      bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 mt-0.5">
@@ -466,9 +466,9 @@
                 </div>
                 <div class="flex-1 min-w-0">
                     <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Generado con IA</p>
-                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 mt-0.5 truncate">{{ resumen.ai_model }}</p>
-                    {% if resumen.duracion_minutos %}
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ resumen.duracion_minutos }} min de transcript</p>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 mt-0.5 truncate">{{ summary.ai_model }}</p>
+                    {% if summary.duration_minutes %}
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ summary.duration_minutes }} min de transcript</p>
                     {% endif %}
                 </div>
             </div>
@@ -550,8 +550,8 @@
             const responded = pickedIdx !== null;
             const card = document.createElement('div');
             card.className = 'space-y-3';
-            const opts = (q.opciones || []).map((opt, optIdx) => {
-                const isCorrect = optIdx === q.correcta_idx;
+            const opts = (q.options || []).map((opt, optIdx) => {
+                const isCorrect = optIdx === q.correct_idx;
                 const isPicked = optIdx === pickedIdx;
                 let cls = 'quiz-opt';
                 let icon = '';
@@ -565,15 +565,15 @@
                     ${icon}
                 </button>`;
             }).join('');
-            const feedback = responded && q.explicacion ? `
-                <div class="quiz-feedback ${pickedIdx === q.correcta_idx ? 'is-correct' : 'is-wrong'}">
-                    <i class="fa-solid ${pickedIdx === q.correcta_idx ? 'fa-lightbulb' : 'fa-circle-info'} mt-0.5"></i>
-                    <span>${escapeHtml(q.explicacion)}</span>
+            const feedback = responded && q.explanation ? `
+                <div class="quiz-feedback ${pickedIdx === q.correct_idx ? 'is-correct' : 'is-wrong'}">
+                    <i class="fa-solid ${pickedIdx === q.correct_idx ? 'fa-lightbulb' : 'fa-circle-info'} mt-0.5"></i>
+                    <span>${escapeHtml(q.explanation)}</span>
                 </div>` : '';
             card.innerHTML = `
                 <div class="flex items-start gap-3">
                     <span class="flex-shrink-0 w-7 h-7 rounded-full bg-violet-500/15 text-violet-600 dark:text-violet-400 inline-flex items-center justify-center font-black text-xs">${qIdx + 1}</span>
-                    <p class="flex-1 font-bold text-slate-900 dark:text-white text-base leading-snug">${escapeHtml(q.pregunta)}</p>
+                    <p class="flex-1 font-bold text-slate-900 dark:text-white text-base leading-snug">${escapeHtml(q.question)}</p>
                 </div>
                 <div class="space-y-2">${opts}</div>
                 ${feedback}
@@ -596,7 +596,7 @@
         const total = preguntas.length;
         const responded = answers.filter(a => a !== null).length;
         if (responded === total) {
-            const correct = answers.filter((a, i) => a === preguntas[i].correcta_idx).length;
+            const correct = answers.filter((a, i) => a === preguntas[i].correct_idx).length;
             scoreNum.textContent = `${correct} / ${total}`;
             scoreBox.classList.remove('hidden');
         }

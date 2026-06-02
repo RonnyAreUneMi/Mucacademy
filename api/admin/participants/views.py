@@ -3,7 +3,7 @@ from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from core.models import Participante
+from core.models import Participant
 from api.common.viewsets import AuditedModelViewSet
 
 from .serializers import (
@@ -15,11 +15,11 @@ from .serializers import (
 
 
 class ParticipanteViewSet(AuditedModelViewSet):
-    queryset = Participante.objects.annotate(certificados_count=Count('certificados'))
+    queryset = Participant.objects.annotate(certificados_count=Count('certificates'))
     permission_classes = [permissions.IsAdminUser]
-    filterset_fields = ['es_lider']
-    search_fields = ['cedula', 'email', 'nombres', 'apellidos']
-    ordering_fields = ['created_at', 'nombres', 'apellidos']
+    filterset_fields = ['is_leader']
+    search_fields = ['national_id', 'email', 'first_name', 'last_name']
+    ordering_fields = ['created_at', 'first_name', 'last_name']
     ordering = ['-created_at']
 
     audit_verbose_name = 'participante'
@@ -32,17 +32,17 @@ class ParticipanteViewSet(AuditedModelViewSet):
         return ParticipanteListSerializer
 
     def audit_detail(self, instance, action):
-        return f'Participante #{instance.pk} ({instance.nombres} {instance.apellidos})'
+        return f'Participante #{instance.pk} ({instance.first_name} {instance.last_name})'
 
     @action(detail=True, methods=['get'])
     def certificates(self, request, pk=None):
         p = self.get_object()
-        return Response(CertificadoMiniSerializer(p.certificados.all(), many=True).data)
+        return Response(CertificadoMiniSerializer(p.certificates.all(), many=True).data)
 
     @action(detail=True, methods=['post'])
     def toggle_leader(self, request, pk=None):
         p = self.get_object()
-        p.es_lider = not p.es_lider
-        p.save(update_fields=['es_lider'])
-        self.log_audit('TOGGLE_LIDER', f'Participante #{p.pk} → es_lider={p.es_lider}')
-        return Response({'id': p.id, 'es_lider': p.es_lider})
+        p.is_leader = not p.is_leader
+        p.save(update_fields=['is_leader'])
+        self.log_audit('TOGGLE_LIDER', f'Participante #{p.pk} → is_leader={p.is_leader}')
+        return Response({'id': p.id, 'is_leader': p.is_leader})

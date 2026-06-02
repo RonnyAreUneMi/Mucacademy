@@ -2,7 +2,7 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import Certificado
+from core.models import Certificate
 
 
 class VerifyCertificateView(APIView):
@@ -11,36 +11,36 @@ class VerifyCertificateView(APIView):
 
     def get(self, request, hash):
         cert = (
-            Certificado.objects
-            .filter(hash_verificacion=hash)
-            .select_related('lote')
+            Certificate.objects
+            .filter(verification_hash=hash)
+            .select_related('batch')
             .first()
         )
         if not cert:
             return Response({'found': False, 'hash': hash}, status=404)
 
-        Certificado.objects.filter(pk=cert.pk).update(veces_buscado=cert.veces_buscado + 1)
+        Certificate.objects.filter(pk=cert.pk).update(search_count=cert.search_count + 1)
 
-        lote = cert.lote
+        batch = cert.batch
         return Response({
             'found': True,
-            'hash': cert.hash_verificacion,
-            'certificado': {
-                'nombres': cert.nombres,
-                'apellidos': cert.apellidos,
-                'cedula': cert.cedula,
+            'hash': cert.verification_hash,
+            'certificate': {
+                'first_name': cert.first_name,
+                'last_name': cert.last_name,
+                'national_id': cert.national_id,
                 'email': cert.email,
-                'curso': cert.curso,
-                'fecha_curso': cert.fecha_curso.isoformat() if cert.fecha_curso else None,
-                'fecha_emision': cert.created_at.isoformat() if cert.created_at else None,
-                'horas': cert.horas,
-                'descargas_count': cert.descargas_count,
-                'veces_buscado': cert.veces_buscado + 1,
+                'course': cert.course,
+                'course_date': cert.course_date.isoformat() if cert.course_date else None,
+                'issued_at': cert.created_at.isoformat() if cert.created_at else None,
+                'hours': cert.hours,
+                'download_count': cert.download_count,
+                'search_count': cert.search_count + 1,
             },
-            'lote': {
-                'nombre': lote.nombre_lote if lote else None,
-                'facultad_code': lote.facultad if lote else None,
-                'facultad_display': lote.get_facultad_display() if lote else None,
-                'plantilla': lote.plantilla if lote else None,
-            } if lote else None,
+            'batch': {
+                'name': batch.name if batch else None,
+                'faculty_code': batch.faculty if batch else None,
+                'faculty_display': batch.get_faculty_display() if batch else None,
+                'template': batch.template if batch else None,
+            } if batch else None,
         })

@@ -12,7 +12,7 @@ from .._logos import draw_smart_logos
 def draw_classic_wow(c, certificado, width, height, pri, sec, ter, txt):
     """Dibuja un certificado con estilo clásico (marco doble, diamantes, script)."""
     register_fonts()
-    lote = certificado.lote
+    lote = certificado.batch
 
     TITLE_FONT = "Times-Bold"
     BODY_FONT = "Times-Roman"
@@ -104,7 +104,7 @@ def draw_classic_wow(c, certificado, width, height, pri, sec, ter, txt):
     c.setFont(SCRIPT_FONT, name_font_size)
     c.setFillColor(txt)
     name_y = main_y_start - 38*mm
-    nombre = f"{certificado.nombres} {certificado.apellidos}".title()
+    nombre = f"{certificado.first_name} {certificado.last_name}".title()
     c.drawCentredString(center_x, name_y, nombre)
 
     # Body con curso en negrita
@@ -117,7 +117,7 @@ def draw_classic_wow(c, certificado, width, height, pri, sec, ter, txt):
     # Fecha
     c.setFont("Times-Italic", 13)
     c.setFillColor(HexColor('#777777'))
-    c.drawRightString(width - 2.5*cm, 2.0*cm, get_current_date_text(certificado.fecha_curso))
+    c.drawRightString(width - 2.5*cm, 2.0*cm, get_current_date_text(certificado.course_date))
 
     # Firmas unificadas (línea dorada con círculos)
     draw_signatures_universal(c, lote, width, line_color=sec, sig_y=4.5*cm)

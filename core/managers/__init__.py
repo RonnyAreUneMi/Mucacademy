@@ -1,11 +1,11 @@
-from .certificado import CertificadoManager, CertificadoQuerySet
-from .participante import ParticipanteManager, ParticipanteQuerySet
-from .lote import LoteManager, LoteQuerySet
-from .sesion import SesionManager, SesionQuerySet
+from .certificate import CertificateManager, CertificateQuerySet
+from .participant import ParticipantManager, ParticipantQuerySet
+from .batch import BatchManager, BatchQuerySet
+from .event import EventManager, EventQuerySet
 
 __all__ = [
-    'CertificadoManager', 'CertificadoQuerySet',
-    'ParticipanteManager', 'ParticipanteQuerySet',
-    'LoteManager', 'LoteQuerySet',
-    'SesionManager', 'SesionQuerySet',
+    'CertificateManager', 'CertificateQuerySet',
+    'ParticipantManager', 'ParticipantQuerySet',
+    'BatchManager', 'BatchQuerySet',
+    'EventManager', 'EventQuerySet',
 ]

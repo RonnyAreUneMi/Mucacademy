@@ -30,7 +30,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-from core.models import ResumenSesion, UIDesignTokens
+from core.models import SessionSummary, UIDesignTokens
 
 
 # ─── Helpers ──────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ from core.models import ResumenSesion, UIDesignTokens
 def _tokens():
     """Obtiene tokens de diseño (con defaults si no existen)."""
     try:
-        t = UIDesignTokens.get_solo()
+        t = UIDesignTokens.load()
     except Exception:
         t = None
     return {
@@ -258,18 +258,18 @@ class _PageDecorator:
 def _build_hero(sesion, resumen, styles, c):
     """Bloque hero con eyebrow, título grande y meta del evento."""
     meta_parts = []
-    meta_parts.append(f'<b>Fecha:</b> {_format_fecha(sesion.fecha)}')
+    meta_parts.append(f'<b>Fecha:</b> {_format_fecha(sesion.date)}')
     meta_parts.append(
-        f'<b>Hora:</b> {sesion.hora_inicio.strftime("%H:%M")}–{sesion.hora_fin.strftime("%H:%M")}'
+        f'<b>Hora:</b> {sesion.start_time.strftime("%H:%M")}–{sesion.end_time.strftime("%H:%M")}'
     )
-    if resumen.duracion_minutos:
-        meta_parts.append(f'<b>Duración:</b> {resumen.duracion_minutos} min')
-    if sesion.modalidad:
-        meta_parts.append(f'<b>Modalidad:</b> {sesion.get_modalidad_display()}')
+    if resumen.duration_minutes:
+        meta_parts.append(f'<b>Duración:</b> {resumen.duration_minutes} min')
+    if sesion.modality:
+        meta_parts.append(f'<b>Modalidad:</b> {sesion.get_modality_display()}')
 
     return [
         Paragraph('RESUMEN DEL EVENTO', styles['eyebrow']),
-        Paragraph(_escape_xml(sesion.titulo or sesion.dia_semana or 'Sesión'),
+        Paragraph(_escape_xml(sesion.title or sesion.day_of_week or 'Sesión'),
                   styles['h1']),
         Spacer(1, 8),
         Paragraph(' &nbsp;&nbsp;·&nbsp;&nbsp; '.join(meta_parts), styles['meta']),
@@ -380,11 +380,11 @@ def _build_cuestionario(preguntas, styles, c):
     for idx, q in enumerate(preguntas, 1):
         block = [
             Paragraph(
-                f'<font color="{_hex(c["violet"])}"><b>Pregunta {idx}.</b></font>&nbsp;&nbsp;{_inline_md(q.get("pregunta", ""))}',
+                f'<font color="{_hex(c["violet"])}"><b>Pregunta {idx}.</b></font>&nbsp;&nbsp;{_inline_md(q.get("question", ""))}',
                 styles['quiz_q']),
         ]
-        correct_idx = q.get('correcta_idx', -1)
-        opciones = q.get('opciones', [])
+        correct_idx = q.get('correct_idx', -1)
+        opciones = q.get('options', [])
         opt_rows = []
         for j, opt in enumerate(opciones):
             letter = chr(65 + j)
@@ -419,9 +419,9 @@ def _build_cuestionario(preguntas, styles, c):
         block.append(opt_table)
 
         # Explicación
-        if q.get('explicacion'):
+        if q.get('explanation'):
             block.append(Paragraph(
-                f'<i><b>💡 Por qué:</b> {_inline_md(q["explicacion"])}</i>',
+                f'<i><b>💡 Por qué:</b> {_inline_md(q["explanation"])}</i>',
                 styles['quiz_exp']))
         block.append(Spacer(1, 12))
 
@@ -433,10 +433,10 @@ def _build_footer_metadata(resumen, styles, c):
     parts = []
     if resumen.ai_model:
         parts.append(f'Modelo IA: <b>{resumen.ai_model}</b>')
-    if resumen.procesado_at:
-        parts.append(f'Generado: {resumen.procesado_at.strftime("%d/%m/%Y %H:%M")}')
-    if resumen.duracion_minutos:
-        parts.append(f'Duración transcript: {resumen.duracion_minutos} min')
+    if resumen.processed_at:
+        parts.append(f'Generado: {resumen.processed_at.strftime("%d/%m/%Y %H:%M")}')
+    if resumen.duration_minutes:
+        parts.append(f'Duración transcript: {resumen.duration_minutes} min')
     if not parts:
         return []
     return [
@@ -450,21 +450,21 @@ def _build_footer_metadata(resumen, styles, c):
 
 # ─── Entry point ─────────────────────────────────────────────────
 
-def generar_resumen_pdf(resumen: ResumenSesion) -> bytes:
+def generar_resumen_pdf(resumen: SessionSummary) -> bytes:
     """Genera el PDF del resumen y devuelve los bytes.
 
     Args:
-        resumen: instancia de ResumenSesion en estado LISTO.
+        resumen: instancia de SessionSummary en estado READY.
 
     Returns:
         bytes del PDF listos para enviar como HttpResponse.
     """
     c = _tokens()
     styles = _styles(c)
-    sesion = resumen.sesion
+    sesion = resumen.event
 
     buf = io.BytesIO()
-    title = f'Resumen · {sesion.titulo or sesion.dia_semana}'
+    title = f'Resumen · {sesion.title or sesion.day_of_week}'
     doc = BaseDocTemplate(
         buf,
         pagesize=A4,
@@ -486,12 +486,12 @@ def generar_resumen_pdf(resumen: ResumenSesion) -> bytes:
 
     story = []
     story.extend(_build_hero(sesion, resumen, styles, c))
-    story.extend(_build_resumen_md(resumen.resumen_md, styles, c))
-    story.extend(_build_puntos_clave(resumen.puntos_clave or [], styles, c))
-    story.extend(_build_proximos_pasos(resumen.proximos_pasos or [], styles, c))
-    if resumen.cuestionario:
+    story.extend(_build_resumen_md(resumen.summary_md, styles, c))
+    story.extend(_build_puntos_clave(resumen.key_points or [], styles, c))
+    story.extend(_build_proximos_pasos(resumen.next_steps or [], styles, c))
+    if resumen.quiz:
         story.append(PageBreak())
-        story.extend(_build_cuestionario(resumen.cuestionario, styles, c))
+        story.extend(_build_cuestionario(resumen.quiz, styles, c))
     story.extend(_build_footer_metadata(resumen, styles, c))
 
     doc.build(story)

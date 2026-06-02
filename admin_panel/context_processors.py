@@ -7,12 +7,12 @@
 from django.db.utils import OperationalError, ProgrammingError
 from django.urls import reverse, NoReverseMatch
 
-from core.models import SolicitudAcceso, UIDesignTokens
+from core.models import AccessRequest, UIDesignTokens
 
 
 def solicitudes_pendientes(request):
-    if request.user.is_authenticated and hasattr(request.user, 'rol') and request.user.rol == 'superadmin':
-        pendientes_count = SolicitudAcceso.objects.filter(estado='pendiente').count()
+    if request.user.is_authenticated and hasattr(request.user, 'role') and request.user.role == 'superadmin':
+        pendientes_count = AccessRequest.objects.filter(status='pending').count()
         return {'pendientes_count': pendientes_count}
     return {'pendientes_count': 0}
 
@@ -27,7 +27,7 @@ def design_tokens(request):
     cae a defaults hardcodeados.
     """
     try:
-        return {'design': UIDesignTokens.get_solo()}
+        return {'design': UIDesignTokens.load()}
     except (OperationalError, ProgrammingError):
         return {'design': None}
 
@@ -60,7 +60,7 @@ def nav_menu(request):
         return {'nav_groups': []}
 
     is_superadmin = (
-        hasattr(request.user, 'rol') and request.user.rol == 'superadmin'
+        hasattr(request.user, 'role') and request.user.role == 'superadmin'
     )
 
     # Paleta DS: brand · accent · success · info · warning · danger

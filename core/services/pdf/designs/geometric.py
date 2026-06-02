@@ -15,7 +15,7 @@ from .._logos import draw_smart_logos
 
 def draw_geometric_wow(c, certificado, width, height, pri, sec, ter, txt):
     """Dibuja un certificado geométrico profesional con chevrons, marca de agua y QR."""
-    lote = certificado.lote
+    lote = certificado.batch
     register_fonts()
     SCRIPT_FONT = get_script_font()
 
@@ -98,7 +98,7 @@ def draw_geometric_wow(c, certificado, width, height, pri, sec, ter, txt):
     name_font_size = 50 if SCRIPT_FONT == 'GreatVibes' else 36
     c.setFont(SCRIPT_FONT, name_font_size)
     c.setFillColor(HexColor('#1a1a1a'))
-    nombre = f"{certificado.nombres} {certificado.apellidos}".title()
+    nombre = f"{certificado.first_name} {certificado.last_name}".title()
     c.drawCentredString(center_x, y_cursor, nombre)
     y_cursor -= 2.0*cm
 
@@ -120,11 +120,11 @@ def draw_geometric_wow(c, certificado, width, height, pri, sec, ter, txt):
     )
 
     # --- 5. FIRMAS (helper unificado, línea dorada con círculos) ---
-    sig_y_cm = getattr(lote, 'posicion_firmas', 4.2)
+    sig_y_cm = getattr(lote, 'signatures_position', 4.2)
     draw_signatures_universal(c, lote, width, line_color=sec, sig_y=sig_y_cm * cm)
 
     # --- 6. FECHA (debajo de firmas) ---
     date_y = (sig_y_cm * cm) - 2.0*cm
     c.setFont("Times-Roman", 10)
     c.setFillColor(HexColor('#555555'))
-    c.drawRightString(width - 3.5*cm, date_y, get_current_date_text(certificado.fecha_curso))
+    c.drawRightString(width - 3.5*cm, date_y, get_current_date_text(certificado.course_date))

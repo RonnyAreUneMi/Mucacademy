@@ -26,11 +26,12 @@ class AuditedModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
     audit_action_delete = ''
 
     def _action_code(self, verb: str) -> str:
-        base = (self.audit_verbose_name or 'recurso').upper().replace(' ', '_')
+        # Maps to the AuditAction enum (CREATE/UPDATE/DELETE). The resource
+        # name lives in `details`, not in the action code.
         return {
-            'create': self.audit_action_create or f'CREAR_{base}',
-            'update': self.audit_action_update or f'EDITAR_{base}',
-            'delete': self.audit_action_delete or f'ELIMINAR_{base}',
+            'create': self.audit_action_create or 'CREATE',
+            'update': self.audit_action_update or 'UPDATE',
+            'delete': self.audit_action_delete or 'DELETE',
         }[verb]
 
     def audit_detail(self, instance, action: str) -> str:

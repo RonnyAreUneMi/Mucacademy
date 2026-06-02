@@ -39,7 +39,7 @@ FLOAT_FIELDS = (
 @superadmin_required
 def design_system_edit(request):
     """Pantalla del Design System. GET muestra el form; POST guarda."""
-    tokens = UIDesignTokens.get_solo()
+    tokens = UIDesignTokens.load()
 
     if request.method == 'POST':
         for f in COLOR_FIELDS + TEXT_FIELDS:
@@ -54,7 +54,7 @@ def design_system_edit(request):
                 except ValueError:
                     pass
         tokens.save()
-        _log_audit(request.user, 'EDITAR_DESIGN_SYSTEM', 'Tokens del Design System actualizados')
+        _log_audit(request.user, 'UPDATE', 'Tokens del Design System actualizados')
         messages.success(request, 'Design System guardado. Recarga para ver los cambios aplicados.')
         return redirect('panel:design_system')
 
@@ -65,8 +65,8 @@ def design_system_edit(request):
 @require_POST
 def design_system_reset(request):
     """Restaura todos los tokens a sus valores por defecto."""
-    tokens = UIDesignTokens.get_solo()
+    tokens = UIDesignTokens.load()
     tokens.reset_to_defaults()
-    _log_audit(request.user, 'RESET_DESIGN_SYSTEM', 'Design System restaurado a valores por defecto')
+    _log_audit(request.user, 'UPDATE', 'Design System restaurado a valores por defecto')
     messages.success(request, 'Design System restaurado a los valores por defecto.')
     return redirect('panel:design_system')

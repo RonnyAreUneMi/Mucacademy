@@ -69,14 +69,14 @@ function esc(s) {
 }
 
 function renderRow(p) {
-    const initials = ((p.nombres?.[0] || '') + (p.apellidos?.[0] || '')).toUpperCase() || '?';
-    const estado = p.es_lider
+    const initials = ((p.first_name?.[0] || '') + (p.last_name?.[0] || '')).toUpperCase() || '?';
+    const estado = p.is_leader
         ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 uppercase tracking-widest">
              <i class="fa-solid fa-star text-[8px]"></i> LÍDER
            </span>`
         : `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400 uppercase tracking-widest">NORMAL</span>`;
 
-    const celular = p.celular ? `<p class="text-xs text-gray-500 flex items-center gap-2"><i class="fa-solid fa-phone text-[10px] text-gray-400"></i>${esc(p.celular)}</p>` : '';
+    const celular = p.phone ? `<p class="text-xs text-gray-500 flex items-center gap-2"><i class="fa-solid fa-phone text-[10px] text-gray-400"></i>${esc(p.phone)}</p>` : '';
 
     return `
     <tr class="hover:bg-gray-50/30 dark:hover:bg-white/5 transition-all group">
@@ -86,13 +86,13 @@ function renderRow(p) {
                     ${esc(initials)}
                 </div>
                 <div class="min-w-0">
-                    <p class="text-sm font-black text-gray-900 dark:text-white truncate tracking-tight">${esc(p.nombres)} ${esc(p.apellidos)}</p>
+                    <p class="text-sm font-black text-gray-900 dark:text-white truncate tracking-tight">${esc(p.first_name)} ${esc(p.last_name)}</p>
                     <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">ID: #${p.id}</p>
                 </div>
             </div>
         </td>
         <td class="px-6 py-4">
-            <span class="text-sm font-bold text-gray-600 dark:text-gray-300 font-mono">${esc(p.cedula) || '—'}</span>
+            <span class="text-sm font-bold text-gray-600 dark:text-gray-300 font-mono">${esc(p.national_id) || '—'}</span>
         </td>
         <td class="px-6 py-4">
             <div class="space-y-1">
@@ -106,7 +106,7 @@ function renderRow(p) {
         <td class="px-6 py-4 text-center">${estado}</td>
         <td class="px-6 py-4 text-right">
             <div class="flex items-center justify-end gap-2">
-                <button onclick="confirmDelete(${p.id}, '${esc(p.nombres + ' ' + p.apellidos).replace(/'/g, '&apos;')}')" class="p-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/20 text-red-500 rounded-xl transition-all" title="Eliminar">
+                <button onclick="confirmDelete(${p.id}, '${esc(p.first_name + ' ' + p.last_name).replace(/'/g, '&apos;')}')" class="p-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/20 text-red-500 rounded-xl transition-all" title="Eliminar">
                     <i class="fa-solid fa-trash-can"></i>
                 </button>
             </div>

@@ -1,36 +1,36 @@
 from rest_framework import serializers
 
-from core.models import Usuario
+from core.models import User
 
 
 class UsuarioListSerializer(serializers.ModelSerializer):
-    rol_display = serializers.CharField(source='get_rol_display', read_only=True)
-    facultad_display = serializers.CharField(source='get_facultad_display', read_only=True)
+    rol_display = serializers.CharField(source='get_role_display', read_only=True)
+    facultad_display = serializers.CharField(source='get_faculty_display', read_only=True)
 
     class Meta:
-        model = Usuario
+        model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
-            'rol', 'rol_display', 'facultad', 'facultad_display',
-            'telefono', 'is_staff', 'is_superuser', 'is_active', 'activo',
-            'fecha_creacion', 'ultimo_acceso',
+            'role', 'rol_display', 'faculty', 'facultad_display',
+            'phone', 'is_staff', 'is_superuser', 'is_active',
+            'date_joined', 'last_login',
         ]
-        read_only_fields = ('fecha_creacion', 'ultimo_acceso')
+        read_only_fields = ('date_joined', 'last_login')
 
 
 class UsuarioWriteSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=4)
 
     class Meta:
-        model = Usuario
+        model = User
         fields = [
             'username', 'email', 'first_name', 'last_name',
-            'rol', 'facultad', 'telefono', 'is_staff', 'is_active', 'activo', 'password',
+            'role', 'faculty', 'phone', 'is_staff', 'is_active', 'password',
         ]
 
     def create(self, validated_data):
         pwd = validated_data.pop('password', None) or '123'
-        user = Usuario(**validated_data)
+        user = User(**validated_data)
         user.set_password(pwd)
         user.save()
         return user

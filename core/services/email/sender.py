@@ -14,7 +14,7 @@ import logging
 from django.conf import settings
 from django.template.loader import render_to_string
 
-from core.models import Participante
+from core.models import Participant
 from core.services.email.gmail import send_email, GmailNotConfigured
 
 logger = logging.getLogger(__name__)
@@ -79,11 +79,11 @@ def _safe_send(*, template: str, subject: str, to: str, context: dict) -> bool:
 # Bienvenida (al registrarse)
 # ════════════════════════════════════════════════════════════════
 
-def send_welcome_email(participante: Participante, request=None) -> bool:
+def send_welcome_email(participante: Participant, request=None) -> bool:
     site = _site_url(request)
     return _safe_send(
         template='emails/welcome.html',
-        subject=f'¡Bienvenido a CertifAI, {participante.nombres}!',
+        subject=f'¡Bienvenido a CertifAI, {participante.first_name}!',
         to=participante.email,
         context={
             'p': participante,
@@ -98,7 +98,7 @@ def send_welcome_email(participante: Participante, request=None) -> bool:
 # Notificación de inicio de sesión
 # ════════════════════════════════════════════════════════════════
 
-def send_login_notification(participante: Participante, *, method: str, request=None) -> bool:
+def send_login_notification(participante: Participant, *, method: str, request=None) -> bool:
     """Envía aviso de nuevo login.
 
     Args:
@@ -131,18 +131,18 @@ def _gcal_add_url(sesion) -> str:
     """Construye un link 'Add to Google Calendar' con los datos del evento."""
     from datetime import datetime
     from urllib.parse import urlencode
-    start = datetime.combine(sesion.fecha, sesion.hora_inicio)
-    end   = datetime.combine(sesion.fecha, sesion.hora_fin)
+    start = datetime.combine(sesion.date, sesion.start_time)
+    end   = datetime.combine(sesion.date, sesion.end_time)
     fmt = '%Y%m%dT%H%M%S'  # local time, sin Z (Google interpreta como tz del user)
-    title = sesion.titulo or sesion.dia_semana
+    title = sesion.title or sesion.day_of_week
     location = ''
-    if getattr(sesion, 'es_virtual', False):
-        location = getattr(sesion, 'enlace_virtual', '') or 'Google Meet'
+    if getattr(sesion, 'is_virtual', False):
+        location = getattr(sesion, 'meeting_url', '') or 'Google Meet'
     else:
-        location = getattr(sesion, 'lugar', '') or ''
+        location = getattr(sesion, 'location', '') or ''
     details = f'Te inscribiste a este evento desde CertifAI.'
-    if getattr(sesion, 'enlace_virtual', None):
-        details += f'\n\nLink: {sesion.enlace_virtual}'
+    if getattr(sesion, 'meeting_url', None):
+        details += f'\n\nLink: {sesion.meeting_url}'
     params = {
         'action': 'TEMPLATE',
         'text':   title,
@@ -153,7 +153,7 @@ def _gcal_add_url(sesion) -> str:
     return f'https://www.google.com/calendar/render?{urlencode(params)}'
 
 
-def send_certificate_issued(*, certificado, sesion, participante: Participante, request=None) -> bool:
+def send_certificate_issued(*, certificado, sesion, participante: Participant, request=None) -> bool:
     """Notifica al participante que su certificado fue emitido.
 
     Si `participante` es None (caso bulk con sólo email/cedula), se intenta
@@ -164,27 +164,27 @@ def send_certificate_issued(*, certificado, sesion, participante: Participante, 
     if not to_email:
         return False
 
-    # Para mostrar en el correo: contexto compatible con Participante real o certificado-only
+    # Para mostrar en el correo: contexto compatible con Participant real o certificado-only
     p_ctx = participante or type('P', (), {
-        'nombres': certificado.nombres or 'participante',
-        'apellidos': certificado.apellidos or '',
+        'first_name': certificado.first_name or 'participante',
+        'last_name': certificado.last_name or '',
         'email': certificado.email or '',
-        'nombre_completo': f'{certificado.nombres} {certificado.apellidos}'.strip(),
+        'full_name': f'{certificado.first_name} {certificado.last_name}'.strip(),
     })()
 
-    hash_full = str(getattr(certificado, 'hash_verificacion', '') or '')
+    hash_full = str(getattr(certificado, 'verification_hash', '') or '')
     hash_short = hash_full[:8].upper() if hash_full else ''
 
     return _safe_send(
         template='emails/certificate_issued.html',
-        subject=f'Tu certificado de "{sesion.titulo or sesion.dia_semana}" ya está listo',
+        subject=f'Tu certificado de "{sesion.title or sesion.day_of_week}" ya está listo',
         to=to_email,
         context={
             'p': p_ctx,
             'to_email': to_email,
             'site_url': site,
             'sesion': sesion,
-            'cert_horas': getattr(certificado, 'horas', None),
+            'cert_horas': getattr(certificado, 'hours', None),
             'cert_hash_short': hash_short,
             'certs_url': f'{site}/cuenta/certificados/',
             'download_url': f'{site}/api/v1/public/certificates/{hash_full}/download/' if hash_full else None,
@@ -192,16 +192,16 @@ def send_certificate_issued(*, certificado, sesion, participante: Participante, 
     )
 
 
-def send_event_inscription(participante: Participante, sesion, request=None) -> bool:
+def send_event_inscription(participante: Participant, sesion, request=None) -> bool:
     """Envía confirmación cuando un user se inscribe a un evento."""
     from django.utils import timezone
     site = _site_url(request)
     today = timezone.localdate()
-    days_until = (sesion.fecha - today).days
-    fecha_iso = sesion.fecha.isoformat()  # YYYY-MM-DD para el deep link
+    days_until = (sesion.date - today).days
+    fecha_iso = sesion.date.isoformat()  # YYYY-MM-DD para el deep link
     return _safe_send(
         template='emails/event_inscription.html',
-        subject=f'Te inscribiste a {sesion.titulo or sesion.dia_semana}',
+        subject=f'Te inscribiste a {sesion.title or sesion.day_of_week}',
         to=participante.email,
         context={
             'p': participante,

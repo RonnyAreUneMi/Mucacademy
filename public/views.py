@@ -14,14 +14,14 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
 from core.models import (
-    Certificado,
-    ConfirmacionAsistencia,
-    EstadoProcesamiento,
-    IntentoCuestionario,
-    Participante,
-    RegistroAsistencia,
-    ResumenSesion,
-    SesionAsistencia,
+    Certificate,
+    Enrollment,
+    ProcessingStatus,
+    QuizAttempt,
+    Participant,
+    Attendance,
+    SessionSummary,
+    Event,
 )
 from public.services import auth as account_auth
 from public.services import google_auth as gsignin
@@ -34,7 +34,7 @@ from core.services.email import sender as email_sender
 
 @require_http_methods(['GET', 'POST'])
 def login_view(request):
-    if account_auth.get_current_participante(request):
+    if account_auth.get_current_participant(request):
         return redirect('public:account_dashboard')
 
     if request.method == 'POST':
@@ -49,7 +49,7 @@ def login_view(request):
 
         account_auth.login(request, p)
         email_sender.send_login_notification(p, method='Email y contraseña', request=request)
-        messages.success(request, f'¡Hola de nuevo, {p.nombres}!')
+        messages.success(request, f'¡Hola de nuevo, {p.first_name}!')
         if next_url.startswith('/'):
             return redirect(next_url)
         return redirect(next_url)
@@ -61,20 +61,20 @@ def login_view(request):
 
 @require_http_methods(['GET', 'POST'])
 def register_view(request):
-    if account_auth.get_current_participante(request):
+    if account_auth.get_current_participant(request):
         return redirect('public:account_dashboard')
 
     if request.method == 'POST':
-        nombres = request.POST.get('nombres', '').strip()
-        apellidos = request.POST.get('apellidos', '').strip()
+        nombres = request.POST.get('first_name', '').strip()
+        apellidos = request.POST.get('last_name', '').strip()
         email = request.POST.get('email', '').strip().lower()
-        cedula = request.POST.get('cedula', '').strip()
-        celular = request.POST.get('celular', '').strip()
+        cedula = request.POST.get('national_id', '').strip()
+        celular = request.POST.get('phone', '').strip()
         password = request.POST.get('password', '')
         password2 = request.POST.get('password2', '')
 
         ctx = {
-            'form': {'nombres': nombres, 'apellidos': apellidos, 'email': email, 'cedula': cedula, 'celular': celular},
+            'form': {'first_name': nombres, 'last_name': apellidos, 'email': email, 'national_id': cedula, 'phone': celular},
         }
 
         # Validaciones
@@ -92,22 +92,22 @@ def register_view(request):
             return render(request, 'public/account/register.html', ctx)
 
         # ¿Ya existe participante con ese email?
-        p = Participante.objects.filter(email__iexact=email).first()
+        p = Participant.objects.filter(email__iexact=email).first()
         if p:
             if p.has_account:
                 messages.error(request, 'Ya existe una cuenta con ese email. Iniciá sesión.')
                 return redirect('public:account_login')
             # Existe como guest → upgrade a cuenta
-            p.nombres = nombres or p.nombres
-            p.apellidos = apellidos or p.apellidos
-            if cedula and not p.cedula:
-                p.cedula = cedula
-            if celular and not p.celular:
-                p.celular = celular
+            p.first_name = nombres or p.first_name
+            p.last_name = apellidos or p.last_name
+            if cedula and not p.national_id:
+                p.national_id = cedula
+            if celular and not p.phone:
+                p.phone = celular
         else:
-            p = Participante(
-                nombres=nombres, apellidos=apellidos, email=email,
-                cedula=cedula, celular=celular,
+            p = Participant(
+                first_name=nombres, last_name=apellidos, email=email,
+                national_id=cedula, phone=celular,
             )
 
         try:
@@ -120,7 +120,7 @@ def register_view(request):
         p.save()
         account_auth.login(request, p)
         email_sender.send_welcome_email(p, request=request)
-        messages.success(request, f'¡Bienvenido a CertifAI, {p.nombres}!')
+        messages.success(request, f'¡Bienvenido a CertifAI, {p.first_name}!')
         return redirect('public:account_dashboard')
 
     return render(request, 'public/account/register.html', {})
@@ -141,42 +141,42 @@ def dashboard(request):
     import calendar as cal
     from datetime import datetime, timedelta
 
-    p: Participante = request.participante
+    p: Participant = request.participant
 
-    certificados = Certificado.objects.filter(
-        Q(cedula=p.cedula) if p.cedula else Q(email__iexact=p.email)
-    ).order_by('-fecha_curso')
+    certificados = Certificate.objects.filter(
+        Q(national_id=p.national_id) if p.national_id else Q(email__iexact=p.email)
+    ).order_by('-course_date')
 
     today = timezone.localdate()
-    confirmadas = ConfirmacionAsistencia.objects.filter(participante=p)
-    asistencias = RegistroAsistencia.objects.filter(participante=p)
-    eventos_inscrito_ids = set(confirmadas.values_list('sesion_id', flat=True))
-    eventos_asistido_ids = set(asistencias.values_list('sesion_id', flat=True))
+    confirmadas = Enrollment.objects.filter(participant=p)
+    asistencias = Attendance.objects.filter(participant=p)
+    eventos_inscrito_ids = set(confirmadas.values_list('event_id', flat=True))
+    eventos_asistido_ids = set(asistencias.values_list('event_id', flat=True))
 
     # Total horas certificadas (suma de horas de todos los certificados)
-    total_horas = sum(c.horas or 0 for c in certificados)
+    total_horas = sum(c.hours or 0 for c in certificados)
 
     # ── Próximo evento (el más cercano donde está inscrito) ────────
-    next_event = (SesionAsistencia.objects
-        .filter(activa=True, id__in=eventos_inscrito_ids, fecha__gte=today)
-        .order_by('fecha', 'hora_inicio')
+    next_event = (Event.objects
+        .filter(is_active=True, id__in=eventos_inscrito_ids, date__gte=today)
+        .order_by('date', 'start_time')
         .first())
     next_event_dt_iso = None
     if next_event:
-        ne_dt = datetime.combine(next_event.fecha, next_event.hora_inicio)
+        ne_dt = datetime.combine(next_event.date, next_event.start_time)
         next_event_dt_iso = ne_dt.isoformat()
 
-    eventos_proximos = (SesionAsistencia.objects
-        .filter(activa=True, id__in=eventos_inscrito_ids, fecha__gte=today)
-        .prefetch_related('ponentes')
-        .order_by('fecha', 'hora_inicio')[:3])
+    eventos_proximos = (Event.objects
+        .filter(is_active=True, id__in=eventos_inscrito_ids, date__gte=today)
+        .prefetch_related('speakers')
+        .order_by('date', 'start_time')[:3])
 
     # Recomendaciones — futuros activos sin inscripción
-    eventos_recomendados = (SesionAsistencia.objects
-        .filter(activa=True, fecha__gte=today)
+    eventos_recomendados = (Event.objects
+        .filter(is_active=True, date__gte=today)
         .exclude(id__in=eventos_inscrito_ids)
-        .prefetch_related('ponentes')
-        .order_by('fecha', 'hora_inicio')[:6])
+        .prefetch_related('speakers')
+        .order_by('date', 'start_time')[:6])
 
     # ── Calendario del mes actual ───────────────────────────────────
     cal.setfirstweekday(cal.MONDAY)
@@ -188,21 +188,21 @@ def dashboard(request):
     last_day = cal.monthrange(year, month)[1]
     last_of_month = today.replace(day=last_day)
 
-    sesiones_mes = SesionAsistencia.objects.filter(
-        activa=True,
-        fecha__gte=first_of_month,
-        fecha__lte=last_of_month,
-    ).order_by('fecha', 'hora_inicio')
+    sesiones_mes = Event.objects.filter(
+        is_active=True,
+        date__gte=first_of_month,
+        date__lte=last_of_month,
+    ).order_by('date', 'start_time')
 
     cal_days = {}  # day_int → {'inscrito': N, 'disponible': N, 'asisti': N}
     for s in sesiones_mes:
-        d = s.fecha.day
+        d = s.date.day
         slot = cal_days.setdefault(d, {'inscrito': 0, 'disponible': 0, 'asisti': 0, 'eventos': []})
         slot['eventos'].append({
             'id': s.id,
-            'titulo': s.titulo or s.dia_semana,
-            'hora': s.hora_inicio.strftime('%H:%M'),
-            'es_virtual': s.es_virtual,
+            'titulo': s.title or s.day_of_week,
+            'hora': s.start_time.strftime('%H:%M'),
+            'es_virtual': s.is_virtual,
         })
         if s.id in eventos_asistido_ids:
             slot['asisti'] += 1
@@ -237,22 +237,22 @@ def dashboard(request):
     from datetime import date as _date_cls
     activity = []
     for c in certificados[:3]:
-        if not c.fecha_curso:
+        if not c.course_date:
             continue  # certificados sin fecha quedan fuera del feed
         activity.append({
             'tipo': 'certificado',
-            'titulo': c.curso,
-            'fecha': c.fecha_curso,
+            'titulo': c.course,
+            'fecha': c.course_date,
             'icono': 'fa-certificate',
             'color': 'success',
         })
     for s in eventos_proximos[:2]:
-        if not s.fecha:
+        if not s.date:
             continue
         activity.append({
             'tipo': 'inscrito',
-            'titulo': s.titulo or s.dia_semana,
-            'fecha': s.fecha,
+            'titulo': s.title or s.day_of_week,
+            'fecha': s.date,
             'icono': 'fa-bookmark',
             'color': 'brand',
         })
@@ -300,15 +300,15 @@ def dashboard(request):
 
 @account_auth.login_required
 def certificados_view(request):
-    p: Participante = request.participante
+    p: Participant = request.participant
     q = request.GET.get('q', '').strip()
 
-    qs = Certificado.objects.filter(
-        Q(cedula=p.cedula) if p.cedula else Q(email__iexact=p.email)
-    ).select_related('lote').order_by('-fecha_curso')
+    qs = Certificate.objects.filter(
+        Q(national_id=p.national_id) if p.national_id else Q(email__iexact=p.email)
+    ).select_related('batch').order_by('-course_date')
 
     if q:
-        qs = qs.filter(Q(curso__icontains=q) | Q(lote__nombre_lote__icontains=q))
+        qs = qs.filter(Q(course__icontains=q) | Q(batch__name__icontains=q))
 
     return render(request, 'public/account/certificados.html', {
         'p': p,
@@ -324,31 +324,31 @@ def certificados_view(request):
 
 @account_auth.login_required
 def eventos_view(request):
-    p: Participante = request.participante
+    p: Participant = request.participant
     tab = request.GET.get('tab', 'mios')  # mios | disponibles
     today = timezone.localdate()
 
-    confirmados_ids = set(ConfirmacionAsistencia.objects.filter(participante=p).values_list('sesion_id', flat=True))
-    asistidos_ids = set(RegistroAsistencia.objects.filter(participante=p).values_list('sesion_id', flat=True))
+    confirmados_ids = set(Enrollment.objects.filter(participant=p).values_list('event_id', flat=True))
+    asistidos_ids = set(Attendance.objects.filter(participant=p).values_list('event_id', flat=True))
     mis_ids = confirmados_ids | asistidos_ids
 
     if tab == 'disponibles':
-        eventos = (SesionAsistencia.objects
-            .filter(activa=True, fecha__gte=today)
+        eventos = (Event.objects
+            .filter(is_active=True, date__gte=today)
             .exclude(id__in=mis_ids)
-            .prefetch_related('ponentes')
-            .order_by('fecha', 'hora_inicio'))
+            .prefetch_related('speakers')
+            .order_by('date', 'start_time'))
     else:
-        eventos = (SesionAsistencia.objects
+        eventos = (Event.objects
             .filter(id__in=mis_ids)
-            .prefetch_related('ponentes')
-            .order_by('-fecha', '-hora_inicio'))
+            .prefetch_related('speakers')
+            .order_by('-date', '-start_time'))
 
     # Sesiones con resumen IA listo (para mostrar el badge "Betto" en la card)
     resumen_listo_ids = set(
-        ResumenSesion.objects
-        .filter(estado=EstadoProcesamiento.LISTO, sesion_id__in=[e.id for e in eventos])
-        .values_list('sesion_id', flat=True)
+        SessionSummary.objects
+        .filter(status=ProcessingStatus.READY, event_id__in=[e.id for e in eventos])
+        .values_list('event_id', flat=True)
     )
 
     # Anotar estado de cada evento para el participante
@@ -358,7 +358,7 @@ def eventos_view(request):
         if e.id in asistidos_ids:
             status = 'asisti'
         elif e.id in confirmados_ids:
-            if e.fecha < today:
+            if e.date < today:
                 status = 'no_asisti'
             else:
                 status = 'inscrito'
@@ -373,20 +373,20 @@ def eventos_view(request):
         'tab': tab,
         'eventos_data': eventos_data,
         'count_mios': len(mis_ids),
-        'count_disponibles': SesionAsistencia.objects.filter(activa=True, fecha__gte=today).exclude(id__in=mis_ids).count(),
+        'count_disponibles': Event.objects.filter(is_active=True, date__gte=today).exclude(id__in=mis_ids).count(),
     })
 
 
 @account_auth.login_required
 def perfil_view(request):
-    p: Participante = request.participante
+    p: Participant = request.participant
     if request.method == 'POST':
-        p.nombres = request.POST.get('nombres', p.nombres).strip()
-        p.apellidos = request.POST.get('apellidos', p.apellidos).strip()
+        p.first_name = request.POST.get('nombres', p.first_name).strip()
+        p.last_name = request.POST.get('apellidos', p.last_name).strip()
         cedula_in = request.POST.get('cedula', '').strip()
-        if cedula_in and cedula_in != p.cedula:
-            p.cedula = cedula_in
-        p.celular = request.POST.get('celular', p.celular).strip()
+        if cedula_in and cedula_in != p.national_id:
+            p.national_id = cedula_in
+        p.phone = request.POST.get('celular', p.phone).strip()
         new_pwd = request.POST.get('new_password', '')
         if new_pwd:
             if len(new_pwd) < 6:
@@ -420,24 +420,24 @@ def evento_resumen_view(request, sesion_id: int):
     igual puede ponerse al día con el resumen + ver la grabación.
     Muestra resumen Markdown, puntos clave, próximos pasos y cuestionario.
     """
-    p: Participante = request.participante
+    p: Participant = request.participant
     try:
-        sesion = SesionAsistencia.objects.get(pk=sesion_id, activa=True)
-    except SesionAsistencia.DoesNotExist:
+        sesion = Event.objects.get(pk=sesion_id, is_active=True)
+    except Event.DoesNotExist:
         raise Http404
 
     # Acceso para inscritos (cualquier estado: asistió, no asistió, confirmado)
-    inscrito = ConfirmacionAsistencia.objects.filter(participante=p, sesion=sesion).exists()
-    asistio  = RegistroAsistencia.objects.filter(participante=p, sesion=sesion).exists()
+    inscrito = Enrollment.objects.filter(participant=p, event=sesion).exists()
+    asistio  = Attendance.objects.filter(participant=p, event=sesion).exists()
     if not (inscrito or asistio):
         messages.error(request, 'Solo podés ver el resumen si te inscribiste al evento.')
         return redirect('public:account_eventos')
 
-    resumen = ResumenSesion.objects.filter(sesion=sesion).first()
+    resumen = SessionSummary.objects.filter(event=sesion).first()
 
     # Buscar grabación en Drive (lazy, no la persistimos aún)
     recording = None
-    if resumen and resumen.estado == EstadoProcesamiento.LISTO:
+    if resumen and resumen.status == ProcessingStatus.READY:
         try:
             from core.services.meet.drive_client import find_recording_for_session
             recording = find_recording_for_session(sesion)
@@ -445,26 +445,26 @@ def evento_resumen_view(request, sesion_id: int):
             recording = None  # silencioso — el resumen no depende del video
 
     # Intentos previos del cuestionario (este participante en esta sesión)
-    intentos = list(IntentoCuestionario.objects.filter(participante=p, sesion=sesion))
-    mejor_intento = max(intentos, key=lambda x: x.correctas, default=None)
-    intentos_disponibles = max(0, IntentoCuestionario.MAX_INTENTOS - len(intentos))
+    intentos = list(QuizAttempt.objects.filter(participant=p, event=sesion))
+    mejor_intento = max(intentos, key=lambda x: x.correct, default=None)
+    intentos_disponibles = max(0, QuizAttempt.MAX_ATTEMPTS - len(intentos))
 
     return render(request, 'public/account/evento_resumen.html', {
         'p': p,
-        'sesion': sesion,
-        'resumen': resumen,
+        'event': sesion,
+        'summary': resumen,
         'recording': recording,
         'asistio': asistio,
-        'intentos': intentos,
-        'mejor_intento': mejor_intento,
-        'intentos_disponibles': intentos_disponibles,
-        'max_intentos': IntentoCuestionario.MAX_INTENTOS,
-        'is_ready': resumen.estado == EstadoProcesamiento.LISTO if resumen else False,
+        'attempts': intentos,
+        'best_attempt': mejor_intento,
+        'attempts_available': intentos_disponibles,
+        'max_attempts': QuizAttempt.MAX_ATTEMPTS,
+        'is_ready': resumen.status == ProcessingStatus.READY if resumen else False,
         'is_processing': (
-            resumen.estado in (
-                EstadoProcesamiento.PENDIENTE,
-                EstadoProcesamiento.BUSCANDO,
-                EstadoProcesamiento.PROCESANDO,
+            resumen.status in (
+                ProcessingStatus.PENDING,
+                ProcessingStatus.SEARCHING,
+                ProcessingStatus.PROCESSING,
             ) if resumen else False
         ),
     })
@@ -477,28 +477,28 @@ def evento_resumen_pdf_view(request, sesion_id: int):
     Acceso: cualquier participante inscrito (o que asistió). Genera el PDF
     on-the-fly usando `core.services.pdf.resumen_pdf.generar_resumen_pdf`.
     """
-    p: Participante = request.participante
+    p: Participant = request.participant
     try:
-        sesion = SesionAsistencia.objects.get(pk=sesion_id, activa=True)
-    except SesionAsistencia.DoesNotExist:
+        sesion = Event.objects.get(pk=sesion_id, is_active=True)
+    except Event.DoesNotExist:
         raise Http404
 
-    inscrito = ConfirmacionAsistencia.objects.filter(participante=p, sesion=sesion).exists()
-    asistio  = RegistroAsistencia.objects.filter(participante=p, sesion=sesion).exists()
+    inscrito = Enrollment.objects.filter(participant=p, event=sesion).exists()
+    asistio  = Attendance.objects.filter(participant=p, event=sesion).exists()
     if not (inscrito or asistio):
         messages.error(request, 'Solo podés descargar el resumen si te inscribiste al evento.')
         return redirect('public:account_eventos')
 
-    resumen = ResumenSesion.objects.filter(sesion=sesion).first()
-    if not resumen or resumen.estado != EstadoProcesamiento.LISTO:
+    resumen = SessionSummary.objects.filter(event=sesion).first()
+    if not resumen or resumen.status != ProcessingStatus.READY:
         messages.info(request, 'El resumen aún no está listo. Volvé en unos minutos.')
         return redirect('public:account_evento_resumen', sesion_id=sesion.id)
 
     from core.services.pdf.resumen_pdf import generar_resumen_pdf
     pdf_bytes = generar_resumen_pdf(resumen)
 
-    titulo_slug = slugify(sesion.titulo or sesion.dia_semana or 'evento')[:50] or 'resumen'
-    fecha_slug = sesion.fecha.strftime('%Y-%m-%d') if sesion.fecha else 'sf'
+    titulo_slug = slugify(sesion.title or sesion.day_of_week or 'evento')[:50] or 'resumen'
+    fecha_slug = sesion.date.strftime('%Y-%m-%d') if sesion.date else 'sf'
     filename = f'Resumen-Betto-{titulo_slug}-{fecha_slug}.pdf'
 
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
@@ -514,38 +514,38 @@ def evento_cuestionario_view(request, sesion_id: int):
     Acceso: cualquier inscrito al evento. Si no hay cuestionario o el
     resumen aún no está LISTO, redirige al resumen para mostrar el estado.
     """
-    p: Participante = request.participante
+    p: Participant = request.participant
     try:
-        sesion = SesionAsistencia.objects.get(pk=sesion_id, activa=True)
-    except SesionAsistencia.DoesNotExist:
+        sesion = Event.objects.get(pk=sesion_id, is_active=True)
+    except Event.DoesNotExist:
         raise Http404
 
-    inscrito = ConfirmacionAsistencia.objects.filter(participante=p, sesion=sesion).exists()
-    asistio  = RegistroAsistencia.objects.filter(participante=p, sesion=sesion).exists()
+    inscrito = Enrollment.objects.filter(participant=p, event=sesion).exists()
+    asistio  = Attendance.objects.filter(participant=p, event=sesion).exists()
     if not (inscrito or asistio):
         messages.error(request, 'Solo podés acceder al cuestionario si te inscribiste al evento.')
         return redirect('public:account_eventos')
 
-    resumen = ResumenSesion.objects.filter(sesion=sesion).first()
-    if not resumen or resumen.estado != EstadoProcesamiento.LISTO or not resumen.cuestionario:
+    resumen = SessionSummary.objects.filter(event=sesion).first()
+    if not resumen or resumen.status != ProcessingStatus.READY or not resumen.quiz:
         return redirect('public:account_evento_resumen', sesion_id=sesion.id)
 
-    # Bloqueo de intentos: máximo MAX_INTENTOS por participante por sesión
-    intentos_count = IntentoCuestionario.objects.filter(participante=p, sesion=sesion).count()
-    if intentos_count >= IntentoCuestionario.MAX_INTENTOS:
+    # Bloqueo de intentos: máximo MAX_ATTEMPTS por participante por sesión
+    intentos_count = QuizAttempt.objects.filter(participant=p, event=sesion).count()
+    if intentos_count >= QuizAttempt.MAX_ATTEMPTS:
         messages.info(
             request,
-            f'Ya completaste tus {IntentoCuestionario.MAX_INTENTOS} intentos del cuestionario. '
+            f'Ya completaste tus {QuizAttempt.MAX_ATTEMPTS} intentos del cuestionario. '
             'Mirá tus resultados acá abajo.',
         )
         return redirect('public:account_evento_resumen', sesion_id=sesion.id)
 
     return render(request, 'public/account/evento_cuestionario.html', {
         'p': p,
-        'sesion': sesion,
-        'resumen': resumen,
-        'intento_numero': intentos_count + 1,
-        'intentos_restantes_tras': IntentoCuestionario.MAX_INTENTOS - (intentos_count + 1),
+        'event': sesion,
+        'summary': resumen,
+        'attempt_number': intentos_count + 1,
+        'attempts_remaining_after': QuizAttempt.MAX_ATTEMPTS - (intentos_count + 1),
     })
 
 
@@ -558,26 +558,26 @@ def evento_cuestionario_submit(request, sesion_id: int):
     Devuelve: { ok, intento_id, correctas, total, intentos_restantes }
     """
     import json
-    p: Participante = request.participante
+    p: Participant = request.participant
     try:
-        sesion = SesionAsistencia.objects.get(pk=sesion_id, activa=True)
-    except SesionAsistencia.DoesNotExist:
+        sesion = Event.objects.get(pk=sesion_id, is_active=True)
+    except Event.DoesNotExist:
         raise Http404
 
-    inscrito = ConfirmacionAsistencia.objects.filter(participante=p, sesion=sesion).exists()
-    asistio  = RegistroAsistencia.objects.filter(participante=p, sesion=sesion).exists()
+    inscrito = Enrollment.objects.filter(participant=p, event=sesion).exists()
+    asistio  = Attendance.objects.filter(participant=p, event=sesion).exists()
     if not (inscrito or asistio):
         return JsonResponse({'ok': False, 'error': 'Sin acceso al cuestionario.'}, status=403)
 
-    resumen = ResumenSesion.objects.filter(sesion=sesion).first()
-    if not resumen or resumen.estado != EstadoProcesamiento.LISTO or not resumen.cuestionario:
+    resumen = SessionSummary.objects.filter(event=sesion).first()
+    if not resumen or resumen.status != ProcessingStatus.READY or not resumen.quiz:
         return JsonResponse({'ok': False, 'error': 'Cuestionario no disponible.'}, status=400)
 
-    intentos_count = IntentoCuestionario.objects.filter(participante=p, sesion=sesion).count()
-    if intentos_count >= IntentoCuestionario.MAX_INTENTOS:
+    intentos_count = QuizAttempt.objects.filter(participant=p, event=sesion).count()
+    if intentos_count >= QuizAttempt.MAX_ATTEMPTS:
         return JsonResponse({
             'ok': False,
-            'error': f'Ya alcanzaste el máximo de {IntentoCuestionario.MAX_INTENTOS} intentos.',
+            'error': f'Ya alcanzaste el máximo de {QuizAttempt.MAX_ATTEMPTS} intentos.',
         }, status=409)
 
     try:
@@ -588,29 +588,29 @@ def evento_cuestionario_submit(request, sesion_id: int):
     respuestas = body.get('respuestas') or []
     tiempo_total = int(body.get('tiempo_total_seg') or 0)
 
-    preguntas = resumen.cuestionario
+    preguntas = resumen.quiz
     total = len(preguntas)
     correctas = 0
     for i, q in enumerate(preguntas):
         if i < len(respuestas) and respuestas[i] is not None:
-            if respuestas[i] == q.get('correcta_idx'):
+            if respuestas[i] == q.get('correct_idx'):
                 correctas += 1
 
-    intento = IntentoCuestionario.objects.create(
-        participante=p,
-        sesion=sesion,
-        correctas=correctas,
+    intento = QuizAttempt.objects.create(
+        participant=p,
+        event=sesion,
+        correct=correctas,
         total=total,
-        tiempo_total_seg=tiempo_total,
-        respuestas=respuestas,
+        total_time_seconds=tiempo_total,
+        answers=respuestas,
     )
-    intentos_restantes = IntentoCuestionario.MAX_INTENTOS - (intentos_count + 1)
+    intentos_restantes = QuizAttempt.MAX_ATTEMPTS - (intentos_count + 1)
     return JsonResponse({
         'ok': True,
         'intento_id': intento.id,
         'correctas': correctas,
         'total': total,
-        'porcentaje': intento.porcentaje,
+        'porcentaje': intento.percentage,
         'intentos_restantes': intentos_restantes,
     })
 
@@ -618,15 +618,15 @@ def evento_cuestionario_submit(request, sesion_id: int):
 @account_auth.login_required
 @require_POST
 def evento_inscribir(request, sesion_id: int):
-    p: Participante = request.participante
+    p: Participant = request.participant
     try:
-        sesion = SesionAsistencia.objects.get(pk=sesion_id, activa=True)
-    except SesionAsistencia.DoesNotExist:
+        sesion = Event.objects.get(pk=sesion_id, is_active=True)
+    except Event.DoesNotExist:
         raise Http404
-    _, created = ConfirmacionAsistencia.objects.get_or_create(participante=p, sesion=sesion)
+    _, created = Enrollment.objects.get_or_create(participant=p, event=sesion)
     if created:
         email_sender.send_event_inscription(p, sesion, request=request)
-    messages.success(request, f'Te inscribiste a "{sesion.titulo or sesion.dia_semana}"')
+    messages.success(request, f'Te inscribiste a "{sesion.title or sesion.day_of_week}"')
     return redirect(request.META.get('HTTP_REFERER') or 'public:account_eventos')
 
 
@@ -649,7 +649,7 @@ def escanear_registrar(request):
     Si nunca se inscribió, lo inscribe automáticamente al escanear.
     """
     import json
-    p: Participante = request.participante
+    p: Participant = request.participant
 
     # Aceptar tanto JSON como form
     codigo_qr = ''
@@ -672,29 +672,29 @@ def escanear_registrar(request):
             codigo_qr = parts[-1]
 
     try:
-        sesion = SesionAsistencia.objects.get(codigo_qr=codigo_qr, activa=True)
-    except SesionAsistencia.DoesNotExist:
+        sesion = Event.objects.get(qr_code=codigo_qr, is_active=True)
+    except Event.DoesNotExist:
         return JsonResponse({'ok': False, 'error': 'QR inválido o sesión no activa.'}, status=404)
 
     # Inscribir al vuelo si no estaba inscrito
-    ConfirmacionAsistencia.objects.get_or_create(participante=p, sesion=sesion)
+    Enrollment.objects.get_or_create(participant=p, event=sesion)
 
     # Registrar asistencia (unique constraint asegura idempotencia)
     ip = (
         request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
         or request.META.get('REMOTE_ADDR')
     )
-    _, created = RegistroAsistencia.objects.get_or_create(
-        participante=p, sesion=sesion,
+    _, created = Attendance.objects.get_or_create(
+        participant=p, event=sesion,
         defaults={'ip_address': ip},
     )
     return JsonResponse({
         'ok': True,
         'created': created,
         'already_registered': not created,
-        'sesion_titulo': sesion.titulo or sesion.dia_semana,
-        'sesion_fecha':  sesion.fecha.strftime('%Y-%m-%d'),
-        'sesion_hora':   sesion.hora_inicio.strftime('%H:%M'),
+        'sesion_titulo': sesion.title or sesion.day_of_week,
+        'sesion_fecha':  sesion.date.strftime('%Y-%m-%d'),
+        'sesion_hora':   sesion.start_time.strftime('%H:%M'),
     })
 
 
@@ -704,9 +704,9 @@ def escanear_registrar(request):
 
 def home(request):
     today = timezone.localdate()
-    eventos = (SesionAsistencia.objects
-        .filter(activa=True, fecha__gte=today)
-        .order_by('fecha', 'hora_inicio'))
+    eventos = (Event.objects
+        .filter(is_active=True, date__gte=today)
+        .order_by('date', 'start_time'))
 
     # 5 destacados para el hero (los más próximos)
     eventos_hero = list(eventos[:5])
@@ -778,20 +778,20 @@ def google_signin_callback(request):
         return redirect('public:account_login')
 
     # Buscar o crear el participante por email
-    p = Participante.objects.filter(email__iexact=email).first()
+    p = Participant.objects.filter(email__iexact=email).first()
     if not p:
-        p = Participante(
+        p = Participant(
             email=email,
-            nombres=info.get('given_name') or email.split('@')[0],
-            apellidos=info.get('family_name') or '',
+            first_name=info.get('given_name') or email.split('@')[0],
+            last_name=info.get('family_name') or '',
         )
         p.save()
         created = True
     else:
-        if not p.nombres and info.get('given_name'):
-            p.nombres = info['given_name']
-        if not p.apellidos and info.get('family_name'):
-            p.apellidos = info['family_name']
+        if not p.first_name and info.get('given_name'):
+            p.first_name = info['given_name']
+        if not p.last_name and info.get('family_name'):
+            p.last_name = info['family_name']
         p.save()
         created = False
 
@@ -803,7 +803,7 @@ def google_signin_callback(request):
 
     messages.success(
         request,
-        f'¡Hola {p.nombres}! ' + ('Tu cuenta fue creada con Google.' if created else 'Iniciaste sesión con Google.')
+        f'¡Hola {p.first_name}! ' + ('Tu cuenta fue creada con Google.' if created else 'Iniciaste sesión con Google.')
     )
 
     if next_url and next_url.startswith('/'):

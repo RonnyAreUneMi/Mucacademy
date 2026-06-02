@@ -2,7 +2,7 @@
 
 Uso desde código Django:
     from core.tasks.email_tasks import send_certificate_issued_bulk
-    send_certificate_issued_bulk.delay(lote_id=42)
+    send_certificate_issued_bulk.delay(batch_id=42)
 
 Worker en otra terminal:
     celery -A config worker -l info

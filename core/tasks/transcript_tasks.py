@@ -1,15 +1,15 @@
 """Tareas Celery del pipeline Drive → transcript → IA → resumen.
 
-Flujo de la task `procesar_transcript_sesion(sesion_id)`:
+Flujo de la task `process_event_transcript(event_id)`:
 
-  1. Carga la sesión + crea/recupera el ResumenSesion vinculado.
-  2. Estado=BUSCANDO → busca el transcript en Drive.
-     - Si no aparece todavía → estado=SIN_TRANSCRIPT, sale (puede reintentarse).
-  3. Estado=PROCESANDO → descarga el doc, lo pasa a texto plano.
+  1. Carga el evento + crea/recupera el SessionSummary vinculado.
+  2. Estado=SEARCHING → busca el transcript en Drive.
+     - Si no aparece todavía → estado=NO_TRANSCRIPT, sale (puede reintentarse).
+  3. Estado=PROCESSING → descarga el doc, lo pasa a texto plano.
   4. Llama al pipeline IA (Claude) → resumen + cuestionario.
-  5. Estado=LISTO → guarda todo en el modelo.
+  5. Estado=READY → guarda todo en el modelo.
 
-Si algo falla, deja estado=FALLIDO con `error_msg` para auditoría.
+Si algo falla, deja estado=FAILED con `error_msg` para auditoría.
 Ningún error de IA o Drive debe matar al worker — todo se captura.
 """
 from __future__ import annotations
@@ -21,7 +21,7 @@ from datetime import datetime
 from celery import shared_task
 from django.utils import timezone
 
-from core.models import EstadoProcesamiento, ResumenSesion, SesionAsistencia
+from core.models import ProcessingStatus, SessionSummary, Event
 from core.services.ai.transcript_summary import summarize_transcript
 from core.services.meet.drive_client import find_transcript_for_session
 from core.services.meet.transcript_parser import (
@@ -38,131 +38,131 @@ logger = logging.getLogger(__name__)
     autoretry_for=(),  # gestionamos errores nosotros — no auto-retry ciego
     max_retries=0,
 )
-def procesar_transcript_sesion(self, sesion_id: int) -> dict:
-    """Procesa el transcript de una sesión: Drive → texto → IA → DB.
+def process_event_transcript(self, event_id: int) -> dict:
+    """Procesa el transcript de un evento: Drive → texto → IA → DB.
 
-    Idempotente: si ya existe un ResumenSesion en estado LISTO, no hace nada.
-    Si está FALLIDO o SIN_TRANSCRIPT, lo reintenta desde cero.
+    Idempotente: si ya existe un SessionSummary en estado READY, no hace nada.
+    Si está FAILED o NO_TRANSCRIPT, lo reintenta desde cero.
     """
     try:
-        sesion = SesionAsistencia.objects.get(pk=sesion_id)
-    except SesionAsistencia.DoesNotExist:
-        logger.warning('Sesion %s no existe', sesion_id)
-        return {'ok': False, 'reason': 'sesion_no_existe', 'sesion_id': sesion_id}
+        event = Event.objects.get(pk=event_id)
+    except Event.DoesNotExist:
+        logger.warning('Event %s no existe', event_id)
+        return {'ok': False, 'reason': 'event_no_existe', 'event_id': event_id}
 
-    if not sesion.transcripcion_habilitada:
-        logger.info('Sesion %s tiene transcripcion deshabilitada — skip', sesion_id)
-        return {'ok': False, 'reason': 'deshabilitada', 'sesion_id': sesion_id}
+    if not event.transcription_enabled:
+        logger.info('Event %s tiene transcripcion deshabilitada — skip', event_id)
+        return {'ok': False, 'reason': 'deshabilitada', 'event_id': event_id}
 
-    resumen, _ = ResumenSesion.objects.get_or_create(sesion=sesion)
+    summary, _ = SessionSummary.objects.get_or_create(event=event)
 
-    if resumen.estado == EstadoProcesamiento.LISTO:
-        logger.info('Sesion %s ya tiene resumen LISTO — skip', sesion_id)
-        return {'ok': True, 'reason': 'ya_listo', 'resumen_id': resumen.id}
+    if summary.status == ProcessingStatus.READY:
+        logger.info('Event %s ya tiene resumen READY — skip', event_id)
+        return {'ok': True, 'reason': 'ya_listo', 'summary_id': summary.id}
 
     # ── 1. Buscar en Drive ──────────────────────────────────────
-    resumen.estado = EstadoProcesamiento.BUSCANDO
-    resumen.error_msg = ''
-    resumen.save(update_fields=['estado', 'error_msg'])
+    summary.status = ProcessingStatus.SEARCHING
+    summary.error_msg = ''
+    summary.save(update_fields=['status', 'error_msg'])
 
     try:
-        tf = find_transcript_for_session(sesion)
+        tf = find_transcript_for_session(event)
     except Exception as e:
-        logger.exception('Error buscando transcript para sesion %s', sesion_id)
-        resumen.estado = EstadoProcesamiento.FALLIDO
-        resumen.error_msg = f'Drive: {e}\n{traceback.format_exc()}'
-        resumen.save(update_fields=['estado', 'error_msg'])
+        logger.exception('Error buscando transcript para event %s', event_id)
+        summary.status = ProcessingStatus.FAILED
+        summary.error_msg = f'Drive: {e}\n{traceback.format_exc()}'
+        summary.save(update_fields=['status', 'error_msg'])
         return {'ok': False, 'reason': 'drive_error', 'detail': str(e)}
 
     if tf is None:
-        resumen.estado = EstadoProcesamiento.SIN_TRANSCRIPT
-        resumen.save(update_fields=['estado'])
-        return {'ok': False, 'reason': 'sin_transcript', 'sesion_id': sesion_id}
+        summary.status = ProcessingStatus.NO_TRANSCRIPT
+        summary.save(update_fields=['status'])
+        return {'ok': False, 'reason': 'sin_transcript', 'event_id': event_id}
 
-    resumen.drive_file_id = tf.file_id
-    resumen.drive_file_name = tf.name
-    resumen.save(update_fields=['drive_file_id', 'drive_file_name'])
+    summary.drive_file_id = tf.file_id
+    summary.drive_file_name = tf.name
+    summary.save(update_fields=['drive_file_id', 'drive_file_name'])
 
     # ── 2. Parsear el doc → texto plano ──────────────────────────
     try:
         text = fetch_transcript_text(tf.file_id)
     except Exception as e:
         logger.exception('Error parseando transcript %s', tf.file_id)
-        resumen.estado = EstadoProcesamiento.FALLIDO
-        resumen.error_msg = f'Parser: {e}\n{traceback.format_exc()}'
-        resumen.save(update_fields=['estado', 'error_msg'])
+        summary.status = ProcessingStatus.FAILED
+        summary.error_msg = f'Parser: {e}\n{traceback.format_exc()}'
+        summary.save(update_fields=['status', 'error_msg'])
         return {'ok': False, 'reason': 'parser_error', 'detail': str(e)}
 
     if not text.strip():
-        resumen.estado = EstadoProcesamiento.SIN_TRANSCRIPT
-        resumen.error_msg = 'Drive devolvió transcript vacío'
-        resumen.save(update_fields=['estado', 'error_msg'])
+        summary.status = ProcessingStatus.NO_TRANSCRIPT
+        summary.error_msg = 'Drive devolvió transcript vacío'
+        summary.save(update_fields=['status', 'error_msg'])
         return {'ok': False, 'reason': 'transcript_vacio'}
 
     duracion = estimate_duration_minutes(text)
-    resumen.transcript_raw = text
-    resumen.transcript_chars = len(text)
-    resumen.duracion_minutos = duracion
-    resumen.save(update_fields=[
-        'transcript_raw', 'transcript_chars', 'duracion_minutos',
+    summary.transcript_raw = text
+    summary.transcript_chars = len(text)
+    summary.duration_minutes = duracion
+    summary.save(update_fields=[
+        'transcript_raw', 'transcript_chars', 'duration_minutes',
     ])
 
     # ── 3. IA → resumen estructurado ─────────────────────────────
-    resumen.estado = EstadoProcesamiento.PROCESANDO
-    resumen.save(update_fields=['estado'])
+    summary.status = ProcessingStatus.PROCESSING
+    summary.save(update_fields=['status'])
 
     try:
         result = summarize_transcript(
             text,
-            titulo=sesion.titulo or '',
-            fecha=str(sesion.fecha),
+            titulo=event.title or '',
+            fecha=str(event.date),
             duracion_minutos=duracion,
         )
     except NotImplementedError as e:
-        # IA sin configurar — no es un fallo "real", deja todo en FALLIDO
+        # IA sin configurar — no es un fallo "real", deja todo en FAILED
         # con un mensaje claro para que el admin sepa qué activar.
-        resumen.estado = EstadoProcesamiento.FALLIDO
-        resumen.error_msg = f'IA no configurada: {e}'
-        resumen.save(update_fields=['estado', 'error_msg'])
+        summary.status = ProcessingStatus.FAILED
+        summary.error_msg = f'IA no configurada: {e}'
+        summary.save(update_fields=['status', 'error_msg'])
         return {'ok': False, 'reason': 'ia_no_configurada', 'detail': str(e)}
     except Exception as e:
-        logger.exception('Error en IA para sesion %s', sesion_id)
-        resumen.estado = EstadoProcesamiento.FALLIDO
-        resumen.error_msg = f'IA: {e}\n{traceback.format_exc()}'
-        resumen.save(update_fields=['estado', 'error_msg'])
+        logger.exception('Error en IA para event %s', event_id)
+        summary.status = ProcessingStatus.FAILED
+        summary.error_msg = f'IA: {e}\n{traceback.format_exc()}'
+        summary.save(update_fields=['status', 'error_msg'])
         return {'ok': False, 'reason': 'ia_error', 'detail': str(e)}
 
     # ── 4. Guardar resultado ─────────────────────────────────────
-    resumen.resumen_md = result.resumen_md
-    resumen.puntos_clave = result.puntos_clave
-    resumen.proximos_pasos = result.proximos_pasos
-    resumen.cuestionario = result.cuestionario
-    resumen.ai_model = result.ai_model
-    resumen.ai_input_tokens = result.ai_input_tokens
-    resumen.ai_output_tokens = result.ai_output_tokens
-    resumen.estado = EstadoProcesamiento.LISTO
-    resumen.procesado_at = timezone.now()
-    resumen.error_msg = ''
-    resumen.save()
+    summary.summary_md = result.resumen_md
+    summary.key_points = result.puntos_clave
+    summary.next_steps = result.proximos_pasos
+    summary.quiz = result.cuestionario
+    summary.ai_model = result.ai_model
+    summary.ai_input_tokens = result.ai_input_tokens
+    summary.ai_output_tokens = result.ai_output_tokens
+    summary.status = ProcessingStatus.READY
+    summary.processed_at = timezone.now()
+    summary.error_msg = ''
+    summary.save()
 
     logger.info(
-        'Resumen sesion %s LISTO (%d chars transcript → %d puntos clave, %d preguntas)',
-        sesion_id, len(text), len(result.puntos_clave), len(result.cuestionario),
+        'Resumen event %s READY (%d chars transcript → %d puntos clave, %d preguntas)',
+        event_id, len(text), len(result.puntos_clave), len(result.cuestionario),
     )
     return {
         'ok': True,
-        'resumen_id': resumen.id,
+        'summary_id': summary.id,
         'transcript_chars': len(text),
         'preguntas': len(result.cuestionario),
     }
 
 
 @shared_task
-def procesar_sesiones_pasadas() -> dict:
-    """Tarea programada: revisa sesiones de hoy/ayer y dispara procesamiento.
+def process_past_events() -> dict:
+    """Tarea programada: revisa eventos de hoy/ayer y dispara procesamiento.
 
-    Pensada para correr cada hora en Celery beat. Procesa sesiones cuyo
-    `hora_fin` ya pasó pero todavía no tienen resumen en estado LISTO.
+    Pensada para correr cada hora en Celery beat. Procesa eventos cuyo
+    `end_time` ya pasó pero todavía no tienen resumen en estado READY.
     """
     from datetime import timedelta
     from django.db.models import Q
@@ -172,30 +172,30 @@ def procesar_sesiones_pasadas() -> dict:
     hasta = ahora.date()
 
     qs = (
-        SesionAsistencia.objects
-        .filter(transcripcion_habilitada=True)
-        .filter(fecha__range=(desde, hasta))
+        Event.objects
+        .filter(transcription_enabled=True)
+        .filter(date__range=(desde, hasta))
         .filter(
-            Q(resumen__isnull=True)
-            | Q(resumen__estado__in=[
-                EstadoProcesamiento.PENDIENTE,
-                EstadoProcesamiento.SIN_TRANSCRIPT,
-                EstadoProcesamiento.FALLIDO,
+            Q(summary__isnull=True)
+            | Q(summary__status__in=[
+                ProcessingStatus.PENDING,
+                ProcessingStatus.NO_TRANSCRIPT,
+                ProcessingStatus.FAILED,
             ])
         )
     )
 
     encolados = 0
-    for sesion in qs:
+    for event in qs:
         # Solo si la hora de fin ya pasó
-        fin = datetime.combine(sesion.fecha, sesion.hora_fin)
+        fin = datetime.combine(event.date, event.end_time)
         fin = timezone.make_aware(fin)
-        if sesion.hora_fin < sesion.hora_inicio:
+        if event.end_time < event.start_time:
             fin += timezone.timedelta(days=1)
         if fin > ahora:
             continue
-        procesar_transcript_sesion.delay(sesion.id)
+        process_event_transcript.delay(event.id)
         encolados += 1
 
-    logger.info('procesar_sesiones_pasadas: %d sesiones encoladas', encolados)
+    logger.info('process_past_events: %d eventos encolados', encolados)
     return {'encoladas': encolados, 'desde': str(desde), 'hasta': str(hasta)}

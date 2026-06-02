@@ -135,10 +135,10 @@ def find_transcript_for_session(sesion) -> TranscriptFile | None:
     from django.utils import timezone
 
     fecha_local = timezone.make_aware(
-        datetime.combine(sesion.fecha, sesion.hora_inicio)
+        datetime.combine(sesion.date, sesion.start_time)
     )
     fecha_fin_local = timezone.make_aware(
-        datetime.combine(sesion.fecha, sesion.hora_fin)
+        datetime.combine(sesion.date, sesion.end_time)
     )
     # Si cruza medianoche, hora_fin < hora_inicio → suma un día
     if fecha_fin_local <= fecha_local:
@@ -159,7 +159,7 @@ def find_transcript_for_session(sesion) -> TranscriptFile | None:
         kw = _is_transcript(name)
         if not kw:
             continue
-        if not _title_matches(name, sesion.titulo or ''):
+        if not _title_matches(name, sesion.title or ''):
             continue
         created = _parse_iso(d.get('createdTime'))
         candidates.append(TranscriptFile(
@@ -212,10 +212,10 @@ def find_recording_for_session(sesion) -> RecordingFile | None:
     from django.utils import timezone
 
     fecha_local = timezone.make_aware(
-        datetime.combine(sesion.fecha, sesion.hora_inicio)
+        datetime.combine(sesion.date, sesion.start_time)
     )
     fecha_fin_local = timezone.make_aware(
-        datetime.combine(sesion.fecha, sesion.hora_fin)
+        datetime.combine(sesion.date, sesion.end_time)
     )
     if fecha_fin_local <= fecha_local:
         fecha_fin_local += timedelta(days=1)
@@ -254,8 +254,8 @@ def find_recording_for_session(sesion) -> RecordingFile | None:
         return None
 
     # Si hay título, filtrar por nombre similar; si no, devolver el más reciente
-    if sesion.titulo:
-        needle = sesion.titulo.strip().lower()
+    if sesion.title:
+        needle = sesion.title.strip().lower()
         for f in candidates:
             if needle in (f.get('name') or '').lower() or needle[:20] in (f.get('name') or '').lower():
                 return _build_recording(f)

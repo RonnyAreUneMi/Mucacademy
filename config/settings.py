@@ -198,7 +198,7 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
 
 # Custom User Model
-AUTH_USER_MODEL = 'core.Usuario'
+AUTH_USER_MODEL = 'core.User'
 
 # Authentication Backends
 AUTHENTICATION_BACKENDS = [
@@ -276,8 +276,8 @@ CELERY_TASK_SOFT_TIME_LIMIT = 240  # 4 min soft kill (catch SoftTimeLimitExceede
 CELERY_BEAT_SCHEDULE = {
     # Cada 30 min revisa sesiones recién terminadas y dispara el pipeline
     # Drive → transcript → IA. Idempotente: skip si ya está LISTO.
-    'procesar-sesiones-pasadas': {
-        'task': 'core.tasks.transcript_tasks.procesar_sesiones_pasadas',
+    'process-past-events': {
+        'task': 'core.tasks.transcript_tasks.process_past_events',
         'schedule': 60 * 30,   # 30 minutos
     },
 }

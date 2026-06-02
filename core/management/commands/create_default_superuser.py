@@ -32,11 +32,11 @@ class Command(BaseCommand):
             return
 
         extra = {}
-        # Si el modelo Usuario tiene campo 'rol', asignar superadmin
-        if hasattr(User, 'rol'):
-            extra['rol'] = 'superadmin'
-        if hasattr(User, 'activo'):
-            extra['activo'] = True
+        # Si el modelo User tiene campo 'role', asignar superadmin
+        if hasattr(User, 'role'):
+            extra['role'] = 'superadmin'
+        if hasattr(User, 'is_active'):
+            extra['is_active'] = True
 
         User.objects.create_superuser(
             username=username,

@@ -13,7 +13,7 @@ from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
-from core.models import Participante
+from core.models import Participant
 from core.services.excel_service import analyze_excel_file
 from core.validators import sanitize_text
 from ._shared import admin_required, _log_audit
@@ -23,15 +23,15 @@ from ._shared import admin_required, _log_audit
 def lideres_list(request):
     """Lista de líderes con búsqueda (render con context)."""
     q = request.GET.get('q', '').strip()
-    qs = Participante.objects.filter(es_lider=True).order_by('-created_at')
+    qs = Participant.objects.filter(is_leader=True).order_by('-created_at')
     if q:
         qs = qs.filter(
-            Q(cedula__icontains=q) | Q(email__icontains=q) |
-            Q(nombres__icontains=q) | Q(apellidos__icontains=q)
+            Q(national_id__icontains=q) | Q(email__icontains=q) |
+            Q(first_name__icontains=q) | Q(last_name__icontains=q)
         )
     return render(request, 'panel/lideres/list.html', {
         'lideres': qs,
-        'total': Participante.objects.filter(es_lider=True).count(),
+        'total': Participant.objects.filter(is_leader=True).count(),
         'q': q,
     })
 
@@ -55,32 +55,32 @@ def lideres_add_manual(request):
 
     participante = None
     if cedula:
-        participante = Participante.objects.filter(cedula=cedula).first()
+        participante = Participant.objects.filter(national_id=cedula).first()
     if not participante and email:
-        participante = Participante.objects.filter(email__iexact=email).first()
+        participante = Participant.objects.filter(email__iexact=email).first()
 
     if participante:
-        if participante.es_lider:
-            messages.info(request, f'{participante.nombres} {participante.apellidos} ya es líder académico.')
+        if participante.is_leader:
+            messages.info(request, f'{participante.first_name} {participante.last_name} ya es líder académico.')
         else:
-            participante.es_lider = True
-            updated = ['es_lider']
-            if cedula and not participante.cedula:
-                participante.cedula = cedula
-                updated.append('cedula')
-            if celular and not participante.celular:
-                participante.celular = celular
-                updated.append('celular')
+            participante.is_leader = True
+            updated = ['is_leader']
+            if cedula and not participante.national_id:
+                participante.national_id = cedula
+                updated.append('national_id')
+            if celular and not participante.phone:
+                participante.phone = celular
+                updated.append('phone')
             participante.save(update_fields=updated)
-            messages.success(request, f'{participante.nombres} {participante.apellidos} marcado como líder.')
+            messages.success(request, f'{participante.first_name} {participante.last_name} marcado como líder.')
     else:
-        Participante.objects.create(
-            cedula=cedula, nombres=nombres, apellidos=apellidos,
-            email=email, celular=celular, es_lider=True,
+        Participant.objects.create(
+            national_id=cedula, first_name=nombres, last_name=apellidos,
+            email=email, phone=celular, is_leader=True,
         )
         messages.success(request, f'Líder {nombres} {apellidos} registrado exitosamente.')
 
-    _log_audit(request.user, 'AGREGAR_LIDER', f'Líder: {cedula or email}')
+    _log_audit(request.user, 'CREATE', f'Líder: {cedula or email}')
     return redirect('panel:lideres_list')
 
 
@@ -187,41 +187,41 @@ def lideres_process_mapping(request):
 
             participante = None
             if cedula:
-                participante = Participante.objects.filter(cedula=cedula).first()
+                participante = Participant.objects.filter(national_id=cedula).first()
             if not participante and email:
-                participante = Participante.objects.filter(email__iexact=email).first()
+                participante = Participant.objects.filter(email__iexact=email).first()
 
             if participante:
                 changed = False
-                if not participante.es_lider:
-                    participante.es_lider = True
+                if not participante.is_leader:
+                    participante.is_leader = True
                     changed = True
-                if cedula and not participante.cedula:
-                    participante.cedula = cedula
+                if cedula and not participante.national_id:
+                    participante.national_id = cedula
                     changed = True
                 if email and not participante.email:
                     participante.email = email
                     changed = True
-                if final_nombres != 'LÍDER' and participante.nombres in ('', 'LÍDER', 'PARTICIPANTE'):
-                    participante.nombres = final_nombres
+                if final_nombres != 'LÍDER' and participante.first_name in ('', 'LÍDER', 'PARTICIPANTE'):
+                    participante.first_name = final_nombres
                     changed = True
-                if final_apellidos != 'ACADÉMICO' and participante.apellidos in ('', 'ACADÉMICO', 'S/N'):
-                    participante.apellidos = final_apellidos
+                if final_apellidos != 'ACADÉMICO' and participante.last_name in ('', 'ACADÉMICO', 'S/N'):
+                    participante.last_name = final_apellidos
                     changed = True
-                if celular and not participante.celular:
-                    participante.celular = celular
+                if celular and not participante.phone:
+                    participante.phone = celular
                     changed = True
                 if changed:
                     participante.save()
                     actualizados += 1
             else:
-                Participante.objects.create(
-                    cedula=cedula, nombres=final_nombres, apellidos=final_apellidos,
-                    email=email, celular=celular, es_lider=True,
+                Participant.objects.create(
+                    national_id=cedula, first_name=final_nombres, last_name=final_apellidos,
+                    email=email, phone=celular, is_leader=True,
                 )
                 nuevos += 1
 
-        _log_audit(request.user, 'SUBIR_LIDERES_EXCEL', f'{nuevos} nuevos, {actualizados} actualizados')
+        _log_audit(request.user, 'CREATE', f'Líderes Excel: {nuevos} nuevos, {actualizados} actualizados')
         messages.success(request, f'Excel procesado: {nuevos} líderes nuevos, {actualizados} actualizados.')
 
     except Exception as e:

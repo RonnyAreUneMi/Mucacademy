@@ -17,11 +17,11 @@
 
     <div class="grid grid-cols-2 gap-3">
         <div class="nm-input">
-            <input type="text" name="nombres" placeholder="Nombres" required value="{{ form.nombres|default:'' }}">
+            <input type="text" name="first_name" placeholder="Nombres" required value="{{ form.first_name|default:'' }}">
             <i class="fa-solid fa-user nm-icon"></i>
         </div>
         <div class="nm-input">
-            <input type="text" name="apellidos" placeholder="Apellidos" required value="{{ form.apellidos|default:'' }}">
+            <input type="text" name="last_name" placeholder="Apellidos" required value="{{ form.last_name|default:'' }}">
             <i class="fa-solid fa-user nm-icon"></i>
         </div>
     </div>
@@ -33,11 +33,11 @@
 
     <div class="grid grid-cols-2 gap-3">
         <div class="nm-input">
-            <input type="text" name="cedula" placeholder="Cédula (opcional)" value="{{ form.cedula|default:'' }}">
+            <input type="text" name="national_id" placeholder="Cédula (opcional)" value="{{ form.national_id|default:'' }}">
             <i class="fa-solid fa-id-card nm-icon"></i>
         </div>
         <div class="nm-input">
-            <input type="tel" name="celular" placeholder="Celular (opcional)" value="{{ form.celular|default:'' }}">
+            <input type="tel" name="phone" placeholder="Celular (opcional)" value="{{ form.phone|default:'' }}">
             <i class="fa-solid fa-mobile-screen nm-icon"></i>
         </div>
     </div>

@@ -31,21 +31,21 @@
                     </label>
                     <div class="grid grid-cols-3 gap-4">
                         <label class="cursor-pointer group">
-                            <input type="radio" name="plantilla" value="clasico" {% if diseno.plantilla == 'clasico' %}checked{% endif %} class="peer sr-only">
+                            <input type="radio" name="plantilla" value="classic" {% if diseno.template == 'classic' %}checked{% endif %} class="peer sr-only">
                             <div class="aspect-video p-4 rounded-xl border-2 border-gray-100 dark:border-blue-900/30 peer-checked:border-unemi-blue peer-checked:bg-blue-50/50 dark:peer-checked:bg-blue-900/40 hover:border-gray-300 transition-all text-center flex flex-col items-center justify-center gap-2">
                                 <i class="fa-solid fa-landmark text-2xl text-gray-400 peer-checked:text-unemi-blue"></i>
                                 <span class="text-xs font-bold text-gray-600 dark:text-gray-300">Clásico</span>
                             </div>
                         </label>
                         <label class="cursor-pointer group">
-                            <input type="radio" name="plantilla" value="moderno" {% if diseno.plantilla == 'moderno' %}checked{% endif %} class="peer sr-only">
+                            <input type="radio" name="plantilla" value="modern" {% if diseno.template == 'modern' %}checked{% endif %} class="peer sr-only">
                             <div class="aspect-video p-4 rounded-xl border-2 border-gray-100 dark:border-blue-900/30 peer-checked:border-unemi-orange peer-checked:bg-orange-50/50 dark:peer-checked:bg-orange-900/20 hover:border-gray-300 transition-all text-center flex flex-col items-center justify-center gap-2">
                                 <i class="fa-solid fa-pager text-2xl text-gray-400 peer-checked:text-unemi-orange"></i>
                                 <span class="text-xs font-bold text-gray-600 dark:text-gray-300">Moderno</span>
                             </div>
                         </label>
                         <label class="cursor-pointer group">
-                            <input type="radio" name="plantilla" value="geometrico" {% if diseno.plantilla == 'geometrico' %}checked{% endif %} class="peer sr-only">
+                            <input type="radio" name="plantilla" value="geometric" {% if diseno.template == 'geometric' %}checked{% endif %} class="peer sr-only">
                             <div class="aspect-video p-4 rounded-xl border-2 border-gray-100 dark:border-blue-900/30 peer-checked:border-pink-500 peer-checked:bg-pink-50/50 dark:peer-checked:bg-pink-900/20 hover:border-gray-300 transition-all text-center flex flex-col items-center justify-center gap-2">
                                 <i class="fa-solid fa-shapes text-2xl text-gray-400 peer-checked:text-pink-500"></i>
                                 <span class="text-xs font-bold text-gray-600 dark:text-gray-300">Geométrico</span>
@@ -62,19 +62,19 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50/50 dark:bg-blue-900/10 p-4 rounded-xl border border-gray-100 dark:border-blue-900/30">
                         <div>
                             <label class="block text-[10px] font-bold uppercase text-gray-400 mb-2">Principal</label>
-                            <input type="color" name="color_primario" value="{{ diseno.color_primario }}" class="h-12 w-full p-1 rounded-lg border border-gray-200 cursor-pointer bg-white">
+                            <input type="color" name="color_primario" value="{{ diseno.color_primary }}" class="h-12 w-full p-1 rounded-lg border border-gray-200 cursor-pointer bg-white">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold uppercase text-gray-400 mb-2">Secundario</label>
-                            <input type="color" name="color_secundario" value="{{ diseno.color_secundario }}" class="h-12 w-full p-1 rounded-lg border border-gray-200 cursor-pointer bg-white">
+                            <input type="color" name="color_secundario" value="{{ diseno.color_secondary }}" class="h-12 w-full p-1 rounded-lg border border-gray-200 cursor-pointer bg-white">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold uppercase text-gray-400 mb-2">Detalles</label>
-                            <input type="color" name="color_terciario" value="{{ diseno.color_terciario }}" class="h-12 w-full p-1 rounded-lg border border-gray-200 cursor-pointer bg-white">
+                            <input type="color" name="color_terciario" value="{{ diseno.color_tertiary }}" class="h-12 w-full p-1 rounded-lg border border-gray-200 cursor-pointer bg-white">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold uppercase text-gray-400 mb-2">Texto</label>
-                            <input type="color" name="color_texto" value="{{ diseno.color_texto }}" class="h-12 w-full p-1 rounded-lg border border-gray-200 cursor-pointer bg-white">
+                            <input type="color" name="color_texto" value="{{ diseno.color_text }}" class="h-12 w-full p-1 rounded-lg border border-gray-200 cursor-pointer bg-white">
                         </div>
                     </div>
                 </div>
@@ -85,7 +85,7 @@
                         <i class="fa-solid fa-align-left text-unemi-blue"></i> Texto Principal
                     </label>
                     <textarea name="cuerpo_certificado" rows="5"
-                        class="block p-4 w-full text-sm text-gray-700 bg-gray-50 rounded-xl border-transparent focus:border-unemi-blue focus:ring-2 focus:ring-blue-50 dark:bg-[#0F163A] dark:text-gray-200 transition-all resize-none">{{ diseno.cuerpo_certificado }}</textarea>
+                        class="block p-4 w-full text-sm text-gray-700 bg-gray-50 rounded-xl border-transparent focus:border-unemi-blue focus:ring-2 focus:ring-blue-50 dark:bg-[#0F163A] dark:text-gray-200 transition-all resize-none">{{ diseno.body_text }}</textarea>
                     <div class="flex gap-2 mt-3">
                         <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded dark:bg-blue-900/30 dark:text-blue-300 border border-blue-100 dark:border-blue-900/50 cursor-pointer" onclick="insertTag('{curso}')">{curso}</span>
                         <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded dark:bg-blue-900/30 dark:text-blue-300 border border-blue-100 dark:border-blue-900/50 cursor-pointer" onclick="insertTag('{horas}')">{horas}</span>
@@ -115,10 +115,10 @@
                                 <option value="">-- Ninguna --</option>
                                 {% for f in firmas_institucionales %}
                                 <option value="{{ f.id }}"
-                                    {% if count == '1' and diseno.firma_inst_1_id == f.id %}selected
-                                    {% elif count == '2' and diseno.firma_inst_2_id == f.id %}selected
-                                    {% elif count == '3' and diseno.firma_inst_3_id == f.id %}selected{% endif %}>
-                                    {% if f.nombre %}{{ f.nombre }} — {% endif %}{{ f.cargo }}
+                                    {% if count == '1' and diseno.signature_inst_1_id == f.id %}selected
+                                    {% elif count == '2' and diseno.signature_inst_2_id == f.id %}selected
+                                    {% elif count == '3' and diseno.signature_inst_3_id == f.id %}selected{% endif %}>
+                                    {% if f.name %}{{ f.name }} — {% endif %}{{ f.role }}
                                 </option>
                                 {% endfor %}
                             </select>
@@ -127,14 +127,14 @@
                         {% endfor %}
                     </div>
 
-                    <details class="rounded-xl border border-gray-100 dark:border-blue-900/30 bg-white dark:bg-[#0F163A]" {% if diseno.nombre_firma_4 %}open{% endif %}>
+                    <details class="rounded-xl border border-gray-100 dark:border-blue-900/30 bg-white dark:bg-[#0F163A]" {% if diseno.signature_name_4 %}open{% endif %}>
                         <summary class="flex justify-between items-center p-4 cursor-pointer text-sm text-gray-600 dark:text-gray-400">
                             <span><i class="fa-solid fa-user-pen mr-1 text-unemi-orange"></i> Firma Personalizada (Opcional)</span>
                             <i class="fa-solid fa-chevron-down"></i>
                         </summary>
                         <div class="p-4 border-t border-gray-100 dark:border-blue-900/30 space-y-3">
-                            <input type="text" name="nombre_firma_4" value="{{ diseno.nombre_firma_4 }}" placeholder="Nombre completo" class="w-full bg-gray-50 dark:bg-[#162054] border-gray-200 text-sm rounded-lg p-2.5 text-gray-800 dark:text-white">
-                            <input type="text" name="cargo_firma_4" value="{{ diseno.cargo_firma_4 }}" placeholder="Cargo" class="w-full bg-gray-50 dark:bg-[#162054] border-gray-200 text-sm rounded-lg p-2.5 text-gray-800 dark:text-white">
+                            <input type="text" name="nombre_firma_4" value="{{ diseno.signature_name_4 }}" placeholder="Nombre completo" class="w-full bg-gray-50 dark:bg-[#162054] border-gray-200 text-sm rounded-lg p-2.5 text-gray-800 dark:text-white">
+                            <input type="text" name="cargo_firma_4" value="{{ diseno.signature_role_4 }}" placeholder="Cargo" class="w-full bg-gray-50 dark:bg-[#162054] border-gray-200 text-sm rounded-lg p-2.5 text-gray-800 dark:text-white">
                             <label class="flex items-center gap-3 cursor-pointer">
                                 <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-blue-900/30 flex items-center justify-center text-gray-400">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
@@ -159,14 +159,14 @@
                         </h4>
                         <div class="flex items-center gap-4">
                             <span class="text-xs text-gray-400 w-12">Abajo</span>
-                            <input type="range" name="posicion_firmas" min="2.5" max="7" step="0.1" value="{{ diseno.posicion_firmas }}" 
+                            <input type="range" name="posicion_firmas" min="2.5" max="7" step="0.1" value="{{ diseno.signatures_position }}"
                                 class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-unemi-orange"
                                 id="globalSigY"
                                 oninput="document.getElementById('globalSigYVal').textContent = this.value + ' cm'">
                             <span class="text-xs text-gray-400 w-12">Arriba</span>
                         </div>
                         <p class="text-center mt-2 text-sm font-bold text-gray-600 dark:text-gray-300">
-                            <span id="globalSigYVal">{{ diseno.posicion_firmas }} cm</span> desde el borde inferior
+                            <span id="globalSigYVal">{{ diseno.signatures_position }} cm</span> desde el borde inferior
                         </p>
                     </div>
 
@@ -191,9 +191,9 @@
                         <div class="border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-center bg-white dark:bg-gray-800">
                             <span class="text-[10px] uppercase font-bold text-gray-400 block mb-2">Logo {{ n }}</span>
                             <div class="h-14 flex items-center justify-center mb-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
-                                {% if n == '1' and diseno.logo_header_1 %}<img src="{{diseno.logo_header_1.url}}" class="h-full object-contain">
-                                {% elif n == '2' and diseno.logo_header_2 %}<img src="{{diseno.logo_header_2.url}}" class="h-full object-contain">
-                                {% elif n == '3' and diseno.logo_header_3 %}<img src="{{diseno.logo_header_3.url}}" class="h-full object-contain">
+                                {% if n == '1' and diseno.header_logo_1 %}<img src="{{diseno.header_logo_1.url}}" class="h-full object-contain">
+                                {% elif n == '2' and diseno.header_logo_2 %}<img src="{{diseno.header_logo_2.url}}" class="h-full object-contain">
+                                {% elif n == '3' and diseno.header_logo_3 %}<img src="{{diseno.header_logo_3.url}}" class="h-full object-contain">
                                 {% else %}<i class="fa-solid fa-image text-gray-300 text-2xl"></i>{% endif %}
                             </div>
                             <label class="cursor-pointer block">

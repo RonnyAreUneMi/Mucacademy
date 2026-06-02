@@ -1,6 +1,6 @@
 import pandas as pd
 from django.db import transaction
-from core.models import LoteCertificados, Certificado, Participante
+from core.models import CertificateBatch, Certificate, Participant
 import uuid
 from core.validators import validate_file_content, sanitize_text
 
@@ -42,27 +42,27 @@ def analyze_excel_file(file_path):
 
 
 def analyze_excel_headers(lote_id):
-    """Analyze the Excel file attached to a Lote."""
+    """Analyze the Excel file attached to a Batch."""
     try:
-        lote = LoteCertificados.objects.get(id=lote_id)
-        return analyze_excel_file(lote.archivo_excel.path)
-    except LoteCertificados.DoesNotExist:
+        batch = CertificateBatch.objects.get(id=lote_id)
+        return analyze_excel_file(batch.excel_file.path)
+    except CertificateBatch.DoesNotExist:
         return {'success': False, 'error': 'Lote no encontrado.'}
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
 def procesar_archivo_excel_lote_business(lote_id, mapping=None):
     """
-    Business logic to process an Excel file for a Lote.
+    Business logic to process an Excel file for a Batch.
     Recieves optional 'mapping' dict: {'cedula': 'ColName', 'nombres': 'ColName', ...}
     """
     try:
         with transaction.atomic():
-            lote = LoteCertificados.objects.select_for_update().get(id=lote_id)
-            if lote.certificados.exists():
+            batch = CertificateBatch.objects.select_for_update().get(id=lote_id)
+            if batch.certificates.exists():
                 return False, "Este lote ya ha sido procesado anteriormente y ya contiene certificados."
-            
-            file_path = lote.archivo_excel.path
+
+            file_path = batch.excel_file.path
             
             # Read Excel
             df = pd.read_excel(file_path, dtype=str)
@@ -71,8 +71,8 @@ def procesar_archivo_excel_lote_business(lote_id, mapping=None):
             df.columns = [str(c).strip() for c in df.columns]
             
             created_count = 0
-            nombre_lote_upper = lote.nombre_lote.upper().strip()
-            nombre_lote_upper = lote.nombre_lote.upper().strip()
+            nombre_lote_upper = batch.name.upper().strip()
+            nombre_lote_upper = batch.name.upper().strip()
             curso_context = nombre_lote_upper
             
             # ---------------------------------------------------------
@@ -200,40 +200,40 @@ def procesar_archivo_excel_lote_business(lote_id, mapping=None):
                 procesados_en_excel.add(unique_key)
 
                 if real_cedula:
-                    participante = Participante.objects.filter(cedula=real_cedula).first()
+                    participante = Participant.objects.filter(national_id=real_cedula).first()
                 if not participante and email_raw:
-                    participante = Participante.objects.filter(email__iexact=email_raw).first()
+                    participante = Participant.objects.filter(email__iexact=email_raw).first()
 
                 if participante:
                     # Update missing fields
                     updated = []
-                    if real_cedula and not participante.cedula:
-                        participante.cedula = real_cedula
-                        updated.append('cedula')
-                    if celular_raw and not participante.celular:
-                        participante.celular = celular_raw
-                        updated.append('celular')
+                    if real_cedula and not participante.national_id:
+                        participante.national_id = real_cedula
+                        updated.append('national_id')
+                    if celular_raw and not participante.phone:
+                        participante.phone = celular_raw
+                        updated.append('phone')
                     if updated:
                         participante.save(update_fields=updated)
                 else:
-                    participante = Participante.objects.create(
-                        cedula=real_cedula,
-                        nombres=final_nombres.upper(),
-                        apellidos=final_apellidos.upper(),
+                    participante = Participant.objects.create(
+                        national_id=real_cedula,
+                        first_name=final_nombres.upper(),
+                        last_name=final_apellidos.upper(),
                         email=email_raw,
-                        celular=celular_raw,
+                        phone=celular_raw,
                     )
 
-                certificates_to_create.append(Certificado(
-                    lote=lote,
-                    participante=participante,
-                    cedula=cedula,
-                    nombres=final_nombres.upper(),
-                    apellidos=final_apellidos.upper(),
+                certificates_to_create.append(Certificate(
+                    batch=batch,
+                    participant=participante,
+                    national_id=cedula,
+                    first_name=final_nombres.upper(),
+                    last_name=final_apellidos.upper(),
                     email=email_raw,
-                    celular=celular_raw,
-                    curso=final_curso,
-                    hash_verificacion=uuid.uuid4()
+                    phone=celular_raw,
+                    course=final_curso,
+                    verification_hash=uuid.uuid4()
                 ))
                 created_count += 1
             
@@ -242,7 +242,7 @@ def procesar_archivo_excel_lote_business(lote_id, mapping=None):
             if certificates_to_create:
                 # We need to save first to get IDs if needed, but for sending email we have the objects.
                 # However, bulk_create on SQLite/Postgres returns objects with IDs.
-                created_certs = Certificado.objects.bulk_create(certificates_to_create)
+                created_certs = Certificate.objects.bulk_create(certificates_to_create)
                 
                 # Send Emails (Async/Threaded inside the service)
                 from core.services.email_service import send_certificate_email

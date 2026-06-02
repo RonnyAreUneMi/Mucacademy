@@ -100,7 +100,7 @@
             </p>
 
             <!-- Rejection Reason -->
-            {% if solicitud.motivo_rechazo %}
+            {% if solicitud.rejection_reason %}
             <div class="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 mb-10 text-left relative overflow-hidden">
                 <div class="absolute top-0 right-0 p-4 opacity-10">
                     <i class="fas fa-quote-right text-6xl text-red-500"></i>
@@ -109,7 +109,7 @@
                     <i class="fas fa-comment-dots mr-2"></i>Motivo de la Decisión:
                 </p>
                 <p class="text-white text-lg font-medium leading-relaxed italic">
-                    "{{ solicitud.motivo_rechazo }}"
+                    "{{ solicitud.rejection_reason }}"
                 </p>
             </div>
             {% endif %}
@@ -126,7 +126,7 @@
                     </div>
                     <div>
                         <p class="text-gray-500 text-xs">Fecha de Solicitud</p>
-                        <p class="text-white font-bold">{{ solicitud.fecha_solicitud|date:"d/m/Y H:i" }}</p>
+                        <p class="text-white font-bold">{{ solicitud.requested_at|date:"d/m/Y H:i" }}</p>
                     </div>
                 </div>
             </div>

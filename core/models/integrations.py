@@ -1,12 +1,8 @@
-"""Credenciales OAuth de servicios externos (Google Workspace) y configuración IA.
+"""External service credentials (Google Workspace) and AI configuration.
 
-Diseño: una sola fila representa la cuenta institucional que organiza
-los Meets. El refresh_token vive aquí para que la app pueda llamar a
-Calendar/Drive/Docs sin intervención humana.
-
-`AIConfig` es un singleton con la configuración del proveedor de IA
-(Claude / OpenAI / Groq) — selecciona uno y administra su API key sin
-tocar `.env`.
+`GoogleCredential` holds the OAuth tokens for the institutional account that
+organizes Meets. `AIConfig` is a singleton with the active AI provider config.
+Sensitive fields are encrypted at rest with Fernet (AES-128 + HMAC).
 """
 from django.db import models
 
@@ -15,34 +11,30 @@ from core.base.models import SingletonModel, TimestampedModel
 
 
 class GoogleCredential(TimestampedModel):
-    """OAuth 2.0 access + refresh tokens para una cuenta Google.
+    """OAuth 2.0 access + refresh tokens for a Google account.
 
-    Convención: existe **una sola fila** con la cuenta institucional
-    (rarellanou@unemi.edu.ec). Si en el futuro hace falta multi-cuenta,
-    se quita el unique=True del email.
-
-    Tokens y client_secret están **cifrados at-rest** con Fernet (AES-128 +
-    HMAC) derivado de SECRET_KEY. La lectura/escritura es transparente.
+    Convention: a single row holds the institutional account. Tokens and
+    client_secret are encrypted at rest (transparent read/write).
     """
-    email = models.EmailField(unique=True, help_text='Cuenta Google conectada')
+    email = models.EmailField(unique=True, help_text='Connected Google account')
     access_token = EncryptedTextField()
-    refresh_token = EncryptedTextField(help_text='Token de larga duración para auto-refrescar')
+    refresh_token = EncryptedTextField(help_text='Long-lived token for auto-refresh')
     token_uri = models.URLField(default='https://oauth2.googleapis.com/token')
     client_id = models.CharField(max_length=200)
-    client_secret = EncryptedCharField(max_length=500, help_text='Cifrado at-rest con Fernet')
+    client_secret = EncryptedCharField(max_length=500, help_text='Encrypted at rest with Fernet')
     scopes = models.JSONField(default=list)
-    expiry = models.DateTimeField(null=True, blank=True, help_text='Cuándo expira el access_token')
+    expiry = models.DateTimeField(null=True, blank=True, help_text='When the access_token expires')
 
     class Meta:
-        verbose_name = 'Credencial Google'
-        verbose_name_plural = 'Credenciales Google'
+        verbose_name = 'Google Credential'
+        verbose_name_plural = 'Google Credentials'
 
     def __str__(self) -> str:
         return f'GoogleCredential<{self.email}>'
 
     @classmethod
     def get_singleton(cls) -> 'GoogleCredential | None':
-        """Devuelve la primera credencial registrada (o None si no hay)."""
+        """Return the first registered credential (or None)."""
         return cls.objects.first()
 
 
@@ -52,79 +44,75 @@ class AIProvider(models.TextChoices):
     GROQ = 'groq', 'Groq (Llama / Mixtral)'
 
 
-# Modelos sugeridos por proveedor (para el dropdown del form).
-# Claude usa IDs con fecha (más estables); OpenAI y Groq usan slugs.
+# Suggested models per provider (for the form dropdown).
 PROVIDER_MODELS = {
     AIProvider.CLAUDE: [
-        ('claude-haiku-4-5-20251001', 'Claude Haiku 4.5 (rápido y económico)'),
-        ('claude-sonnet-4-6', 'Claude Sonnet 4.6 (equilibrado)'),
-        ('claude-opus-4-7', 'Claude Opus 4.7 (máxima calidad)'),
+        ('claude-haiku-4-5-20251001', 'Claude Haiku 4.5 (fast & cheap)'),
+        ('claude-sonnet-4-6', 'Claude Sonnet 4.6 (balanced)'),
+        ('claude-opus-4-7', 'Claude Opus 4.7 (highest quality)'),
     ],
     AIProvider.OPENAI: [
-        ('gpt-4o-mini', 'GPT-4o mini (rápido y económico)'),
-        ('gpt-4o', 'GPT-4o (equilibrado)'),
+        ('gpt-4o-mini', 'GPT-4o mini (fast & cheap)'),
+        ('gpt-4o', 'GPT-4o (balanced)'),
         ('gpt-4-turbo', 'GPT-4 Turbo'),
     ],
     AIProvider.GROQ: [
-        ('llama-3.3-70b-versatile', 'Llama 3.3 70B (recomendado)'),
-        ('llama-3.1-8b-instant', 'Llama 3.1 8B (ultra rápido)'),
+        ('llama-3.3-70b-versatile', 'Llama 3.3 70B (recommended)'),
+        ('llama-3.1-8b-instant', 'Llama 3.1 8B (ultra fast)'),
         ('mixtral-8x7b-32768', 'Mixtral 8×7B'),
     ],
 }
 
 
 class AIConfig(SingletonModel, TimestampedModel):
-    """Singleton con la configuración del proveedor de IA activo.
+    """Singleton with the active AI provider configuration.
 
-    Solo existe una fila (pk=1). El admin elige proveedor + modelo,
-    pega la API key y los servicios `core.services.ai.*` la usan
-    automáticamente. Si está deshabilitado o sin key, las features de
-    IA devuelven 501 y los formularios funcionan sin asistencia IA.
+    A single row (pk=1). Admin picks provider + model, pastes the API key,
+    and `core.services.ai.*` use it automatically. If disabled or keyless,
+    AI features return 501 and forms work without AI assistance.
     """
     provider = models.CharField(
         max_length=20, choices=AIProvider.choices, default=AIProvider.CLAUDE,
-        verbose_name='Proveedor de IA',
+        verbose_name='AI provider',
     )
     model = models.CharField(
         max_length=80, blank=True, default='claude-haiku-4-5-20251001',
-        verbose_name='Modelo',
-        help_text='Identificador del modelo según el proveedor (ej. claude-haiku-4-5-20251001).',
+        verbose_name='Model',
+        help_text='Model identifier per provider (e.g. claude-haiku-4-5-20251001).',
     )
     api_key = EncryptedCharField(
         max_length=1000, blank=True, default='',
-        help_text='Cifrado at-rest con Fernet. Solo visible para Python (no SQL).',
+        help_text='Encrypted at rest with Fernet. Only readable from Python (not SQL).',
     )
     temperature = models.FloatField(
-        default=0.7,
-        help_text='0.0 = más determinista, 1.0 = más creativo.',
+        default=0.7, help_text='0.0 = deterministic, 1.0 = creative.',
     )
     max_tokens = models.PositiveIntegerField(
-        default=1024,
-        help_text='Tope máximo de tokens en la respuesta.',
+        default=1024, help_text='Max tokens in the response.',
     )
     system_prompt_override = models.TextField(
         blank=True, default='',
-        verbose_name='System prompt global (opcional)',
-        help_text='Si se llena, se antepone a todos los prompts del sistema.',
+        verbose_name='Global system prompt (optional)',
+        help_text='If set, prepended to all system prompts.',
     )
     enabled = models.BooleanField(
         default=False,
-        help_text='Si está apagado, todas las features de IA quedan deshabilitadas.',
+        help_text='If off, all AI features are disabled.',
     )
 
     class Meta:
-        verbose_name = 'Configuración IA'
-        verbose_name_plural = 'Configuración IA'
+        verbose_name = 'AI Configuration'
+        verbose_name_plural = 'AI Configuration'
 
     def __str__(self) -> str:
         return f'AIConfig<{self.provider}:{self.model} {"ON" if self.enabled else "OFF"}>'
 
     def is_ready(self) -> bool:
-        """True si está habilitada y tiene api_key."""
+        """True if enabled and has an api_key."""
         return self.enabled and bool(self.api_key) and bool(self.model)
 
     def masked_api_key(self) -> str:
-        """Devuelve la key con todo enmascarado salvo los últimos 4 chars."""
+        """API key masked except the last 4 chars."""
         if not self.api_key:
             return ''
         if len(self.api_key) <= 8:

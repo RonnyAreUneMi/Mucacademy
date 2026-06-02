@@ -23,7 +23,7 @@ from googleapiclient.errors import HttpError
 from .oauth import get_credentials
 
 if TYPE_CHECKING:
-    from core.models import SesionAsistencia
+    from core.models import Event
 
 logger = logging.getLogger(__name__)
 
@@ -41,24 +41,24 @@ def _datetime_for(date, hora: time) -> str:
     return datetime.combine(date, hora).isoformat()
 
 
-def _event_body(sesion: 'SesionAsistencia', include_meet: bool = True) -> dict:
+def _event_body(sesion: 'Event', include_meet: bool = True) -> dict:
     """Construye el dict que pide events.insert/patch."""
     tz = getattr(settings, 'TIME_ZONE', 'America/Guayaquil')
-    summary = sesion.titulo or f'Sesión {sesion.dia_semana} {sesion.fecha}'
+    summary = sesion.title or f'Sesión {sesion.day_of_week} {sesion.date}'
     body: dict = {
         'summary': summary,
-        'description': sesion.descripcion or '',
+        'description': sesion.description or '',
         'start': {
-            'dateTime': _datetime_for(sesion.fecha, sesion.hora_inicio),
+            'dateTime': _datetime_for(sesion.date, sesion.start_time),
             'timeZone': tz,
         },
         'end': {
-            'dateTime': _datetime_for(sesion.fecha, sesion.hora_fin),
+            'dateTime': _datetime_for(sesion.date, sesion.end_time),
             'timeZone': tz,
         },
     }
-    if sesion.lugar:
-        body['location'] = sesion.lugar
+    if sesion.location:
+        body['location'] = sesion.location
     if include_meet:
         body['conferenceData'] = {
             'createRequest': {
@@ -69,7 +69,7 @@ def _event_body(sesion: 'SesionAsistencia', include_meet: bool = True) -> dict:
     return body
 
 
-def create_meet_event(sesion: 'SesionAsistencia') -> tuple[str, str] | None:
+def create_meet_event(sesion: 'Event') -> tuple[str, str] | None:
     """Crea un evento en Calendar con link Meet adjunto.
 
     Devuelve (meet_link, event_id) si funciona, None si:
@@ -106,7 +106,7 @@ def create_meet_event(sesion: 'SesionAsistencia') -> tuple[str, str] | None:
     return meet_link, event['id']
 
 
-def update_meet_event(sesion: 'SesionAsistencia') -> bool:
+def update_meet_event(sesion: 'Event') -> bool:
     """Actualiza fecha/hora/título de un evento existente. True si OK."""
     if not sesion.google_calendar_event_id:
         return False

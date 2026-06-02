@@ -804,7 +804,7 @@
                         <button class="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-slate-200/60 dark:hover:bg-white/5 transition-colors">
                             <div class="hidden sm:block text-right">
                                 <p class="text-xs font-bold text-slate-900 dark:text-white leading-tight">{{ user.first_name|default:user.username }}</p>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{% if user.rol == 'superadmin' %}Administrador{% else %}Coordinador{% endif %}</p>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{% if user.role == 'superadmin' %}Administrador{% else %}Coordinador{% endif %}</p>
                             </div>
                             <div class="relative">
                                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#F58830] to-[#D97520] flex items-center justify-center text-white shadow-lg ring-2 ring-white/70 dark:ring-white/10">

@@ -18,9 +18,9 @@ def ponentes_json(qs):
     items = []
     for p in qs:
         items.append({
-            'nombre': p.nombre or '',
-            'titulo': p.titulo or '',
-            'afiliacion': p.afiliacion or '',
+            'name': p.name or '',
+            'title': p.title or '',
+            'affiliation': p.affiliation or '',
             'bio': p.bio or '',
         })
     return json.dumps(items, ensure_ascii=False)

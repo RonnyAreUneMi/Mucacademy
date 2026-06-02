@@ -9,7 +9,7 @@ from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from core.models import Certificado, LoteCertificados
+from core.models import Certificate, CertificateBatch
 from core.services.excel_service import analyze_excel_headers, procesar_archivo_excel_lote_business
 from core.services.pdf_service import generate_certificate_pdf
 from api.common.viewsets import AuditedModelViewSet
@@ -19,12 +19,12 @@ from .serializers import LoteListSerializer, LoteDetailSerializer, LoteWriteSeri
 
 class LoteViewSet(AuditedModelViewSet):
     """CRUD de lotes de certificados."""
-    queryset = LoteCertificados.objects.all().select_related('administrador')
+    queryset = CertificateBatch.objects.all().select_related('administrator')
     permission_classes = [permissions.IsAdminUser]
-    filterset_fields = ['activo', 'facultad', 'plantilla', 'personalizar_diseno']
-    search_fields = ['nombre_lote']
-    ordering_fields = ['fecha_creacion', 'nombre_lote']
-    ordering = ['-fecha_creacion']
+    filterset_fields = ['is_active', 'faculty', 'template', 'customize_design']
+    search_fields = ['name']
+    ordering_fields = ['created_at', 'name']
+    ordering = ['-created_at']
 
     audit_verbose_name = 'lote'
 
@@ -36,10 +36,10 @@ class LoteViewSet(AuditedModelViewSet):
         return LoteListSerializer
 
     def audit_detail(self, instance, action):
-        return f'Lote #{instance.pk} ({instance.nombre_lote})'
+        return f'Lote #{instance.pk} ({instance.name})'
 
     def perform_create(self, serializer):
-        instance = serializer.save(administrador=self.request.user)
+        instance = serializer.save(administrator=self.request.user)
         self.log_audit(self._action_code('create'), self.audit_detail(instance, 'create'))
 
     # ── Custom actions ──────────────────────────────────────────
@@ -66,26 +66,26 @@ class LoteViewSet(AuditedModelViewSet):
     @action(detail=True, methods=['post'])
     def toggle(self, request, pk=None):
         lote = self.get_object()
-        lote.activo = not lote.activo
-        lote.save(update_fields=['activo'])
-        self.log_audit('TOGGLE_LOTE', f'Lote #{lote.pk} → activo={lote.activo}')
-        return Response({'id': lote.id, 'activo': lote.activo})
+        lote.is_active = not lote.is_active
+        lote.save(update_fields=['is_active'])
+        self.log_audit('TOGGLE_LOTE', f'Lote #{lote.pk} → is_active={lote.is_active}')
+        return Response({'id': lote.id, 'activo': lote.is_active})
 
     @action(detail=True, methods=['get'], url_path='preview-pdf')
     @method_decorator(xframe_options_exempt)
     def preview_pdf(self, request, pk=None):
         """GET → devuelve un PDF de preview con datos dummy para este lote."""
         lote = self.get_object()
-        dummy_cert = Certificado(
-            lote=lote,
-            cedula='0999999999',
-            nombres='ESTUDIANTE',
-            apellidos='DE PRUEBA',
+        dummy_cert = Certificate(
+            batch=lote,
+            national_id='0999999999',
+            first_name='ESTUDIANTE',
+            last_name='DE PRUEBA',
             email='prueba@unemi.edu.ec',
-            curso='CURSO DE DEMOSTRACIÓN',
-            fecha_curso=date.today(),
-            horas=40,
-            hash_verificacion=uuid.uuid4(),
+            course='CURSO DE DEMOSTRACIÓN',
+            course_date=date.today(),
+            hours=40,
+            verification_hash=uuid.uuid4(),
         )
         dummy_cert.id = random.randint(10000, 99999)
         try:

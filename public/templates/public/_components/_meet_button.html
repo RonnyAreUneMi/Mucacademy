@@ -9,7 +9,7 @@ Args:
     label  (str)  texto custom  default 'Ingresar a la reunión'
 
 Uso:
-    {% include 'public/_components/_meet_button.html' with url=sesion.enlace_virtual full=True %}
+    {% include 'public/_components/_meet_button.html' with url=event.meeting_url full=True %}
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}
 {% with s=size|default:'md' %}

@@ -1,8 +1,8 @@
-"""Design System tokens del admin panel — singleton.
+"""Admin panel Design System tokens — singleton.
 
-Una sola fila guarda los tokens de diseño (colores, tipografías,
-radios, sombras, etc.) que el `:root` CSS del panel consume vía
-context processor. Cambiar un valor aquí actualiza toda la UI.
+A single row holds the design tokens (colors, fonts, radii, shadows, etc.)
+consumed by the panel `:root` CSS via context processor. Changing a value
+here updates the whole UI.
 """
 from django.db import models
 
@@ -10,10 +10,10 @@ from core.base.models import SingletonModel, TimestampedModel
 
 
 class UIDesignTokens(SingletonModel, TimestampedModel):
-    """Tokens del sistema de diseño del admin panel.
+    """Admin panel design-system tokens.
 
-    Pensado como source-of-truth de los CSS custom properties que
-    están declarados en `:root` dentro de `panel/base.html`.
+    Source of truth for the CSS custom properties declared in `:root`
+    inside `panel/base.html`.
     """
 
     # ─── Branding / colores principales ──────────────────────

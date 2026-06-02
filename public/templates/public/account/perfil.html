@@ -23,7 +23,7 @@
             <span class="avatar-circle" style="width:64px;height:64px;font-size:1.5rem;">{{ p.initials }}</span>
             {% endif %}
             <div class="flex-1">
-                <p class="text-sm font-bold text-slate-900 dark:text-white">{{ p.nombre_completo }}</p>
+                <p class="text-sm font-bold text-slate-900 dark:text-white">{{ p.full_name }}</p>
                 <p class="text-xs text-slate-500 dark:text-slate-400">{{ p.email }}</p>
                 <label class="inline-flex mt-2 items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer
                               bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
@@ -38,22 +38,22 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
                 <label class="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Nombres</label>
-                <input type="text" name="nombres" value="{{ p.nombres }}" required
+                <input type="text" name="nombres" value="{{ p.first_name }}" required
                        class="w-full mt-1 px-3 py-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/20">
             </div>
             <div>
                 <label class="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Apellidos</label>
-                <input type="text" name="apellidos" value="{{ p.apellidos }}" required
+                <input type="text" name="apellidos" value="{{ p.last_name }}" required
                        class="w-full mt-1 px-3 py-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/20">
             </div>
             <div>
                 <label class="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Cédula</label>
-                <input type="text" name="cedula" value="{{ p.cedula }}"
+                <input type="text" name="cedula" value="{{ p.national_id }}"
                        class="w-full mt-1 px-3 py-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/20">
             </div>
             <div>
                 <label class="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Celular</label>
-                <input type="tel" name="celular" value="{{ p.celular }}"
+                <input type="tel" name="celular" value="{{ p.phone }}"
                        class="w-full mt-1 px-3 py-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/20">
             </div>
             <div class="sm:col-span-2">

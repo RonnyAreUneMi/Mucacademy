@@ -26,10 +26,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="md:col-span-2">
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Título</label>
-                    <input type="text" name="titulo" value="{{ sesion.titulo|default:'' }}" placeholder="Ej: Seminario de IA aplicada a la salud" class="{{ css }}">
+                    <input type="text" name="title" value="{{ sesion.title|default:'' }}" placeholder="Ej: Seminario de IA aplicada a la salud" class="{{ css }}">
                 </div>
                 <div class="md:col-span-2">
-                    {% include 'panel/includes/_description_with_ai.html' with title_input_name='titulo' description_name='descripcion' description_value=sesion.descripcion %}
+                    {% include 'panel/includes/_description_with_ai.html' with title_input_name='title' description_name='description' description_value=sesion.description %}
                 </div>
             </div>
 
@@ -37,23 +37,23 @@
             <div>
                 <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2"><i class="fa-solid fa-image mr-1 text-[#F58830]"></i> Imagen de banner</label>
                 <label for="banner-input" id="banner-zone" class="block cursor-pointer rounded-2xl border-2 border-dashed border-gray-300 dark:border-blue-900/40 hover:border-[#F58830] hover:bg-[#F58830]/5 transition-all overflow-hidden">
-                    <div id="banner-empty" class="{% if sesion.imagen_banner %}hidden{% endif %} px-6 py-10 text-center">
+                    <div id="banner-empty" class="{% if sesion.banner_image %}hidden{% endif %} px-6 py-10 text-center">
                         <div class="w-14 h-14 mx-auto rounded-full bg-[#F58830]/10 flex items-center justify-center mb-3">
                             <i class="fa-solid fa-cloud-arrow-up text-[#F58830] text-2xl"></i>
                         </div>
                         <p class="text-sm font-bold text-gray-700 dark:text-gray-200">Click o arrastrá una imagen</p>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">PNG, JPG, WEBP · recomendado 1200×600</p>
                     </div>
-                    <div id="banner-preview" class="{% if not sesion.imagen_banner %}hidden{% endif %} relative">
-                        <img id="banner-img" src="{% if sesion.imagen_banner %}{{ sesion.imagen_banner.url }}{% endif %}" alt="" class="w-full h-56 object-cover">
+                    <div id="banner-preview" class="{% if not sesion.banner_image %}hidden{% endif %} relative">
+                        <img id="banner-img" src="{% if sesion.banner_image %}{{ sesion.banner_image.url }}{% endif %}" alt="" class="w-full h-56 object-cover">
                         <div class="absolute top-3 right-3 flex gap-2">
                             <button type="button" onclick="changeBanner(event)" class="w-9 h-9 rounded-full bg-white/95 hover:bg-white text-gray-700 shadow-lg flex items-center justify-center" title="Cambiar"><i class="fa-solid fa-arrows-rotate text-sm"></i></button>
                             <button type="button" onclick="removeBanner(event)" class="w-9 h-9 rounded-full bg-white/95 hover:bg-red-50 text-red-600 shadow-lg flex items-center justify-center" title="Quitar"><i class="fa-solid fa-trash text-sm"></i></button>
                         </div>
-                        <div class="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-black/55 backdrop-blur-sm text-white text-xs font-medium" id="banner-filename">{% if sesion.imagen_banner %}Banner actual{% endif %}</div>
+                        <div class="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-black/55 backdrop-blur-sm text-white text-xs font-medium" id="banner-filename">{% if sesion.banner_image %}Banner actual{% endif %}</div>
                     </div>
                 </label>
-                <input id="banner-input" type="file" name="imagen_banner" accept="image/*" class="hidden">
+                <input id="banner-input" type="file" name="banner_image" accept="image/*" class="hidden">
             </div>
         </section>
 
@@ -68,14 +68,14 @@
                 <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2"><i class="fa-solid fa-globe mr-1 text-[#F58830]"></i> Modalidad</label>
                 <div class="grid grid-cols-2 gap-3">
                     <label class="relative cursor-pointer">
-                        <input type="radio" name="modalidad" value="presencial" {% if sesion.modalidad == 'presencial' %}checked{% endif %} class="peer sr-only" onchange="toggleModalidad()">
+                        <input type="radio" name="modality" value="in_person" {% if sesion.modality == 'in_person' %}checked{% endif %} class="peer sr-only" onchange="toggleModalidad()">
                         <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-blue-900/30 peer-checked:border-[#F58830] peer-checked:bg-[#F58830]/10 transition-all text-center">
                             <i class="fa-solid fa-building text-2xl text-gray-400 peer-checked:text-[#F58830] mb-1"></i>
                             <p class="text-sm font-bold text-gray-700 dark:text-gray-200">Presencial</p>
                         </div>
                     </label>
                     <label class="relative cursor-pointer">
-                        <input type="radio" name="modalidad" value="virtual" {% if sesion.modalidad == 'virtual' %}checked{% endif %} class="peer sr-only" onchange="toggleModalidad()">
+                        <input type="radio" name="modality" value="virtual" {% if sesion.modality == 'virtual' %}checked{% endif %} class="peer sr-only" onchange="toggleModalidad()">
                         <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-blue-900/30 peer-checked:border-[#F58830] peer-checked:bg-[#F58830]/10 transition-all text-center">
                             <i class="fa-solid fa-video text-2xl text-gray-400 peer-checked:text-[#F58830] mb-1"></i>
                             <p class="text-sm font-bold text-gray-700 dark:text-gray-200">Virtual</p>
@@ -84,7 +84,7 @@
                 </div>
             </div>
 
-            <div id="virtual-fields" class="{% if sesion.modalidad != 'virtual' %}hidden{% endif %} p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/30">
+            <div id="virtual-fields" class="{% if sesion.modality != 'virtual' %}hidden{% endif %} p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/30">
                 <div class="flex items-start gap-3">
                     <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l5-5v14l-5-5M5 7h10v10H5z"/></svg>
                     <div class="flex-1">
@@ -92,45 +92,45 @@
                         <p class="text-xs text-emerald-700 dark:text-emerald-300/80 mt-1 leading-relaxed">
                             Al guardar se generará automáticamente un enlace de Google Meet con grabación y transcripción.
                         </p>
-                        {% if sesion.enlace_virtual %}
+                        {% if sesion.meeting_url %}
                         <div class="mt-2 p-2 rounded-lg bg-white dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800/40">
                             <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 mb-1">Enlace actual</p>
-                            <a href="{{ sesion.enlace_virtual }}" target="_blank" rel="noopener" class="text-xs text-emerald-700 dark:text-emerald-300 hover:underline break-all">{{ sesion.enlace_virtual }}</a>
+                            <a href="{{ sesion.meeting_url }}" target="_blank" rel="noopener" class="text-xs text-emerald-700 dark:text-emerald-300 hover:underline break-all">{{ sesion.meeting_url }}</a>
                         </div>
                         {% endif %}
                     </div>
                 </div>
             </div>
 
-            <div id="lugar-wrapper" class="{% if sesion.modalidad == 'virtual' %}hidden{% endif %}">
+            <div id="lugar-wrapper" class="{% if sesion.modality == 'virtual' %}hidden{% endif %}">
                 <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1"><i class="fa-solid fa-location-dot mr-1 text-[#F58830]"></i> Lugar</label>
-                <input type="text" name="lugar" value="{{ sesion.lugar|default:'' }}" placeholder="Ej: Auditorio Principal" class="{{ css }}">
+                <input type="text" name="location" value="{{ sesion.location|default:'' }}" placeholder="Ej: Auditorio Principal" class="{{ css }}">
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Fecha</label>
-                    <input id="id_fecha" type="date" name="fecha" value="{{ sesion.fecha|date:'Y-m-d' }}" required class="{{ css }}">
+                    <input id="id_fecha" type="date" name="date" value="{{ sesion.date|date:'Y-m-d' }}" required class="{{ css }}">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Día</label>
-                    <select id="id_dia_semana" name="dia_semana" required class="{{ css }} pointer-events-none opacity-80" tabindex="-1">
-                        <option value="Lunes" {% if sesion.dia_semana == 'Lunes' %}selected{% endif %}>Lunes</option>
-                        <option value="Martes" {% if sesion.dia_semana == 'Martes' %}selected{% endif %}>Martes</option>
-                        <option value="Miércoles" {% if sesion.dia_semana == 'Miércoles' %}selected{% endif %}>Miércoles</option>
-                        <option value="Jueves" {% if sesion.dia_semana == 'Jueves' %}selected{% endif %}>Jueves</option>
-                        <option value="Viernes" {% if sesion.dia_semana == 'Viernes' %}selected{% endif %}>Viernes</option>
-                        <option value="Sábado" {% if sesion.dia_semana == 'Sábado' %}selected{% endif %}>Sábado</option>
-                        <option value="Domingo" {% if sesion.dia_semana == 'Domingo' %}selected{% endif %}>Domingo</option>
+                    <select id="id_dia_semana" name="day_of_week" required class="{{ css }} pointer-events-none opacity-80" tabindex="-1">
+                        <option value="Lunes" {% if sesion.day_of_week == 'Lunes' %}selected{% endif %}>Lunes</option>
+                        <option value="Martes" {% if sesion.day_of_week == 'Martes' %}selected{% endif %}>Martes</option>
+                        <option value="Miércoles" {% if sesion.day_of_week == 'Miércoles' %}selected{% endif %}>Miércoles</option>
+                        <option value="Jueves" {% if sesion.day_of_week == 'Jueves' %}selected{% endif %}>Jueves</option>
+                        <option value="Viernes" {% if sesion.day_of_week == 'Viernes' %}selected{% endif %}>Viernes</option>
+                        <option value="Sábado" {% if sesion.day_of_week == 'Sábado' %}selected{% endif %}>Sábado</option>
+                        <option value="Domingo" {% if sesion.day_of_week == 'Domingo' %}selected{% endif %}>Domingo</option>
                     </select>
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Hora inicio</label>
-                    <input type="time" name="hora_inicio" value="{{ sesion.hora_inicio|time:'H:i' }}" required class="{{ css }}">
+                    <input type="time" name="start_time" value="{{ sesion.start_time|time:'H:i' }}" required class="{{ css }}">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Hora fin</label>
-                    <input type="time" name="hora_fin" value="{{ sesion.hora_fin|time:'H:i' }}" required class="{{ css }}">
+                    <input type="time" name="end_time" value="{{ sesion.end_time|time:'H:i' }}" required class="{{ css }}">
                 </div>
             </div>
         </section>
@@ -184,9 +184,9 @@
                 <h2 class="text-lg font-bold text-gray-800 dark:text-white">Capacidad</h2>
             </div>
             <div class="flex items-center gap-4">
-                <input type="number" id="cap-input" min="1" value="{% if sesion.capacidad > 0 %}{{ sesion.capacidad }}{% endif %}" {% if sesion.capacidad == 0 %}disabled{% endif %} placeholder="Ej: 100 cupos" class="flex-1 {{ css }}">
+                <input type="number" id="cap-input" min="1" value="{% if sesion.capacity > 0 %}{{ sesion.capacity }}{% endif %}" {% if sesion.capacity == 0 %}disabled{% endif %} placeholder="Ej: 100 cupos" class="flex-1 {{ css }}">
                 <label class="flex items-center gap-2 cursor-pointer select-none whitespace-nowrap">
-                    <input type="checkbox" id="cap-ilimitada" {% if sesion.capacidad == 0 %}checked{% endif %} onchange="toggleCapacidad()" class="h-5 w-5 rounded text-[#F58830] focus:ring-[#F58830] border-gray-300">
+                    <input type="checkbox" id="cap-ilimitada" {% if sesion.capacity == 0 %}checked{% endif %} onchange="toggleCapacidad()" class="h-5 w-5 rounded text-[#F58830] focus:ring-[#F58830] border-gray-300">
                     <span class="text-sm font-bold text-gray-600 dark:text-gray-300">Ilimitada</span>
                 </label>
             </div>
@@ -213,10 +213,10 @@
             </button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input type="text" data-field="titulo" placeholder="Dr., Mgs., Ing..." class="{{ css }} text-sm">
-            <input type="text" data-field="nombre" placeholder="Nombre completo *" required class="{{ css }} text-sm md:col-span-2">
+            <input type="text" data-field="title" placeholder="Dr., Mgs., Ing..." class="{{ css }} text-sm">
+            <input type="text" data-field="name" placeholder="Nombre completo *" required class="{{ css }} text-sm md:col-span-2">
         </div>
-        <input type="text" data-field="afiliacion" placeholder="Afiliación / Institución (opcional)" class="{{ css }} text-sm">
+        <input type="text" data-field="affiliation" placeholder="Afiliación / Institución (opcional)" class="{{ css }} text-sm">
         <textarea data-field="bio" rows="2" placeholder="Biografía corta (opcional)" class="{{ css }} text-sm resize-none"></textarea>
     </div>
 </template>
@@ -238,7 +238,7 @@ function toggleCapacidad() {
 }
 
 function toggleModalidad() {
-    const selected = document.querySelector('input[name="modalidad"]:checked')?.value;
+    const selected = document.querySelector('input[name="modality"]:checked')?.value;
     document.getElementById('virtual-fields').classList.toggle('hidden', selected !== 'virtual');
     document.getElementById('lugar-wrapper').classList.toggle('hidden', selected === 'virtual');
 }
@@ -283,9 +283,9 @@ function addPonente(data = {}) {
     const list = document.getElementById('ponentes-list');
     const tpl = document.getElementById('ponente-template');
     const node = tpl.content.firstElementChild.cloneNode(true);
-    if (data.nombre) node.querySelector('[data-field="nombre"]').value = data.nombre;
-    if (data.titulo) node.querySelector('[data-field="titulo"]').value = data.titulo;
-    if (data.afiliacion) node.querySelector('[data-field="afiliacion"]').value = data.afiliacion;
+    if (data.name) node.querySelector('[data-field="name"]').value = data.name;
+    if (data.title) node.querySelector('[data-field="title"]').value = data.title;
+    if (data.affiliation) node.querySelector('[data-field="affiliation"]').value = data.affiliation;
     if (data.bio) node.querySelector('[data-field="bio"]').value = data.bio;
     list.appendChild(node);
     refreshPonentesUI();
@@ -298,11 +298,11 @@ function refreshPonentesUI() {
 }
 function collectPonentes() {
     return Array.from(document.querySelectorAll('#ponentes-list .ponente-row')).map(row => ({
-        nombre: row.querySelector('[data-field="nombre"]').value.trim(),
-        titulo: row.querySelector('[data-field="titulo"]').value.trim(),
-        afiliacion: row.querySelector('[data-field="afiliacion"]').value.trim(),
+        name: row.querySelector('[data-field="name"]').value.trim(),
+        title: row.querySelector('[data-field="title"]').value.trim(),
+        affiliation: row.querySelector('[data-field="affiliation"]').value.trim(),
         bio: row.querySelector('[data-field="bio"]').value.trim(),
-    })).filter(p => p.nombre);
+    })).filter(p => p.name);
 }
 (function initPonentes() {
     const dataEl = document.getElementById('ponentes-init-data');
@@ -319,14 +319,14 @@ document.getElementById('session-form').addEventListener('submit', async (e) => 
     errBox.classList.add('hidden');
 
     const fd = new FormData(e.target);
-    fd.delete('capacidad');
-    fd.set('capacidad', document.getElementById('cap-ilimitada').checked ? '0' : (document.getElementById('cap-input').value || '0'));
+    fd.delete('capacity');
+    fd.set('capacity', document.getElementById('cap-ilimitada').checked ? '0' : (document.getElementById('cap-input').value || '0'));
     fd.set('ponentes_json', JSON.stringify(collectPonentes()));
     if (typeof window.getDescriptionHTML === 'function') {
-        fd.set('descripcion', window.getDescriptionHTML());
+        fd.set('description', window.getDescriptionHTML());
     }
     const bannerFile = document.getElementById('banner-input').files[0];
-    if (bannerFile) fd.set('imagen_banner', bannerFile);
+    if (bannerFile) fd.set('banner_image', bannerFile);
 
     try {
         const res = await fetch(`/api/v1/admin/sessions/${SESION_ID}/`, {

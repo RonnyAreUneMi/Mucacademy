@@ -13,26 +13,26 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nombre de Autoridad <span class="text-red-500">*</span></label>
-                <input type="text" name="nombre" required value="{{ firma.nombre|default:'' }}" placeholder="Ej: Ph.D. Fabricio Guevara Viejó" class="{{ css }}">
+                <input type="text" name="nombre" required value="{{ firma.name|default:'' }}" placeholder="Ej: Ph.D. Fabricio Guevara Viejó" class="{{ css }}">
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cargo <span class="text-red-500">*</span></label>
-                <input type="text" name="cargo" required value="{{ firma.cargo|default:'' }}" placeholder="Ej: RECTOR UNEMI" class="{{ css }}">
+                <input type="text" name="cargo" required value="{{ firma.role|default:'' }}" placeholder="Ej: RECTOR UNEMI" class="{{ css }}">
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Orden de aparición</label>
-                <input type="number" name="orden" min="0" value="{{ firma.orden|default:0 }}" placeholder="1, 2, 3..." class="{{ css }}">
+                <input type="number" name="orden" min="0" value="{{ firma.sort_order|default:0 }}" placeholder="1, 2, 3..." class="{{ css }}">
                 <p class="mt-1 text-xs text-gray-500">Determina el orden por defecto al asignar firmas a un lote (1 = primero).</p>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Firma (Imagen PNG, fondo transparente)</label>
-                {% if firma and firma.imagen %}
+                {% if firma and firma.image %}
                 <div class="mb-3">
                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Firma actual:</p>
-                    <img src="data:image/png;base64,{{ firma.imagen }}" alt="Firma Actual" class="h-16 object-contain bg-gray-50 dark:bg-gray-800 rounded p-2">
+                    <img src="data:image/png;base64,{{ firma.image }}" alt="Firma Actual" class="h-16 object-contain bg-gray-50 dark:bg-gray-800 rounded p-2">
                 </div>
                 {% endif %}
                 <input type="file" id="imagen-file" accept="image/png, image/jpeg" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
@@ -40,7 +40,7 @@
             </div>
 
             <div class="flex items-center">
-                <input type="checkbox" name="activa" id="activa" {% if firma.activa|default:True %}checked{% endif %} class="h-5 w-5 rounded text-[#F58830] focus:ring-[#F58830] border-gray-300">
+                <input type="checkbox" name="activa" id="activa" {% if firma.is_active|default:True %}checked{% endif %} class="h-5 w-5 rounded text-[#F58830] focus:ring-[#F58830] border-gray-300">
                 <label for="activa" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Firma activa y disponible para usar</label>
             </div>
 
@@ -77,17 +77,17 @@ document.getElementById('firma-form').addEventListener('submit', async (e) => {
 
     const fd = new FormData(e.target);
     const payload = {
-        nombre: fd.get('nombre'),
-        cargo: fd.get('cargo'),
-        orden: parseInt(fd.get('orden') || '0'),
-        activa: fd.get('activa') === 'on',
+        name: fd.get('nombre'),
+        role: fd.get('cargo'),
+        sort_order: parseInt(fd.get('orden') || '0'),
+        is_active: fd.get('activa') === 'on',
     };
 
     // Imagen → base64 si el user eligió un archivo
     const fileInput = document.getElementById('imagen-file');
     if (fileInput.files.length > 0) {
         try {
-            payload.imagen = await fileToBase64(fileInput.files[0]);
+            payload.image = await fileToBase64(fileInput.files[0]);
         } catch (err) {
             errBox.textContent = 'No se pudo leer la imagen.';
             errBox.classList.remove('hidden');

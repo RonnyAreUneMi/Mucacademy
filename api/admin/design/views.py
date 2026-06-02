@@ -2,24 +2,24 @@ from rest_framework import serializers, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import DisenoGlobal
+from core.models import GlobalDesign
 from core.base.mixins import log_audit
 
 
 class DisenoGlobalSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DisenoGlobal
+        model = GlobalDesign
         fields = [
-            'id', 'plantilla', 'color_primario', 'color_secundario',
-            'color_terciario', 'color_texto', 'cuerpo_certificado',
-            'firma_inst_1', 'firma_inst_2', 'firma_inst_3',
-            'nombre_firma_4', 'cargo_firma_4', 'imagen_firma_4',
-            'logo_header_1', 'logo_header_2', 'logo_header_3',
-            'posicion_firmas',
-            'firma_1_offset_y', 'firma_1_escala',
-            'firma_2_offset_y', 'firma_2_escala',
-            'firma_3_offset_y', 'firma_3_escala',
-            'firma_4_offset_y', 'firma_4_escala',
+            'id', 'template', 'color_primary', 'color_secondary',
+            'color_tertiary', 'color_text', 'body_text',
+            'signature_inst_1', 'signature_inst_2', 'signature_inst_3',
+            'signature_name_4', 'signature_role_4', 'signature_image_4',
+            'header_logo_1', 'header_logo_2', 'header_logo_3',
+            'signatures_position',
+            'signature_1_offset_y', 'signature_1_scale',
+            'signature_2_offset_y', 'signature_2_scale',
+            'signature_3_offset_y', 'signature_3_scale',
+            'signature_4_offset_y', 'signature_4_scale',
             'updated_at',
         ]
         read_only_fields = ('id', 'updated_at')
@@ -30,11 +30,11 @@ class DisenoGlobalView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
-        diseno = DisenoGlobal.get_solo()
+        diseno = GlobalDesign.load()
         return Response(DisenoGlobalSerializer(diseno).data)
 
     def patch(self, request):
-        diseno = DisenoGlobal.get_solo()
+        diseno = GlobalDesign.load()
         ser = DisenoGlobalSerializer(diseno, data=request.data, partial=True)
         ser.is_valid(raise_exception=True)
         ser.save()

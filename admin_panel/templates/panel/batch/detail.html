@@ -14,7 +14,7 @@
                     Detalle de Lote #{{ lote.id }}
                 </h1>
             </div>
-            <p class="text-gray-500 dark:text-gray-400 ml-11">{{ lote.nombre_lote }}</p>
+            <p class="text-gray-500 dark:text-gray-400 ml-11">{{ lote.name }}</p>
         </div>
         
         <!-- Design Menu (Standalone & Clear) -->
@@ -27,7 +27,7 @@
                 Agregar Estudiante
              </button>
 
-             {% if user.rol == 'admin' or user.rol == 'superadmin' %}
+             {% if user.role == 'admin' or user.role == 'superadmin' %}
              <a href="{% url 'panel:batch_configure' lote.id %}"
                class="inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-unemi-blue bg-white border-2 border-unemi-blue/20 rounded-xl hover:bg-blue-50 hover:border-unemi-blue transition-all duration-200 shadow-sm hover:shadow-md group">
                 <span class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
@@ -55,7 +55,7 @@
         <div class="bg-white dark:bg-[#162054] p-6 rounded-2xl shadow-md border border-gray-100 dark:border-blue-900/50 relative overflow-hidden group">
             <div class="absolute right-0 top-0 w-32 h-32 bg-purple-50 dark:bg-purple-500/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
             <p class="text-sm font-medium text-gray-500 dark:text-purple-300 relative z-10">Fecha Creación</p>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white mt-2 relative z-10 capitalize">{{ lote.fecha_creacion|date:"d M Y" }}</h3>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mt-2 relative z-10 capitalize">{{ lote.created_at|date:"d M Y" }}</h3>
             <i class="fa-regular fa-calendar absolute bottom-4 right-4 text-purple-500/20 dark:text-purple-400/40 text-5xl group-hover:scale-110 transition-transform duration-300"></i>
         </div>
 
@@ -126,27 +126,27 @@
                             {{ forloop.counter }}
                         </td>
                         <td class="px-6 py-4 font-mono text-gray-600 dark:text-blue-300">
-                            {{ cert.cedula }}
+                            {{ cert.national_id }}
                         </td>
                         <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                            {{ cert.nombres }} {{ cert.apellidos }}
+                            {{ cert.first_name }} {{ cert.last_name }}
                         </td>
                         <td class="px-6 py-4">
                            <div class="flex flex-col items-start gap-1">
                                <span class="text-sm">{{ cert.email }}</span>
-                               {% if cert.celular %}
-                               <a href="https://wa.me/{{ cert.celular }}" target="_blank" class="inline-flex items-center gap-1 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition-colors text-xs font-medium bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-full border border-green-100 dark:border-green-500/20" title="Chat en WhatsApp">
-                                   <i class="fa-brands fa-whatsapp"></i> {{ cert.celular }}
+                               {% if cert.phone %}
+                               <a href="https://wa.me/{{ cert.phone }}" target="_blank" class="inline-flex items-center gap-1 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition-colors text-xs font-medium bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-full border border-green-100 dark:border-green-500/20" title="Chat en WhatsApp">
+                                   <i class="fa-brands fa-whatsapp"></i> {{ cert.phone }}
                                </a>
                                {% endif %}
                            </div>
                         </td>
-                        <td class="px-6 py-4 text-xs max-w-xs truncate" title="{{ cert.curso }}">
-                            {{ cert.curso }}
+                        <td class="px-6 py-4 text-xs max-w-xs truncate" title="{{ cert.course }}">
+                            {{ cert.course }}
                         </td>
                         <td class="px-6 py-4">
-                            {% if cert.pdf_generado %}
-                            <a href="{{ cert.pdf_generado.url }}" target="_blank" class="inline-flex items-center gap-1 text-unemi-blue dark:text-blue-400 hover:text-unemi-orange dark:hover:text-neon-orange font-medium transition-colors">
+                            {% if cert.pdf_file %}
+                            <a href="{{ cert.pdf_file.url }}" target="_blank" class="inline-flex items-center gap-1 text-unemi-blue dark:text-blue-400 hover:text-unemi-orange dark:hover:text-neon-orange font-medium transition-colors">
                                 <i class="fa-solid fa-file-pdf"></i> Ver PDF
                             </a>
                             {% else %}
@@ -247,7 +247,7 @@
                             </div>
 
                             <!-- Hidden Fields (Defaults from Lote) -->
-                            <input type="hidden" name="curso" value="{{ lote.nombre_lote }}">
+                            <input type="hidden" name="curso" value="{{ lote.name }}">
                             <input type="hidden" name="horas" value="40">
                             <input type="hidden" name="fecha_curso" id="hiddenFecha" value="{% now 'Y-m-d' %}">
                         </div>

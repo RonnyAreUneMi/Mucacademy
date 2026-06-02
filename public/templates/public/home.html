@@ -829,27 +829,27 @@
             {% for e in eventos_hero %}
             <div class="hero-slide {% if forloop.first %}is-active{% endif %}" data-index="{{ forloop.counter0 }}">
                 <div class="hero-slide-bg">
-                    {% if e.imagen_banner %}
-                    <img src="{{ e.imagen_banner.url }}" alt="{{ e.titulo|default:e.dia_semana }}">
+                    {% if e.banner_image %}
+                    <img src="{{ e.banner_image.url }}" alt="{{ e.title|default:e.day_of_week }}">
                     {% else %}
-                    <div class="w-full h-full {% if e.es_virtual %}bg-gradient-to-br from-blue-500 via-blue-700 to-blue-900{% else %}bg-gradient-to-br from-[var(--ds-brand)] via-[#E8721C] to-[var(--ds-brand-dark)]{% endif %} flex items-center justify-center">
-                        <i class="fa-solid {% if e.es_virtual %}fa-video{% else %}fa-calendar-check{% endif %} text-white/20 text-[180px]"></i>
+                    <div class="w-full h-full {% if e.is_virtual %}bg-gradient-to-br from-blue-500 via-blue-700 to-blue-900{% else %}bg-gradient-to-br from-[var(--ds-brand)] via-[#E8721C] to-[var(--ds-brand-dark)]{% endif %} flex items-center justify-center">
+                        <i class="fa-solid {% if e.is_virtual %}fa-video{% else %}fa-calendar-check{% endif %} text-white/20 text-[180px]"></i>
                     </div>
                     {% endif %}
                 </div>
                 <div class="hero-slide-content">
                     <span class="hero-pill">
-                        <i class="fa-solid {% if e.es_virtual %}fa-video{% else %}fa-building{% endif %}"></i>
-                        {{ e.es_virtual|yesno:'Virtual,Presencial' }}
+                        <i class="fa-solid {% if e.is_virtual %}fa-video{% else %}fa-building{% endif %}"></i>
+                        {{ e.is_virtual|yesno:'Virtual,Presencial' }}
                     </span>
                     <h2 class="ds-display text-2xl sm:text-4xl lg:text-5xl font-black mt-4 leading-tight tracking-tight">
-                        {{ e.titulo|default:e.dia_semana }}
+                        {{ e.title|default:e.day_of_week }}
                     </h2>
                     <div class="flex items-center flex-wrap gap-x-4 gap-y-2 mt-4 text-sm font-medium text-white/85">
-                        <span><i class="fa-solid fa-calendar-day text-[var(--ds-brand)] mr-1.5"></i>{{ e.dia_semana }} {{ e.fecha|date:"d M Y" }}</span>
-                        <span class="ds-mono"><i class="fa-solid fa-clock text-[var(--ds-brand)] mr-1.5"></i>{{ e.hora_inicio|time:"H:i" }}–{{ e.hora_fin|time:"H:i" }}</span>
-                        {% if e.lugar and not e.es_virtual %}
-                        <span><i class="fa-solid fa-location-dot text-[var(--ds-brand)] mr-1.5"></i>{{ e.lugar|truncatechars:40 }}</span>
+                        <span><i class="fa-solid fa-calendar-day text-[var(--ds-brand)] mr-1.5"></i>{{ e.day_of_week }} {{ e.date|date:"d M Y" }}</span>
+                        <span class="ds-mono"><i class="fa-solid fa-clock text-[var(--ds-brand)] mr-1.5"></i>{{ e.start_time|time:"H:i" }}–{{ e.end_time|time:"H:i" }}</span>
+                        {% if e.location and not e.is_virtual %}
+                        <span><i class="fa-solid fa-location-dot text-[var(--ds-brand)] mr-1.5"></i>{{ e.location|truncatechars:40 }}</span>
                         {% endif %}
                     </div>
                     <div class="flex items-center gap-3 mt-6">
@@ -902,28 +902,28 @@
         {% for e in eventos_grid %}
         <div class="lg-card overflow-hidden rounded-3xl flex flex-col group transition-all hover:-translate-y-1">
             <div class="relative h-32 rounded-t-3xl overflow-hidden">
-                {% if e.imagen_banner %}
-                <img src="{{ e.imagen_banner.url }}" alt="" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                {% if e.banner_image %}
+                <img src="{{ e.banner_image.url }}" alt="" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                 {% else %}
-                <div class="w-full h-full {% if e.es_virtual %}bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800{% else %}bg-gradient-to-br from-[var(--ds-brand)] via-[#E8721C] to-[var(--ds-brand-dark)]{% endif %} flex items-center justify-center">
-                    <i class="fa-solid {% if e.es_virtual %}fa-video{% else %}fa-calendar-check{% endif %} text-white/40 text-5xl"></i>
+                <div class="w-full h-full {% if e.is_virtual %}bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800{% else %}bg-gradient-to-br from-[var(--ds-brand)] via-[#E8721C] to-[var(--ds-brand-dark)]{% endif %} flex items-center justify-center">
+                    <i class="fa-solid {% if e.is_virtual %}fa-video{% else %}fa-calendar-check{% endif %} text-white/40 text-5xl"></i>
                 </div>
                 {% endif %}
                 <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/35"></div>
-                <span class="absolute top-2.5 right-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur-md {% if e.es_virtual %}bg-blue-500/85{% else %}bg-[var(--ds-brand)]/85{% endif %} text-white ring-1 ring-white/30">
-                    <i class="fa-solid {% if e.es_virtual %}fa-video{% else %}fa-building{% endif %} text-[9px]"></i>
-                    {{ e.es_virtual|yesno:'Virtual,Presencial' }}
+                <span class="absolute top-2.5 right-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur-md {% if e.is_virtual %}bg-blue-500/85{% else %}bg-[var(--ds-brand)]/85{% endif %} text-white ring-1 ring-white/30">
+                    <i class="fa-solid {% if e.is_virtual %}fa-video{% else %}fa-building{% endif %} text-[9px]"></i>
+                    {{ e.is_virtual|yesno:'Virtual,Presencial' }}
                 </span>
             </div>
             <div class="p-5 flex-1 flex flex-col">
                 <h3 class="font-black text-base text-slate-900 dark:text-white leading-snug mb-2"
                     style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-                    {{ e.titulo|default:e.dia_semana }}
+                    {{ e.title|default:e.day_of_week }}
                 </h3>
                 <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-[12px] text-slate-600 dark:text-slate-300 font-medium mb-3">
-                    <span><i class="fa-solid fa-calendar-day text-[var(--ds-brand)] mr-1"></i>{{ e.fecha|date:"d M" }}</span>
+                    <span><i class="fa-solid fa-calendar-day text-[var(--ds-brand)] mr-1"></i>{{ e.date|date:"d M" }}</span>
                     <span class="text-slate-300 dark:text-slate-600">·</span>
-                    <span class="ds-mono"><i class="fa-solid fa-clock text-[var(--ds-brand)] mr-1"></i>{{ e.hora_inicio|time:"H:i" }}</span>
+                    <span class="ds-mono"><i class="fa-solid fa-clock text-[var(--ds-brand)] mr-1"></i>{{ e.start_time|time:"H:i" }}</span>
                 </div>
                 <div class="mt-auto pt-3">
                     {% if participante %}
