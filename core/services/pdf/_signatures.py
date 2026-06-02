@@ -10,20 +10,20 @@ from ._helpers import hex2rgb
 def get_signatures_for_lote(lote):
     signatures = []
     for i in range(1, 5):
-        firma_inst = getattr(lote, f'firma_inst_{i}')
+        firma_inst = getattr(lote, f'signature_inst_{i}')
         if firma_inst:
             signatures.append({
-                'name': firma_inst.nombre,
-                'cargo': firma_inst.cargo,
-                'img': firma_inst.imagen
+                'name': firma_inst.name,
+                'cargo': firma_inst.role,
+                'img': firma_inst.image
             })
         else:
-            nombre = getattr(lote, f'nombre_firma_{i}')
+            nombre = getattr(lote, f'signature_name_{i}')
             if nombre:
                 signatures.append({
                     'name': nombre,
-                    'cargo': getattr(lote, f'cargo_firma_{i}'),
-                    'img': getattr(lote, f'imagen_firma_{i}')
+                    'cargo': getattr(lote, f'signature_role_{i}'),
+                    'img': getattr(lote, f'signature_image_{i}')
                 })
     return signatures
 
@@ -86,7 +86,7 @@ def draw_signatures_bottom(c, lote, width, line_color='#000000', name_color='#22
 
 def draw_signatures(c, certificado, width, y_position, color='#000000'):
     """Legacy wrapper - redirige a draw_signatures_bottom."""
-    draw_signatures_bottom(c, certificado.lote, width)
+    draw_signatures_bottom(c, certificado.batch, width)
 
 
 def draw_signatures_universal(c, lote, width, line_color=None, name_color='#1a1a1a',
@@ -132,8 +132,8 @@ def draw_signatures_universal(c, lote, width, line_color=None, name_color='#1a1a
         cx = margin_l + spacing * i + spacing / 2
 
         sig_num = i + 1
-        img_offset_y = getattr(lote, f'firma_{sig_num}_offset_y', 0) * cm
-        escala = getattr(lote, f'firma_{sig_num}_escala', 100) / 100.0
+        img_offset_y = getattr(lote, f'signature_{sig_num}_offset_y', 0) * cm
+        escala = getattr(lote, f'signature_{sig_num}_scale', 100) / 100.0
 
         img_h = BASE_IMG_H * escala
         img_w = BASE_IMG_W * escala
@@ -218,8 +218,8 @@ def _draw_geometric_signatures(c, lote, width, pri, sec, sig_y=None):
         
         # Per-signature adjustments — ONLY affect the image, NOT the line/text
         sig_num = i + 1
-        img_offset_y = getattr(lote, f'firma_{sig_num}_offset_y', 0) * cm
-        escala = getattr(lote, f'firma_{sig_num}_escala', 100) / 100.0
+        img_offset_y = getattr(lote, f'signature_{sig_num}_offset_y', 0) * cm
+        escala = getattr(lote, f'signature_{sig_num}_scale', 100) / 100.0
         
         # Scale image dimensions
         img_h = BASE_IMG_H * escala

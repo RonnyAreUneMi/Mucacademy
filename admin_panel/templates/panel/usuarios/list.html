@@ -62,7 +62,7 @@ function esc(s) {
 function renderRow(u) {
     const fullName = (`${u.first_name || ''} ${u.last_name || ''}`).trim() || u.username;
     const initials = ((u.first_name?.[0] || '') + (u.last_name?.[0] || '')).toUpperCase() || (u.username?.[0] || '?').toUpperCase();
-    const rolBadge = u.rol === 'superadmin'
+    const rolBadge = u.role === 'superadmin'
         ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
         : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
     return `
@@ -75,7 +75,7 @@ function renderRow(u) {
                 <div>
                     <p class="text-sm font-bold text-gray-900 dark:text-white">${esc(fullName)}</p>
                     <p class="text-xs text-gray-500 mb-1">${esc(u.email)}</p>
-                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${rolBadge}">${esc(u.rol_display || u.rol)}</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${rolBadge}">${esc(u.rol_display || u.role)}</span>
                 </div>
             </div>
         </td>
@@ -94,7 +94,7 @@ async function loadUsers(query = '') {
         const res = await fetch(url, { credentials: 'same-origin' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
-        const users = (data.results || data).filter(u => u.rol === 'admin' || u.rol === 'superadmin');
+        const users = (data.results || data).filter(u => u.role === 'admin' || u.role === 'superadmin');
         document.getElementById('stat-total').textContent = users.length;
 
         if (users.length === 0) {

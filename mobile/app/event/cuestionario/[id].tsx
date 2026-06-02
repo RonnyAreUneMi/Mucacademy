@@ -30,16 +30,17 @@ import {
 } from '@/theme/tokens';
 import { BettoLogo, Loader, useToast } from '@/components/ui';
 
-type Pregunta = {
-  pregunta: string;
-  opciones: string[];
-  correcta_idx: number;
-  explicacion?: string;
+type Question = {
+  question: string;
+  options: string[];
+  correct_idx: number;
+  explanation?: string;
 };
 
-type ResumenPayload = {
-  estado: string;
-  cuestionario?: Pregunta[];
+type SummaryPayload = {
+  status?: string;
+  estado?: string;
+  quiz?: Question[];
   intentos_disponibles?: number;
   max_intentos?: number;
 };
@@ -59,7 +60,7 @@ export default function CuestionarioScreen() {
   const insets = useSafeAreaInsets();
   const toast = useToast();
 
-  const [data, setData] = useState<ResumenPayload | null>(null);
+  const [data, setData] = useState<SummaryPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
@@ -76,11 +77,11 @@ export default function CuestionarioScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.get<ResumenPayload>(`/api/v1/public/sessions/${id}/resumen/`);
+        const res = await api.get<SummaryPayload>(`/api/v1/public/sessions/${id}/resumen/`);
         setData(res);
-        if (res.cuestionario) {
-          setAnswers(new Array(res.cuestionario.length).fill(null));
-          setTimesUsed(new Array(res.cuestionario.length).fill(TIME_PER_Q));
+        if (res.quiz) {
+          setAnswers(new Array(res.quiz.length).fill(null));
+          setTimesUsed(new Array(res.quiz.length).fill(TIME_PER_Q));
         }
         if (res.intentos_disponibles === 0) {
           toast.info(`Ya completaste tus ${res.max_intentos ?? 2} intentos.`, 'Sin intentos');
@@ -95,7 +96,7 @@ export default function CuestionarioScreen() {
   }, [id, toast]);
 
   // ── Timer por pregunta ─────────────────────────────────────────
-  const total = data?.cuestionario?.length ?? 0;
+  const total = data?.quiz?.length ?? 0;
 
   const clearTimers = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -103,7 +104,7 @@ export default function CuestionarioScreen() {
   }, []);
 
   useEffect(() => {
-    if (loading || done || !data?.cuestionario || answers[idx] !== null) return;
+    if (loading || done || !data?.quiz || answers[idx] !== null) return;
     setTimeLeft(TIME_PER_Q);
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
@@ -119,7 +120,7 @@ export default function CuestionarioScreen() {
     }, 1000);
     return () => clearTimers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idx, loading, done, data?.cuestionario, answers]);
+  }, [idx, loading, done, data?.quiz, answers]);
 
   // ── Responder ──────────────────────────────────────────────────
   function pick(optIdx: number | null) {
@@ -137,7 +138,7 @@ export default function CuestionarioScreen() {
       return copy;
     });
 
-    const correctIdx = data!.cuestionario![idx].correcta_idx;
+    const correctIdx = data!.quiz![idx].correct_idx;
     const wasCorrect = optIdx === correctIdx;
     Haptics.notificationAsync(
       wasCorrect ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error
@@ -181,7 +182,7 @@ export default function CuestionarioScreen() {
   if (loading) {
     return <View style={styles.loading}><Loader size={88} /></View>;
   }
-  if (!data?.cuestionario || total === 0) {
+  if (!data?.quiz || total === 0) {
     return (
       <View style={[styles.shell, { paddingTop: insets.top + spacing.lg }]}>
         <Text style={styles.empty}>No hay cuestionario disponible.</Text>
@@ -193,7 +194,7 @@ export default function CuestionarioScreen() {
     return (
       <ResultScreen
         answers={answers}
-        preguntas={data.cuestionario}
+        preguntas={data.quiz}
         timesUsed={timesUsed}
         intentosRestantes={intentosRestantes}
         submitting={submitting}
@@ -203,9 +204,9 @@ export default function CuestionarioScreen() {
     );
   }
 
-  const q = data.cuestionario[idx];
+  const q = data.quiz[idx];
   const responded = answers[idx] !== null;
-  const correctIdx = q.correcta_idx;
+  const correctIdx = q.correct_idx;
   const pickedIdx = answers[idx];
 
   return (
@@ -245,12 +246,12 @@ export default function CuestionarioScreen() {
           entering={ZoomIn.springify().damping(12)}
           style={styles.questionWrap}
         >
-          <Text style={styles.question}>{q.pregunta}</Text>
+          <Text style={styles.question}>{q.question}</Text>
         </Animated.View>
 
         {/* Opciones */}
         <View style={styles.options}>
-          {q.opciones.map((opt, i) => (
+          {q.options.map((opt, i) => (
             <OptionButton
               key={`${idx}-${i}`}
               letter={String.fromCharCode(65 + i)}
@@ -289,8 +290,8 @@ export default function CuestionarioScreen() {
                     ? '¡Correcto!'
                     : pickedIdx === null ? 'Tiempo agotado' : 'Incorrecto'}
                 </Text>
-                {q.explicacion ? (
-                  <Text style={styles.feedbackText}>{q.explicacion}</Text>
+                {q.explanation ? (
+                  <Text style={styles.feedbackText}>{q.explanation}</Text>
                 ) : null}
               </View>
             </View>
@@ -427,7 +428,7 @@ function ResultScreen({
   answers, preguntas, timesUsed, intentosRestantes, submitting, sesionId, insetTop,
 }: {
   answers: (number | null)[];
-  preguntas: Pregunta[];
+  preguntas: Question[];
   timesUsed: number[];
   intentosRestantes: number | null;
   submitting: boolean;
@@ -435,7 +436,7 @@ function ResultScreen({
   insetTop: number;
 }) {
   const correct: number = answers.reduce<number>(
-    (acc, a, i) => acc + (a === preguntas[i].correcta_idx ? 1 : 0),
+    (acc, a, i) => acc + (a === preguntas[i].correct_idx ? 1 : 0),
     0,
   );
   const total = preguntas.length;

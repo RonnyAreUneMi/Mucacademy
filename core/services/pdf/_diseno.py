@@ -19,52 +19,52 @@ _fonts_registered = False
 def _apply_diseno_global(lote):
     """
     Sobrescribe los campos de diseño del lote (en memoria) con los del
-    DisenoGlobal singleton, para que toda la generación de PDF use el
+    GlobalDesign singleton, para que toda la generación de PDF use el
     diseño global sin tener que tocar cada función.
 
-    Si el lote tiene `personalizar_diseno=True`, se usa el diseño propio del lote.
+    Si el lote tiene `customize_design=True`, se usa el diseño propio del lote.
     """
-    if getattr(lote, 'personalizar_diseno', False):
+    if getattr(lote, 'customize_design', False):
         return lote
 
     try:
-        from core.models import DisenoGlobal
-        diseno = DisenoGlobal.get_solo()
+        from core.models import GlobalDesign
+        diseno = GlobalDesign.load()
     except Exception:
         return lote
 
-    lote.plantilla = diseno.plantilla
-    lote.color_primario = diseno.color_primario
-    lote.color_secundario = diseno.color_secundario
-    lote.color_terciario = diseno.color_terciario
-    lote.color_texto = diseno.color_texto
-    lote.cuerpo_certificado = diseno.cuerpo_certificado
+    lote.template = diseno.template
+    lote.color_primary = diseno.color_primary
+    lote.color_secondary = diseno.color_secondary
+    lote.color_tertiary = diseno.color_tertiary
+    lote.color_text = diseno.color_text
+    lote.body_text = diseno.body_text
 
-    lote.firma_inst_1 = diseno.firma_inst_1
-    lote.firma_inst_2 = diseno.firma_inst_2
-    lote.firma_inst_3 = diseno.firma_inst_3
+    lote.signature_inst_1 = diseno.signature_inst_1
+    lote.signature_inst_2 = diseno.signature_inst_2
+    lote.signature_inst_3 = diseno.signature_inst_3
     # Limpiar firmas custom (1-3) — el diseño global solo usa firmas institucionales 1-3
     for i in (1, 2, 3):
-        setattr(lote, f'nombre_firma_{i}', '')
-        setattr(lote, f'cargo_firma_{i}', '')
-        setattr(lote, f'imagen_firma_{i}', '')
+        setattr(lote, f'signature_name_{i}', '')
+        setattr(lote, f'signature_role_{i}', '')
+        setattr(lote, f'signature_image_{i}', '')
 
     # Firma 4 = la personalizada del diseño global
-    lote.firma_inst_4 = None
-    lote.nombre_firma_4 = diseno.nombre_firma_4 or ''
-    lote.cargo_firma_4 = diseno.cargo_firma_4 or ''
-    lote.imagen_firma_4 = diseno.imagen_firma_4 or ''
+    lote.signature_inst_4 = None
+    lote.signature_name_4 = diseno.signature_name_4 or ''
+    lote.signature_role_4 = diseno.signature_role_4 or ''
+    lote.signature_image_4 = diseno.signature_image_4 or ''
 
-    lote.logo_header_1 = diseno.logo_header_1
-    lote.logo_header_2 = diseno.logo_header_2
-    lote.logo_header_3 = diseno.logo_header_3
+    lote.header_logo_1 = diseno.header_logo_1
+    lote.header_logo_2 = diseno.header_logo_2
+    lote.header_logo_3 = diseno.header_logo_3
 
-    lote.posicion_firmas = diseno.posicion_firmas
+    lote.signatures_position = diseno.signatures_position
 
     # Per-signature adjustments
     for i in range(1, 5):
-        setattr(lote, f'firma_{i}_offset_y', getattr(diseno, f'firma_{i}_offset_y', 0))
-        setattr(lote, f'firma_{i}_escala', getattr(diseno, f'firma_{i}_escala', 100))
+        setattr(lote, f'signature_{i}_offset_y', getattr(diseno, f'signature_{i}_offset_y', 0))
+        setattr(lote, f'signature_{i}_scale', getattr(diseno, f'signature_{i}_scale', 100))
 
     return lote
 

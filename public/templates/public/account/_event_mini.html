@@ -7,7 +7,7 @@ Args:
     has_resumen: bool — si True, muestra badge "Betto IA" + CTA al resumen
 {% endcomment %}
 {% load json_tags %}{% spaceless %}
-{% with ponentes_json=e.ponentes.all|ponentes_json %}
+{% with ponentes_json=e.speakers.all|ponentes_json %}
 {% if has_resumen and status and status != 'disponible' %}
 <a href="{% url 'public:account_evento_resumen' e.id %}"
    class="ev-card lg-card rounded-3xl overflow-hidden flex flex-col hover:-translate-y-1 transition-all group text-left w-full p-0 no-underline">
@@ -15,17 +15,17 @@ Args:
 <button type="button"
         class="ev-card lg-card rounded-3xl overflow-hidden flex flex-col hover:-translate-y-1 transition-all group text-left w-full p-0"
         data-ev-id="{{ e.id }}"
-        data-ev-title="{{ e.titulo|default:e.dia_semana }}"
-        data-ev-desc="{{ e.descripcion|default:'' }}"
-        data-ev-day="{{ e.dia_semana }}"
-        data-ev-date="{{ e.fecha|date:'l, d \\d\\e F \\d\\e Y'|capfirst }}"
-        data-ev-time-start="{{ e.hora_inicio|time:'H:i' }}"
-        data-ev-time-end="{{ e.hora_fin|time:'H:i' }}"
-        data-ev-virtual="{{ e.es_virtual|yesno:'1,0' }}"
-        data-ev-platform="{{ e.plataforma_display_safe|default:'' }}"
-        data-ev-meet="{{ e.enlace_virtual|default:'' }}"
-        data-ev-place="{{ e.lugar|default:'' }}"
-        data-ev-banner="{% if e.imagen_banner %}{{ e.imagen_banner.url }}{% endif %}"
+        data-ev-title="{{ e.title|default:e.day_of_week }}"
+        data-ev-desc="{{ e.description|default:'' }}"
+        data-ev-day="{{ e.day_of_week }}"
+        data-ev-date="{{ e.date|date:'l, d \\d\\e F \\d\\e Y'|capfirst }}"
+        data-ev-time-start="{{ e.start_time|time:'H:i' }}"
+        data-ev-time-end="{{ e.end_time|time:'H:i' }}"
+        data-ev-virtual="{{ e.is_virtual|yesno:'1,0' }}"
+        data-ev-platform="{{ e.platform_display_safe|default:'' }}"
+        data-ev-meet="{{ e.meeting_url|default:'' }}"
+        data-ev-place="{{ e.location|default:'' }}"
+        data-ev-banner="{% if e.banner_image %}{{ e.banner_image.url }}{% endif %}"
         data-ev-status="{{ status|default:'' }}"
         data-ev-ponentes="{{ ponentes_json }}"
         data-ev-inscribir-url="{% url 'public:account_evento_inscribir' e.id %}"
@@ -36,20 +36,20 @@ Args:
 {% endspaceless %}
     <!-- Hero más grande -->
     <div class="relative h-44 overflow-hidden rounded-t-3xl">
-        {% if e.imagen_banner %}
-        <img src="{{ e.imagen_banner.url }}" alt="" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+        {% if e.banner_image %}
+        <img src="{{ e.banner_image.url }}" alt="" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
         {% else %}
-        <div class="w-full h-full {% if e.es_virtual %}bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800{% else %}bg-gradient-to-br from-[var(--ds-brand)] via-[#E8721C] to-[var(--ds-brand-dark)]{% endif %} flex items-center justify-center">
-            <i class="fa-solid {% if e.es_virtual %}fa-video{% else %}fa-calendar-check{% endif %} text-white/40 text-6xl"></i>
+        <div class="w-full h-full {% if e.is_virtual %}bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800{% else %}bg-gradient-to-br from-[var(--ds-brand)] via-[#E8721C] to-[var(--ds-brand-dark)]{% endif %} flex items-center justify-center">
+            <i class="fa-solid {% if e.is_virtual %}fa-video{% else %}fa-calendar-check{% endif %} text-white/40 text-6xl"></i>
         </div>
         {% endif %}
         <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/40"></div>
 
         <!-- Pills -->
         <span class="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur-md
-                     {% if e.es_virtual %}bg-blue-500/90{% else %}bg-[var(--ds-brand)]/90{% endif %} text-white ring-1 ring-white/30">
-            <i class="fa-solid {% if e.es_virtual %}fa-video{% else %}fa-building{% endif %} text-[9px]"></i>
-            {{ e.es_virtual|yesno:'Virtual,Presencial' }}
+                     {% if e.is_virtual %}bg-blue-500/90{% else %}bg-[var(--ds-brand)]/90{% endif %} text-white ring-1 ring-white/30">
+            <i class="fa-solid {% if e.is_virtual %}fa-video{% else %}fa-building{% endif %} text-[9px]"></i>
+            {{ e.is_virtual|yesno:'Virtual,Presencial' }}
         </span>
 
         {% if status %}
@@ -66,7 +66,7 @@ Args:
         <div class="absolute bottom-3 left-3">
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white bg-black/40 backdrop-blur-md ring-1 ring-white/20">
                 <i class="fa-solid fa-calendar-day text-[10px]"></i>
-                {{ e.dia_semana|truncatechars:3 }} {{ e.fecha|date:"d M" }} · {{ e.hora_inicio|time:"H:i" }}
+                {{ e.day_of_week|truncatechars:3 }} {{ e.date|date:"d M" }} · {{ e.start_time|time:"H:i" }}
             </span>
         </div>
 
@@ -76,12 +76,12 @@ Args:
     <div class="p-5 flex-1 flex flex-col relative">
         <h3 class="font-black text-base text-slate-900 dark:text-white leading-snug pr-9 mb-2 tracking-tight"
             style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-            {{ e.titulo|default:e.dia_semana }}
+            {{ e.title|default:e.day_of_week }}
         </h3>
 
         <!-- Meta secundaria -->
         <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400 font-medium">
-            {% if e.es_virtual %}
+            {% if e.is_virtual %}
             <span class="inline-flex items-center gap-1.5">
                 <svg viewBox="0 0 87.5 72" width="14" height="11.5" style="flex-shrink:0;" aria-hidden="true">
                     <path fill="#00832d" d="M49.5 36l8.53 9.75 11.47 7.33 2-17.02-2-16.64-11.69 6.44z"/>
@@ -91,15 +91,15 @@ Args:
                     <path fill="#00ac47" d="M82.6 8.68L69.5 19.42v33.66l13.16 10.79c1.97 1.54 4.85.135 4.85-2.37V11c0-2.535-2.945-3.925-4.91-2.32zM49.5 36v15.5h-29V72h43c3.315 0 6-2.685 6-6V53.08z"/>
                     <path fill="#ffba00" d="M63.5 0h-43v20.5h29V36l20-.04V6c0-3.315-2.685-6-6-6z"/>
                 </svg>
-                {{ e.plataforma_display_safe|default:"Google Meet" }}
+                {{ e.platform_display_safe|default:"Google Meet" }}
             </span>
-            {% elif e.lugar %}
+            {% elif e.location %}
             <span class="inline-flex items-center gap-1.5 truncate">
                 <i class="fa-solid fa-location-dot text-[var(--ds-brand)] text-[11px]"></i>
-                <span class="truncate">{{ e.lugar|truncatechars:30 }}</span>
+                <span class="truncate">{{ e.location|truncatechars:30 }}</span>
             </span>
             {% endif %}
-            {% with cnt=e.ponentes.all|length %}
+            {% with cnt=e.speakers.all|length %}
             {% if cnt %}
             <span class="text-slate-300 dark:text-slate-600">·</span>
             <span class="inline-flex items-center gap-1.5">

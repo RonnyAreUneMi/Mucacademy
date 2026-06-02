@@ -13,10 +13,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from core.models import (
-    SesionAsistencia, ConfirmacionAsistencia, RegistroAsistencia,
-    LoteCertificados, Certificado, FirmaInstitucional,
+    Event, Enrollment, Attendance,
+    CertificateBatch, Certificate, Signature,
 )
-from core.models._choices import Modalidad
+from core.models.catalogs.enums import EventModality
 from core.services.pdf_service import generate_certificate_pdf
 from core.services.meet import calendar_client as meet_calendar
 from core.tasks.email_tasks import send_certificate_issued_bulk
@@ -32,12 +32,12 @@ from .serializers import (
 
 class SesionViewSet(AuditedModelViewSet):
     """CRUD admin de sesiones/eventos."""
-    queryset = SesionAsistencia.objects.all()
+    queryset = Event.objects.all()
     permission_classes = [permissions.IsAdminUser]
-    filterset_fields = ['activa', 'modalidad', 'solo_lideres', 'fecha', 'lote']
-    search_fields = ['titulo', 'descripcion', 'lugar']
-    ordering_fields = ['fecha', 'hora_inicio', 'created_at']
-    ordering = ['-fecha', '-hora_inicio']
+    filterset_fields = ['is_active', 'modality', 'leaders_only', 'date', 'batch']
+    search_fields = ['title', 'description', 'location']
+    ordering_fields = ['date', 'start_time', 'created_at']
+    ordering = ['-date', '-start_time']
 
     audit_verbose_name = 'sesion'
 
@@ -49,13 +49,13 @@ class SesionViewSet(AuditedModelViewSet):
         return SesionListSerializer
 
     def audit_detail(self, instance, action):
-        return f'Sesión #{instance.pk} ({instance.titulo or instance.dia_semana} - {instance.fecha})'
+        return f'Sesión #{instance.pk} ({instance.title or instance.day_of_week} - {instance.date})'
 
     # ── Hooks Google Calendar / Meet ─────────────────────────────
-    def _should_auto_create_meet(self, sesion: SesionAsistencia) -> bool:
+    def _should_auto_create_meet(self, sesion: Event) -> bool:
         """Toda sesión virtual = Meet auto-generado (no hay otras plataformas)."""
         return (
-            sesion.modalidad == Modalidad.VIRTUAL
+            sesion.modality == EventModality.VIRTUAL
             and not sesion.google_calendar_event_id
         )
 
@@ -65,10 +65,10 @@ class SesionViewSet(AuditedModelViewSet):
             result = meet_calendar.create_meet_event(sesion)
             if result is not None:
                 meet_link, event_id = result
-                sesion.enlace_virtual = meet_link
+                sesion.meeting_url = meet_link
                 sesion.google_calendar_event_id = event_id
-                sesion.save(update_fields=['enlace_virtual', 'google_calendar_event_id'])
-                self.log_audit('CREAR_MEET_SESION', f'Sesión #{sesion.pk}: {meet_link}')
+                sesion.save(update_fields=['meeting_url', 'google_calendar_event_id'])
+                self.log_audit('CREATE', f'Meet event #{sesion.pk}: {meet_link}')
         # Auditoría base (la del AuditedModelViewSet)
         self.log_audit(self._action_code('create'), self.audit_detail(sesion, 'create'))
 
@@ -82,14 +82,14 @@ class SesionViewSet(AuditedModelViewSet):
             result = meet_calendar.create_meet_event(sesion)
             if result is not None:
                 meet_link, event_id = result
-                sesion.enlace_virtual = meet_link
+                sesion.meeting_url = meet_link
                 sesion.google_calendar_event_id = event_id
-                sesion.save(update_fields=['enlace_virtual', 'google_calendar_event_id'])
+                sesion.save(update_fields=['meeting_url', 'google_calendar_event_id'])
         self.log_audit(self._action_code('update'), self.audit_detail(sesion, 'update'))
 
     def destroy(self, request, *args, **kwargs):
         sesion = self.get_object()
-        if sesion.confirmaciones.exists() or sesion.registros.exists():
+        if sesion.enrollments.exists() or sesion.attendances.exists():
             return Response(
                 {'error': 'No puedes eliminar una sesión que ya tiene participantes registrados o confirmados.'},
                 status=status.HTTP_409_CONFLICT,
@@ -102,19 +102,19 @@ class SesionViewSet(AuditedModelViewSet):
     @action(detail=True, methods=['post'])
     def toggle(self, request, pk=None):
         sesion = self.get_object()
-        sesion.activa = not sesion.activa
-        sesion.save(update_fields=['activa'])
-        self.log_audit('TOGGLE_SESION', f'Sesión #{sesion.pk} → activa={sesion.activa}')
-        return Response({'id': sesion.id, 'activa': sesion.activa})
+        sesion.is_active = not sesion.is_active
+        sesion.save(update_fields=['is_active'])
+        self.log_audit('UPDATE', f'Event #{sesion.pk} → is_active={sesion.is_active}')
+        return Response({'id': sesion.id, 'is_active': sesion.is_active})
 
     @action(detail=True, methods=['get'])
     def confirmados(self, request, pk=None):
         sesion = self.get_object()
         qs = (
-            ConfirmacionAsistencia.objects
-            .filter(sesion=sesion, confirmado=True)
-            .select_related('participante')
-            .order_by('-fecha_confirmacion')
+            Enrollment.objects
+            .filter(event=sesion, confirmed=True)
+            .select_related('participant')
+            .order_by('-enrolled_at')
         )
         return Response(ConfirmacionSerializer(qs, many=True).data)
 
@@ -124,31 +124,31 @@ class SesionViewSet(AuditedModelViewSet):
         sesion = self.get_object()
         since_str = request.query_params.get('since', '')
 
-        registros = RegistroAsistencia.objects.filter(sesion=sesion).select_related('participante', 'certificado')
+        registros = Attendance.objects.filter(event=sesion).select_related('participant', 'certificate')
 
         if since_str:
             try:
                 since_dt = datetime.fromisoformat(since_str)
-                registros = registros.filter(fecha_registro__gt=since_dt)
+                registros = registros.filter(registered_at__gt=since_dt)
             except (ValueError, TypeError):
                 pass
 
-        registros = registros.order_by('-fecha_registro')[:50]
-        total = RegistroAsistencia.objects.filter(sesion=sesion).count()
+        registros = registros.order_by('-registered_at')[:50]
+        total = Attendance.objects.filter(event=sesion).count()
 
         attendees = []
         for r in registros:
-            p = r.participante
-            c = r.certificado
+            p = r.participant
+            c = r.certificate
             # Convertir a hora local antes de formatear (la BDD guarda UTC)
-            local_dt = timezone.localtime(r.fecha_registro)
+            local_dt = timezone.localtime(r.registered_at)
             attendees.append({
                 'id': r.id,
-                'nombre': f'{p.nombres} {p.apellidos}' if p else (f'{c.nombres} {c.apellidos}' if c else '?'),
-                'cedula': p.cedula if p else (c.cedula if c else ''),
+                'nombre': f'{p.first_name} {p.last_name}' if p else (f'{c.first_name} {c.last_name}' if c else '?'),
+                'cedula': p.national_id if p else (c.national_id if c else ''),
                 'email': p.email if p else (c.email if c else ''),
                 'hora': local_dt.strftime('%H:%M:%S'),
-                'timestamp': r.fecha_registro.isoformat(),
+                'timestamp': r.registered_at.isoformat(),
             })
 
         return Response({
@@ -161,13 +161,13 @@ class SesionViewSet(AuditedModelViewSet):
     def qr_info(self, request, pk=None):
         """GET → URL de check-in absoluta + totales para la pantalla QR."""
         sesion = self.get_object()
-        checkin_url = request.build_absolute_uri(f'/checkin/{sesion.codigo_qr}/')
+        checkin_url = request.build_absolute_uri(f'/checkin/{sesion.qr_code}/')
         return Response({
-            'codigo_qr': sesion.codigo_qr,
+            'codigo_qr': sesion.qr_code,
             'checkin_url': checkin_url,
-            'total_registros': RegistroAsistencia.objects.filter(sesion=sesion).count(),
-            'titulo': sesion.titulo or sesion.dia_semana,
-            'fecha': sesion.fecha.strftime('%d/%m/%Y'),
+            'total_registros': Attendance.objects.filter(event=sesion).count(),
+            'titulo': sesion.title or sesion.day_of_week,
+            'fecha': sesion.date.strftime('%d/%m/%Y'),
             'horario': sesion.label,
         })
 
@@ -177,9 +177,9 @@ class SesionViewSet(AuditedModelViewSet):
         from PyPDF2 import PdfMerger
 
         sesion = self.get_object()
-        confirmaciones = ConfirmacionAsistencia.objects.filter(
-            sesion=sesion, confirmado=True
-        ).select_related('certificado', 'certificado__lote')
+        confirmaciones = Enrollment.objects.filter(
+            event=sesion, confirmed=True
+        ).select_related('certificate', 'certificate__batch')
 
         if not confirmaciones.exists():
             return Response({'error': 'No hay participantes confirmados.'}, status=status.HTTP_404_NOT_FOUND)
@@ -188,7 +188,7 @@ class SesionViewSet(AuditedModelViewSet):
         count = 0
         for conf in confirmaciones:
             try:
-                cert = conf.certificado
+                cert = conf.certificate
                 if not cert:
                     continue
                 pdf_buffer = generate_certificate_pdf(cert)
@@ -205,28 +205,28 @@ class SesionViewSet(AuditedModelViewSet):
         merger.close()
         output_buffer.seek(0)
 
-        safe_dia = sesion.dia_semana.replace('é', 'e').replace('á', 'a')
-        filename = f'Certificados_{safe_dia}_{sesion.hora_inicio:%H%M}_{count}personas.pdf'
+        safe_dia = sesion.day_of_week.replace('é', 'e').replace('á', 'a')
+        filename = f'Certificados_{safe_dia}_{sesion.start_time:%H%M}_{count}personas.pdf'
 
-        self.log_audit('BULK_PDF_SESION', f'Sesión #{sesion.pk}: {count} PDFs merged')
+        self.log_audit('DOWNLOAD', f'Event #{sesion.pk}: {count} PDFs merged')
         response = HttpResponse(output_buffer, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
     @action(detail=True, methods=['post'], url_path='generate-batch')
     def generate_batch(self, request, pk=None):
-        """POST {facultad} → crea LoteCertificados desde los confirmados de esta sesión."""
+        """POST {facultad} → crea CertificateBatch desde los confirmados de esta sesión."""
         sesion = self.get_object()
 
-        if sesion.lote:
+        if sesion.batch:
             return Response(
-                {'error': 'Esta sesión ya tiene un lote asociado.', 'lote_id': sesion.lote_id},
+                {'error': 'Esta sesión ya tiene un lote asociado.', 'lote_id': sesion.batch_id},
                 status=status.HTTP_409_CONFLICT,
             )
 
-        confirmaciones = ConfirmacionAsistencia.objects.filter(
-            sesion=sesion, confirmado=True, participante__isnull=False
-        ).select_related('participante')
+        confirmaciones = Enrollment.objects.filter(
+            event=sesion, confirmed=True, participant__isnull=False
+        ).select_related('participant')
 
         if not confirmaciones.exists():
             return Response(
@@ -234,30 +234,30 @@ class SesionViewSet(AuditedModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        facultad = request.data.get('facultad', 'FACI')
+        facultad = request.data.get('faculty', request.data.get('facultad', 'FACI'))
 
         with transaction.atomic():
-            sesion = SesionAsistencia.objects.select_for_update().get(pk=pk)
-            if sesion.lote:
+            sesion = Event.objects.select_for_update().get(pk=pk)
+            if sesion.batch:
                 return Response(
-                    {'error': 'Esta sesión ya tiene un lote asociado.', 'lote_id': sesion.lote_id},
+                    {'error': 'Esta sesión ya tiene un lote asociado.', 'lote_id': sesion.batch_id},
                     status=status.HTTP_409_CONFLICT,
                 )
 
-            lote = LoteCertificados.objects.create(
-                nombre_lote=sesion.titulo or f'Sesión {sesion.fecha} {sesion.label}',
-                administrador=request.user,
-                facultad=facultad,
+            lote = CertificateBatch.objects.create(
+                name=sesion.title or f'Sesión {sesion.date} {sesion.label}',
+                administrator=request.user,
+                faculty=facultad,
             )
 
-            firmas_default = list(FirmaInstitucional.objects.filter(activa=True).order_by('orden')[:3])
+            firmas_default = list(Signature.objects.filter(is_active=True).order_by('sort_order')[:3])
             for i, firma in enumerate(firmas_default, start=1):
-                setattr(lote, f'firma_inst_{i}', firma)
+                setattr(lote, f'signature_inst_{i}', firma)
 
             default_logos = [
-                ('logo_header_1', 'muc.png'),
-                ('logo_header_2', 'logo-unemi-removebg-preview.png'),
-                ('logo_header_3', 'feue.png'),
+                ('header_logo_1', 'muc.png'),
+                ('header_logo_2', 'logo-unemi-removebg-preview.png'),
+                ('header_logo_3', 'feue.png'),
             ]
             for field_name, filename in default_logos:
                 img_path = os.path.join(django_settings.BASE_DIR, 'static', 'img', filename)
@@ -269,37 +269,37 @@ class SesionViewSet(AuditedModelViewSet):
 
             certs = []
             for conf in confirmaciones:
-                p = conf.participante
-                certs.append(Certificado(
-                    lote=lote,
-                    participante=p,
-                    cedula=p.cedula or f'GEN-{uuid.uuid4().hex[:8].upper()}',
-                    nombres=p.nombres,
-                    apellidos=p.apellidos,
+                p = conf.participant
+                certs.append(Certificate(
+                    batch=lote,
+                    participant=p,
+                    national_id=p.national_id or f'GEN-{uuid.uuid4().hex[:8].upper()}',
+                    first_name=p.first_name,
+                    last_name=p.last_name,
                     email=p.email,
-                    celular=p.celular,
-                    curso=lote.nombre_lote.upper(),
+                    phone=p.phone,
+                    course=lote.name.upper(),
                 ))
-            Certificado.objects.bulk_create(certs)
+            Certificate.objects.bulk_create(certs)
 
-            sesion.lote = lote
-            sesion.save(update_fields=['lote'])
+            sesion.batch = lote
+            sesion.save(update_fields=['batch'])
 
         self.log_audit(
-            'GENERAR_LOTE_SESION',
-            f'Lote "{lote.nombre_lote}" generado desde sesión {sesion.id} con {len(certs)} certificados',
+            'CREATE',
+            f'Batch "{lote.name}" generated from event {sesion.id} with {len(certs)} certificates',
         )
 
         # ── Notificación por correo a cada participante (async vía Celery) ──
         # En vez de bloquear el request mientras se envían N correos, despachamos
         # una task de Celery que itera y envía. En desarrollo sin Redis, EAGER
         # mode hace que corra inmediatamente sincrónica (mismo comportamiento).
-        send_certificate_issued_bulk.delay(lote_id=lote.id)
+        send_certificate_issued_bulk.delay(batch_id=lote.id)
 
         return Response({
             'ok': True,
-            'lote_id': lote.id,
-            'lote_nombre': lote.nombre_lote,
-            'certificados_creados': len(certs),
-            'correos_encolados': len(certs),
+            'batch_id': lote.id,
+            'batch_name': lote.name,
+            'certificates_created': len(certs),
+            'emails_queued': len(certs),
         })

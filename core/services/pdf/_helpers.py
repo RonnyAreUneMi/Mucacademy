@@ -118,9 +118,9 @@ def format_body_text(certificado, wrap_width=75):
     del curso en negrita. Si no hay marcador {curso}, todo va en pre_lines.
     """
     from textwrap import wrap
-    body_raw = certificado.lote.cuerpo_certificado or ''
-    curso_upper = (certificado.lote.nombre_lote or '').upper()
-    horas_str = str(certificado.horas or 0)
+    body_raw = certificado.batch.body_text or ''
+    curso_upper = (certificado.batch.name or '').upper()
+    horas_str = str(certificado.hours or 0)
     body = body_raw.replace('{horas}', horas_str)
 
     if '{curso}' in body:

@@ -8,8 +8,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import (
-    Certificado, LoteCertificados, Auditoria,
-    SesionAsistencia, Participante, ConfirmacionAsistencia, SolicitudAcceso,
+    Certificate, CertificateBatch, AuditLog,
+    Event, Participant, Enrollment, AccessRequest,
 )
 
 
@@ -21,66 +21,66 @@ class AdminDashboardView(APIView):
         now = timezone.now()
         today = now.date()
 
-        total_certificados = Certificado.objects.count()
-        total_descargas = Certificado.objects.aggregate(total=Sum('descargas_count'))['total'] or 0
-        total_busquedas = Certificado.objects.aggregate(total=Sum('veces_buscado'))['total'] or 0
-        total_lotes = LoteCertificados.objects.count()
-        total_participantes = Participante.objects.count()
-        total_eventos = SesionAsistencia.objects.filter(activa=True).count()
-        total_inscripciones = ConfirmacionAsistencia.objects.filter(confirmado=True).count()
-        solicitudes_pendientes = SolicitudAcceso.objects.filter(estado='pendiente').count()
+        total_certificados = Certificate.objects.count()
+        total_descargas = Certificate.objects.aggregate(total=Sum('download_count'))['total'] or 0
+        total_busquedas = Certificate.objects.aggregate(total=Sum('search_count'))['total'] or 0
+        total_lotes = CertificateBatch.objects.count()
+        total_participantes = Participant.objects.count()
+        total_eventos = Event.objects.filter(is_active=True).count()
+        total_inscripciones = Enrollment.objects.filter(confirmed=True).count()
+        solicitudes_pendientes = AccessRequest.objects.filter(status='pending').count()
 
         # Lotes recientes
         recent_lotes = list(
-            LoteCertificados.objects.order_by('-fecha_creacion')
-            .values('id', 'nombre_lote', 'facultad', 'fecha_creacion')[:5]
+            CertificateBatch.objects.order_by('-created_at')
+            .values('id', 'name', 'faculty', 'created_at')[:5]
         )
 
         # Auditoría reciente
         auditoria = list(
-            Auditoria.objects.select_related('usuario')[:10]
-            .values('id', 'accion', 'detalle', 'fecha',
-                    'usuario__username', 'usuario__first_name', 'usuario__last_name')
+            AuditLog.objects.select_related('user')[:10]
+            .values('id', 'action', 'details', 'created_at',
+                    'user__username', 'user__first_name', 'user__last_name')
         )
 
         # Distribución por facultad
         stats_facultad = list(
-            Certificado.objects.values('lote__facultad')
+            Certificate.objects.values('batch__faculty')
             .annotate(total=Count('id')).order_by('-total')
         )
-        labels_facultad = [i['lote__facultad'] for i in stats_facultad if i['lote__facultad']]
-        data_facultad = [i['total'] for i in stats_facultad if i['lote__facultad']]
+        labels_facultad = [i['batch__faculty'] for i in stats_facultad if i['batch__faculty']]
+        data_facultad = [i['total'] for i in stats_facultad if i['batch__faculty']]
 
         # Top 5 lotes por descargas
         top_lotes = list(
-            Certificado.objects.values('lote__nombre_lote')
-            .annotate(downloads=Sum('descargas_count'))
+            Certificate.objects.values('batch__name')
+            .annotate(downloads=Sum('download_count'))
             .order_by('-downloads')[:5]
         )
-        labels_top_lotes = [i['lote__nombre_lote'] for i in top_lotes]
+        labels_top_lotes = [i['batch__name'] for i in top_lotes]
         data_top_lotes = [i['downloads'] or 0 for i in top_lotes]
 
         # Próximos eventos (próximos 7 días)
         upcoming_sessions_qs = (
-            SesionAsistencia.objects
-            .filter(activa=True, fecha__gte=today, fecha__lte=today + timedelta(days=7))
-            .annotate(num_inscritos=Count('confirmaciones'))
-            .order_by('fecha', 'hora_inicio')[:5]
+            Event.objects
+            .filter(is_active=True, date__gte=today, date__lte=today + timedelta(days=7))
+            .annotate(num_inscritos=Count('enrollments'))
+            .order_by('date', 'start_time')[:5]
         )
         upcoming_sessions = [
             {
                 'id': s.id,
-                'titulo': s.titulo or s.dia_semana,
-                'fecha': s.fecha.isoformat(),
-                'fecha_display': s.fecha.strftime('%d/%m'),
-                'dia_semana': s.dia_semana,
-                'hora_inicio': s.hora_inicio.strftime('%H:%M'),
-                'hora_fin': s.hora_fin.strftime('%H:%M'),
-                'modalidad': s.modalidad,
-                'lugar': s.lugar,
+                'titulo': s.title or s.day_of_week,
+                'fecha': s.date.isoformat(),
+                'fecha_display': s.date.strftime('%d/%m'),
+                'dia_semana': s.day_of_week,
+                'hora_inicio': s.start_time.strftime('%H:%M'),
+                'hora_fin': s.end_time.strftime('%H:%M'),
+                'modalidad': s.modality,
+                'lugar': s.location,
                 'inscritos': s.num_inscritos,
-                'capacidad': s.capacidad,
-                'es_hoy': s.fecha == today,
+                'capacidad': s.capacity,
+                'es_hoy': s.date == today,
             }
             for s in upcoming_sessions_qs
         ]
@@ -105,12 +105,12 @@ class AdminDashboardView(APIView):
             (today - timedelta(days=offset)).strftime('%d/%m')
             for offset in range(13, -1, -1)
         ]
-        data_daily = _serie_diaria_count(Certificado.objects.all(), 'created_at')
+        data_daily = _serie_diaria_count(Certificate.objects.all(), 'created_at')
         data_inscripciones_daily = _serie_diaria_count(
-            ConfirmacionAsistencia.objects.filter(confirmado=True), 'fecha_confirmacion'
+            Enrollment.objects.filter(confirmed=True), 'enrolled_at'
         )
         data_eventos_daily = _serie_diaria_count(
-            SesionAsistencia.objects.filter(activa=True), 'created_at'
+            Event.objects.filter(is_active=True), 'created_at'
         )
 
         return Response({
@@ -129,11 +129,11 @@ class AdminDashboardView(APIView):
             'auditoria': [
                 {
                     'id': a['id'],
-                    'accion': a['accion'],
-                    'detalle': a['detalle'],
-                    'fecha': a['fecha'].isoformat(),
-                    'usuario_username': a['usuario__username'],
-                    'usuario_nombre': f"{a['usuario__first_name']} {a['usuario__last_name']}".strip(),
+                    'accion': a['action'],
+                    'detalle': a['details'],
+                    'fecha': a['created_at'].isoformat(),
+                    'usuario_username': a['user__username'],
+                    'usuario_nombre': f"{a['user__first_name']} {a['user__last_name']}".strip(),
                 }
                 for a in auditoria
             ],

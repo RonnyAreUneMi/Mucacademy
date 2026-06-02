@@ -217,7 +217,7 @@
                     <i class="fa-solid fa-sun"></i> {{ today|date:"l, d \d\e F"|capfirst }}
                 </p>
                 <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1.5 tracking-tight">
-                    Hola, <span class="brand-ai">{{ p.nombres }}</span>.
+                    Hola, <span class="brand-ai">{{ p.first_name }}</span>.
                 </h1>
                 <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
                     {% if eventos_proximos %}Tienes {{ eventos_proximos|length }} evento{{ eventos_proximos|length|pluralize:"s" }} próximo{{ eventos_proximos|length|pluralize:"s" }}.{% else %}Hoy es un buen día para descubrir un evento nuevo.{% endif %}
@@ -338,12 +338,12 @@
             </p>
             <h3 class="ds-display text-lg font-black text-slate-900 dark:text-white leading-tight"
                 style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-                {{ next_event.titulo|default:next_event.dia_semana }}
+                {{ next_event.title|default:next_event.day_of_week }}
             </h3>
             <div class="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2 text-[12px] text-slate-600 dark:text-slate-300 font-medium">
-                <span><i class="fa-solid fa-calendar-day text-[var(--ds-brand)] mr-1"></i>{{ next_event.fecha|date:"d M" }}</span>
+                <span><i class="fa-solid fa-calendar-day text-[var(--ds-brand)] mr-1"></i>{{ next_event.date|date:"d M" }}</span>
                 <span class="text-slate-300 dark:text-slate-600">·</span>
-                <span class="ds-mono"><i class="fa-solid fa-clock text-[var(--ds-brand)] mr-1"></i>{{ next_event.hora_inicio|time:"H:i" }}</span>
+                <span class="ds-mono"><i class="fa-solid fa-clock text-[var(--ds-brand)] mr-1"></i>{{ next_event.start_time|time:"H:i" }}</span>
             </div>
 
             <!-- Countdown -->
@@ -356,8 +356,8 @@
 
             <!-- CTA -->
             <div class="mt-4 flex items-center gap-2">
-                {% if next_event.es_virtual and next_event.enlace_virtual %}
-                <a href="{{ next_event.enlace_virtual }}" target="_blank" rel="noopener" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold
+                {% if next_event.is_virtual and next_event.meeting_url %}
+                <a href="{{ next_event.meeting_url }}" target="_blank" rel="noopener" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold
                         bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)] text-white
                         shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_14px_-4px_rgba(245,136,48,0.40)]
                         hover:brightness-110 transition-all">
@@ -454,15 +454,15 @@
             {% if certificados_recientes %}
             <div class="space-y-2">
                 {% for c in certificados_recientes %}
-                <a href="/api/v1/public/certificates/{{ c.hash_verificacion }}/download/" target="_blank"
+                <a href="/api/v1/public/certificates/{{ c.verification_hash }}/download/" target="_blank"
                    class="flex items-center gap-3 p-2.5 rounded-xl bg-white/50 dark:bg-white/[0.04] border border-white/60 dark:border-white/10
                           hover:bg-white/80 dark:hover:bg-white/[0.08] transition-all">
                     <span class="nm-disc nm-disc--brand nm-disc--sm flex-shrink-0">
                         <i class="fa-solid fa-certificate"></i>
                     </span>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ c.curso }}</p>
-                        <p class="text-[10px] text-slate-500 dark:text-slate-400">{{ c.fecha_curso|date:"d M Y" }} · {{ c.horas }}h</p>
+                        <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ c.course }}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400">{{ c.course_date|date:"d M Y" }} · {{ c.hours }}h</p>
                     </div>
                     <i class="fa-solid fa-arrow-down text-slate-400"></i>
                 </a>

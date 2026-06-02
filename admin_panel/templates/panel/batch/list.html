@@ -66,20 +66,20 @@
                             {{ lote.id }}
                         </td>
                         <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                            {{ lote.nombre_lote }}
+                            {{ lote.name }}
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
                                 <div class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center text-xs">
-                                    {{ lote.administrador.username|first|upper }}
+                                    {{ lote.administrator.username|first|upper }}
                                 </div>
-                                {{ lote.administrador.username }}
+                                {{ lote.administrator.username }}
                             </div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
                                 <i class="fa-regular fa-calendar text-gray-400"></i>
-                                {{ lote.fecha_creacion|date:"d M Y" }}
+                                {{ lote.created_at|date:"d M Y" }}
                             </div>
                         </td>
                         <td class="px-6 py-4 text-right">

@@ -5,17 +5,17 @@ mobile no lo necesita; solo el resumen procesado y el cuestionario.
 """
 from rest_framework import serializers
 
-from core.models import IntentoCuestionario, ResumenSesion
+from core.models import QuizAttempt, SessionSummary
 
 
 class IntentoCuestionarioSerializer(serializers.ModelSerializer):
-    porcentaje = serializers.IntegerField(read_only=True)
+    porcentaje = serializers.IntegerField(source='percentage', read_only=True)
 
     class Meta:
-        model = IntentoCuestionario
+        model = QuizAttempt
         fields = [
-            'id', 'correctas', 'total', 'porcentaje',
-            'tiempo_total_seg', 'respuestas', 'created_at',
+            'id', 'correct', 'total', 'porcentaje',
+            'total_time_seconds', 'answers', 'created_at',
         ]
         read_only_fields = fields
 
@@ -23,15 +23,15 @@ class IntentoCuestionarioSerializer(serializers.ModelSerializer):
 class ResumenSesionSerializer(serializers.ModelSerializer):
     is_ready = serializers.BooleanField(read_only=True)
     has_failed = serializers.BooleanField(read_only=True)
-    estado_display = serializers.CharField(source='get_estado_display', read_only=True)
+    estado_display = serializers.CharField(source='get_status_display', read_only=True)
 
     class Meta:
-        model = ResumenSesion
+        model = SessionSummary
         fields = [
-            'id', 'estado', 'estado_display',
+            'id', 'status', 'estado_display',
             'is_ready', 'has_failed',
-            'resumen_md', 'puntos_clave', 'proximos_pasos', 'cuestionario',
-            'duracion_minutos', 'transcript_chars',
-            'ai_model', 'created_at', 'procesado_at',
+            'summary_md', 'key_points', 'next_steps', 'quiz',
+            'duration_minutes', 'transcript_chars',
+            'ai_model', 'created_at', 'processed_at',
         ]
         read_only_fields = fields

@@ -38,7 +38,7 @@
                 <div class="absolute inset-0 opacity-15" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 18px 18px;"></div>
                 <i class="fa-solid fa-certificate text-white/40 text-5xl relative"></i>
                 <span class="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/85 dark:bg-black/40 text-slate-900 dark:text-white backdrop-blur-md ring-1 ring-white/60">
-                    {{ c.horas }}h
+                    {{ c.hours }}h
                 </span>
             </div>
 
@@ -46,20 +46,20 @@
             <div class="p-4 flex-1 flex flex-col">
                 <h3 class="font-black text-sm text-slate-900 dark:text-white leading-snug line-clamp-2 mb-1.5"
                     style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-                    {{ c.curso }}
+                    {{ c.course }}
                 </h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400">
-                    <i class="fa-solid fa-calendar-day text-[var(--ds-brand)] mr-1"></i>{{ c.fecha_curso|date:"d M Y" }}
+                    <i class="fa-solid fa-calendar-day text-[var(--ds-brand)] mr-1"></i>{{ c.course_date|date:"d M Y" }}
                 </p>
-                {% if c.lote %}
+                {% if c.batch %}
                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1 truncate">
-                    <i class="fa-solid fa-graduation-cap mr-1"></i>{{ c.lote.nombre_lote|truncatechars:42 }}
+                    <i class="fa-solid fa-graduation-cap mr-1"></i>{{ c.batch.name|truncatechars:42 }}
                 </p>
                 {% endif %}
 
                 <!-- Actions -->
                 <div class="mt-auto pt-3.5 flex items-center gap-1.5">
-                    <a href="/api/v1/public/certificates/{{ c.hash_verificacion }}/download/" target="_blank"
+                    <a href="/api/v1/public/certificates/{{ c.verification_hash }}/download/" target="_blank"
                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold
                               bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)] text-white
                               shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_14px_-4px_rgba(245,136,48,0.40)]
@@ -67,7 +67,7 @@
                        data-tip="Descargar PDF">
                         <i class="fa-solid fa-download"></i> Descargar
                     </a>
-                    <a href="{% url 'public:verify_certificate' c.hash_verificacion %}"
+                    <a href="{% url 'public:verify_certificate' c.verification_hash %}"
                        class="w-9 h-9 inline-flex items-center justify-center rounded-xl text-xs
                               bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
                               text-slate-600 dark:text-slate-300
@@ -75,7 +75,7 @@
                        data-tip="Verificar autenticidad" data-tip-pos="left">
                         <i class="fa-solid fa-shield-halved"></i>
                     </a>
-                    <button onclick="navigator.clipboard.writeText(window.location.origin + '{% url 'public:verify_certificate' c.hash_verificacion %}'); this.querySelector('i').className='fa-solid fa-check'; setTimeout(()=>this.querySelector('i').className='fa-solid fa-share-nodes', 1500)"
+                    <button onclick="navigator.clipboard.writeText(window.location.origin + '{% url 'public:verify_certificate' c.verification_hash %}'); this.querySelector('i').className='fa-solid fa-check'; setTimeout(()=>this.querySelector('i').className='fa-solid fa-share-nodes', 1500)"
                             class="w-9 h-9 inline-flex items-center justify-center rounded-xl text-xs
                                    bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
                                    text-slate-600 dark:text-slate-300

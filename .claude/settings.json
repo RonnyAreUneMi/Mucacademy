@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -f /c/INNOTECH/CertifAI/_tplcheck.py; ls /c/INNOTECH/CertifAI/_tplcheck.py 2>&1)",
+      "Bash(netstat -ano)",
+      "Edit(/.claude/skills/certifai-setup/**)"
+    ],
+    "additionalDirectories": [
+      "C:\\INNOTECH\\CertifAI"
+    ]
+  }
+}

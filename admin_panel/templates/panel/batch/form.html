@@ -39,7 +39,7 @@
                         <label for="id_nombre_lote" class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2 group-focus-within:text-unemi-orange transition-colors">
                             <i class="fa-solid fa-tag mr-2 text-gray-400 dark:text-gray-500"></i>Nombre del Evento
                         </label>
-                        <input type="text" id="id_nombre_lote" name="nombre_lote" required placeholder="Ej: NORMAS ISO" class="{{ css }}">
+                        <input type="text" id="id_nombre_lote" name="name" required placeholder="Ej: NORMAS ISO" class="{{ css }}">
                         <div class="mt-2 p-3 rounded-xl bg-gray-50 dark:bg-[#0F163A]/50 border border-dashed border-gray-300 dark:border-blue-900/30">
                             <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1">
                                 <i class="fa-solid fa-eye mr-1"></i> Así se verá en el certificado:
@@ -55,7 +55,7 @@
                         <label for="id_facultad" class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2 group-focus-within:text-unemi-orange transition-colors">
                             <i class="fa-solid fa-building-columns mr-2 text-gray-400 dark:text-gray-500"></i>Facultad Organizadora
                         </label>
-                        <select id="id_facultad" name="facultad" required class="{{ css }}">
+                        <select id="id_facultad" name="faculty" required class="{{ css }}">
                             {% for val, lbl in facultades_choices %}
                             <option value="{{ val }}">{{ lbl }}</option>
                             {% endfor %}
@@ -72,7 +72,7 @@
                              class="relative group cursor-pointer active:scale-[0.99] transition-all">
 
                             <!-- Hidden Input -->
-                            <input type="file" name="archivo_excel" id="file-upload" required
+                            <input type="file" name="excel_file" id="file-upload" required
                                 accept=".xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                                 class="hidden">
 

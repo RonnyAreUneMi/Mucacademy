@@ -5,28 +5,29 @@ import { create } from 'zustand';
 
 import { api, setToken } from '@/api/client';
 
-export type Participante = {
+export type Participant = {
   id: number;
-  nombres: string;
-  apellidos: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  cedula: string;
-  celular: string;
-  es_lider: boolean;
+  national_id: string;
+  phone: string;
+  is_leader: boolean;
   nombre_completo: string;
   initials: string;
   avatar_url: string | null;
   last_login: string | null;
+  created_at?: string;
 };
 
 type LoginResponse = {
   token: string;
   expires_at: string;
-  participante: Participante;
+  participante: Participant;
 };
 
 type AuthState = {
-  participante: Participante | null;
+  participante: Participant | null;
   loading: boolean;
   error: string | null;
   /** True una vez que terminó el primer refresh (haya o no sesión). */
@@ -82,7 +83,7 @@ export const useAuth = create<AuthState>((set) => ({
     set({ loading: true, error: null });
     await setToken(token);
     try {
-      const me = await api.get<Participante>('/api/v1/public/account/me/');
+      const me = await api.get<Participant>('/api/v1/public/account/me/');
       set({ participante: me, loading: false });
     } catch (err: any) {
       await setToken(null);
@@ -99,7 +100,7 @@ export const useAuth = create<AuthState>((set) => ({
 
   refresh: async () => {
     try {
-      const me = await api.get<Participante>('/api/v1/public/account/me/');
+      const me = await api.get<Participant>('/api/v1/public/account/me/');
       set({ participante: me, ready: true });
     } catch {
       // token inválido o expirado → logout silencioso

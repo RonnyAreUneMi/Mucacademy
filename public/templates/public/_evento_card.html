@@ -3,31 +3,31 @@
     onclick="openEventModal(this)"
     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openEventModal(this);}"
     data-sesion-id="{{ s.id }}"
-    data-titulo="{{ s.titulo|default:s.dia_semana }}"
-    data-descripcion="{{ s.descripcion|default:'' }}"
-    data-dia-semana="{{ s.dia_semana }}"
-    data-fecha-format="{{ s.fecha|date:'d/m/Y' }}"
-    data-hora-inicio="{{ s.hora_inicio|time:'H:i' }}"
-    data-hora-fin="{{ s.hora_fin|time:'H:i' }}"
-    data-modalidad="{{ s.modalidad }}"
-    data-plataforma="{{ s.plataforma_display_safe }}"
-    data-enlace-virtual="{{ s.enlace_virtual|default:'' }}"
-    data-lugar="{{ s.lugar|default:'' }}"
-    data-capacidad="{{ s.capacidad }}"
-    data-confirmados="{{ s.confirmados_count }}"
-    data-fecha-iso="{{ s.fecha|date:'Y-m-d' }}"
+    data-titulo="{{ s.title|default:s.day_of_week }}"
+    data-descripcion="{{ s.description|default:'' }}"
+    data-dia-semana="{{ s.day_of_week }}"
+    data-fecha-format="{{ s.date|date:'d/m/Y' }}"
+    data-hora-inicio="{{ s.start_time|time:'H:i' }}"
+    data-hora-fin="{{ s.end_time|time:'H:i' }}"
+    data-modalidad="{{ s.modality }}"
+    data-plataforma="{{ s.platform_display_safe }}"
+    data-enlace-virtual="{{ s.meeting_url|default:'' }}"
+    data-lugar="{{ s.location|default:'' }}"
+    data-capacidad="{{ s.capacity }}"
+    data-confirmados="{{ s.enrolled_count }}"
+    data-fecha-iso="{{ s.date|date:'Y-m-d' }}"
     data-is-past="{% if is_past %}1{% else %}0{% endif %}"
-    {% if s.imagen_banner %}data-banner="{{ s.imagen_banner.url }}"{% endif %}>
+    {% if s.banner_image %}data-banner="{{ s.banner_image.url }}"{% endif %}>
 
-    {% if s.imagen_banner %}
+    {% if s.banner_image %}
     <div class="relative {% if is_past %}h-32{% else %}h-40{% endif %} overflow-hidden bg-gray-100 dark:bg-[#0F163A]">
-        <img src="{{ s.imagen_banner.url }}" alt="{{ s.titulo }}" class="w-full h-full object-cover {% if is_past %}grayscale group-hover:grayscale-0{% else %}group-hover:scale-105{% endif %} transition-all duration-500">
+        <img src="{{ s.banner_image.url }}" alt="{{ s.title }}" class="w-full h-full object-cover {% if is_past %}grayscale group-hover:grayscale-0{% else %}group-hover:scale-105{% endif %} transition-all duration-500">
         <div class="absolute top-3 right-3">
             {% if is_past %}
             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-gray-700/90 text-white backdrop-blur-sm">
                 <i class="fa-solid fa-flag-checkered text-[10px]"></i> Finalizado
             </span>
-            {% elif s.es_virtual %}
+            {% elif s.is_virtual %}
             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/90 text-white backdrop-blur-sm">
                 <i class="fa-solid fa-video text-[10px]"></i> Virtual
             </span>
@@ -39,12 +39,12 @@
         </div>
     </div>
     {% else %}
-    <div class="relative {% if is_past %}h-24 bg-gradient-to-br from-gray-400 to-gray-600{% elif s.es_virtual %}h-32 bg-gradient-to-br from-blue-500 to-blue-700{% else %}h-32 bg-gradient-to-br from-[#F58830] to-[#D97520]{% endif %} flex items-center justify-center">
-        <i class="fa-solid {% if is_past %}fa-flag-checkered{% elif s.es_virtual %}fa-video{% else %}fa-calendar-check{% endif %} text-white/40 {% if is_past %}text-4xl{% else %}text-6xl{% endif %}"></i>
+    <div class="relative {% if is_past %}h-24 bg-gradient-to-br from-gray-400 to-gray-600{% elif s.is_virtual %}h-32 bg-gradient-to-br from-blue-500 to-blue-700{% else %}h-32 bg-gradient-to-br from-[#F58830] to-[#D97520]{% endif %} flex items-center justify-center">
+        <i class="fa-solid {% if is_past %}fa-flag-checkered{% elif s.is_virtual %}fa-video{% else %}fa-calendar-check{% endif %} text-white/40 {% if is_past %}text-4xl{% else %}text-6xl{% endif %}"></i>
         <div class="absolute top-3 right-3">
             {% if is_past %}
             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-white backdrop-blur-sm">Finalizado</span>
-            {% elif s.es_virtual %}
+            {% elif s.is_virtual %}
             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-white backdrop-blur-sm">
                 <i class="fa-solid fa-video text-[10px]"></i> Virtual
             </span>
@@ -59,42 +59,42 @@
 
     <div class="{% if is_past %}p-5{% else %}p-6{% endif %}">
         <h3 class="font-black {% if is_past %}text-base{% else %}text-xl{% endif %} text-gray-800 dark:text-white mb-2 line-clamp-2">
-            {{ s.titulo|default:s.dia_semana }}
+            {{ s.title|default:s.day_of_week }}
         </h3>
 
-        {% if s.descripcion and not is_past %}
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">{{ s.descripcion }}</p>
+        {% if s.description and not is_past %}
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">{{ s.description }}</p>
         {% endif %}
 
         <div class="space-y-{% if is_past %}1{% else %}1.5{% endif %} {% if is_past %}text-xs{% else %}text-sm{% endif %} text-gray-500 dark:text-gray-400 mb-4">
-            <p><i class="fa-solid fa-calendar-day mr-2 {% if is_past %}text-gray-400{% else %}text-[#F58830]{% endif %} w-4"></i>{% if not is_past %}{{ s.dia_semana }} {% endif %}{{ s.fecha|date:"d/m/Y" }}</p>
+            <p><i class="fa-solid fa-calendar-day mr-2 {% if is_past %}text-gray-400{% else %}text-[#F58830]{% endif %} w-4"></i>{% if not is_past %}{{ s.day_of_week }} {% endif %}{{ s.date|date:"d/m/Y" }}</p>
             {% if not is_past %}
-            <p><i class="fa-solid fa-clock mr-2 text-[#F58830] w-4"></i>{{ s.hora_inicio|time:"H:i" }} – {{ s.hora_fin|time:"H:i" }}</p>
+            <p><i class="fa-solid fa-clock mr-2 text-[#F58830] w-4"></i>{{ s.start_time|time:"H:i" }} – {{ s.end_time|time:"H:i" }}</p>
             {% endif %}
-            {% if s.es_virtual %}
-            <p><i class="fa-solid fa-video mr-2 {% if is_past %}text-gray-400{% else %}text-blue-500{% endif %} w-4"></i>{{ s.plataforma_display_safe }}</p>
-            {% elif s.lugar %}
-            <p class="truncate"><i class="fa-solid fa-location-dot mr-2 {% if is_past %}text-gray-400{% else %}text-[#F58830]{% endif %} w-4"></i>{{ s.lugar }}</p>
+            {% if s.is_virtual %}
+            <p><i class="fa-solid fa-video mr-2 {% if is_past %}text-gray-400{% else %}text-blue-500{% endif %} w-4"></i>{{ s.platform_display_safe }}</p>
+            {% elif s.location %}
+            <p class="truncate"><i class="fa-solid fa-location-dot mr-2 {% if is_past %}text-gray-400{% else %}text-[#F58830]{% endif %} w-4"></i>{{ s.location }}</p>
             {% endif %}
             {% if is_past %}
-            <p><i class="fa-solid fa-users mr-2 text-gray-400"></i>{{ s.confirmados_count }} inscritos</p>
+            <p><i class="fa-solid fa-users mr-2 text-gray-400"></i>{{ s.enrolled_count }} inscritos</p>
             {% endif %}
         </div>
 
         {% if not is_past %}
         <!-- Cupos -->
-        {% if s.capacidad == 0 %}
+        {% if s.capacity == 0 %}
         <div class="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-bold mb-4">
             <i class="fa-solid fa-infinity"></i> Cupos ilimitados
         </div>
-        {% elif not s.esta_llena %}
+        {% elif not s.is_full %}
         <div class="mb-4">
             <div class="flex justify-between text-xs mb-1">
-                <span class="text-gray-500 dark:text-gray-400 font-bold">{{ s.cupos_disponibles }} cupos disponibles</span>
-                <span class="text-gray-400">{{ s.confirmados_count }}/{{ s.capacidad }}</span>
+                <span class="text-gray-500 dark:text-gray-400 font-bold">{{ s.available_seats }} cupos disponibles</span>
+                <span class="text-gray-400">{{ s.enrolled_count }}/{{ s.capacity }}</span>
             </div>
             <div class="w-full bg-gray-100 dark:bg-[#0F163A]/50 rounded-full h-1.5 overflow-hidden">
-                <div class="h-full bg-[#F58830] rounded-full" style="width: {% widthratio s.confirmados_count s.capacidad 100 %}%"></div>
+                <div class="h-full bg-[#F58830] rounded-full" style="width: {% widthratio s.enrolled_count s.capacity 100 %}%"></div>
             </div>
         </div>
         {% else %}

@@ -26,10 +26,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="md:col-span-2">
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Título</label>
-                    <input type="text" name="titulo" placeholder="Ej: Seminario de IA aplicada a la salud" required class="{{ css }}">
+                    <input type="text" name="title" placeholder="Ej: Seminario de IA aplicada a la salud" required class="{{ css }}">
                 </div>
                 <div class="md:col-span-2">
-                    {% include 'panel/includes/_description_with_ai.html' with title_input_name='titulo' description_name='descripcion' %}
+                    {% include 'panel/includes/_description_with_ai.html' with title_input_name='title' description_name='description' %}
                 </div>
             </div>
 
@@ -53,7 +53,7 @@
                         <div class="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-black/55 backdrop-blur-sm text-white text-xs font-medium" id="banner-filename"></div>
                     </div>
                 </label>
-                <input id="banner-input" type="file" name="imagen_banner" accept="image/*" class="hidden">
+                <input id="banner-input" type="file" name="banner_image" accept="image/*" class="hidden">
             </div>
         </section>
 
@@ -69,14 +69,14 @@
                 <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2"><i class="fa-solid fa-globe mr-1 text-[#F58830]"></i> Modalidad</label>
                 <div class="grid grid-cols-2 gap-3">
                     <label class="relative cursor-pointer">
-                        <input type="radio" name="modalidad" value="presencial" checked class="peer sr-only" onchange="toggleModalidad()">
+                        <input type="radio" name="modality" value="in_person" checked class="peer sr-only" onchange="toggleModalidad()">
                         <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-blue-900/30 peer-checked:border-[#F58830] peer-checked:bg-[#F58830]/10 transition-all text-center">
                             <i class="fa-solid fa-building text-2xl text-gray-400 peer-checked:text-[#F58830] mb-1"></i>
                             <p class="text-sm font-bold text-gray-700 dark:text-gray-200">Presencial</p>
                         </div>
                     </label>
                     <label class="relative cursor-pointer">
-                        <input type="radio" name="modalidad" value="virtual" class="peer sr-only" onchange="toggleModalidad()">
+                        <input type="radio" name="modality" value="virtual" class="peer sr-only" onchange="toggleModalidad()">
                         <div class="p-4 rounded-xl border-2 border-gray-200 dark:border-blue-900/30 peer-checked:border-[#F58830] peer-checked:bg-[#F58830]/10 transition-all text-center">
                             <i class="fa-solid fa-video text-2xl text-gray-400 peer-checked:text-[#F58830] mb-1"></i>
                             <p class="text-sm font-bold text-gray-700 dark:text-gray-200">Virtual</p>
@@ -101,18 +101,18 @@
             <!-- Lugar (solo presencial) -->
             <div id="lugar-wrapper">
                 <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1"><i class="fa-solid fa-location-dot mr-1 text-[#F58830]"></i> Lugar</label>
-                <input type="text" name="lugar" placeholder="Ej: Auditorio Principal — Edificio A" class="{{ css }}">
+                <input type="text" name="location" placeholder="Ej: Auditorio Principal — Edificio A" class="{{ css }}">
             </div>
 
             <!-- Fecha / Hora (4 cols) -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Fecha</label>
-                    <input id="id_fecha" type="date" name="fecha" required class="{{ css }}">
+                    <input id="id_fecha" type="date" name="date" required class="{{ css }}">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Día</label>
-                    <select id="id_dia_semana" name="dia_semana" required class="{{ css }} pointer-events-none opacity-80" tabindex="-1">
+                    <select id="id_dia_semana" name="day_of_week" required class="{{ css }} pointer-events-none opacity-80" tabindex="-1">
                         <option value="Lunes">Lunes</option>
                         <option value="Martes">Martes</option>
                         <option value="Miércoles">Miércoles</option>
@@ -124,11 +124,11 @@
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Hora inicio</label>
-                    <input type="time" name="hora_inicio" required class="{{ css }}">
+                    <input type="time" name="start_time" required class="{{ css }}">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Hora fin</label>
-                    <input type="time" name="hora_fin" required class="{{ css }}">
+                    <input type="time" name="end_time" required class="{{ css }}">
                 </div>
             </div>
         </section>
@@ -203,8 +203,8 @@
             </a>
         </div>
 
-        <input type="hidden" name="capacidad" value="0">
-        <input type="hidden" name="activa" value="true">
+        <input type="hidden" name="capacity" value="0">
+        <input type="hidden" name="is_active" value="true">
     </form>
 </div>
 
@@ -218,10 +218,10 @@
             </button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input type="text" data-field="titulo" placeholder="Dr., Mgs., Ing..." class="{{ css }} text-sm">
-            <input type="text" data-field="nombre" placeholder="Nombre completo *" required class="{{ css }} text-sm md:col-span-2">
+            <input type="text" data-field="title" placeholder="Dr., Mgs., Ing..." class="{{ css }} text-sm">
+            <input type="text" data-field="name" placeholder="Nombre completo *" required class="{{ css }} text-sm md:col-span-2">
         </div>
-        <input type="text" data-field="afiliacion" placeholder="Afiliación / Institución (opcional)" class="{{ css }} text-sm">
+        <input type="text" data-field="affiliation" placeholder="Afiliación / Institución (opcional)" class="{{ css }} text-sm">
         <textarea data-field="bio" rows="2" placeholder="Biografía corta (opcional)" class="{{ css }} text-sm resize-none"></textarea>
     </div>
 </template>
@@ -239,7 +239,7 @@ function toggleCapacidad() {
 }
 
 function toggleModalidad() {
-    const selected = document.querySelector('input[name="modalidad"]:checked')?.value;
+    const selected = document.querySelector('input[name="modality"]:checked')?.value;
     document.getElementById('virtual-fields').classList.toggle('hidden', selected !== 'virtual');
     document.getElementById('lugar-wrapper').classList.toggle('hidden', selected === 'virtual');
 }
@@ -285,9 +285,9 @@ function addPonente(data = {}) {
     const list = document.getElementById('ponentes-list');
     const tpl = document.getElementById('ponente-template');
     const node = tpl.content.firstElementChild.cloneNode(true);
-    if (data.nombre) node.querySelector('[data-field="nombre"]').value = data.nombre;
-    if (data.titulo) node.querySelector('[data-field="titulo"]').value = data.titulo;
-    if (data.afiliacion) node.querySelector('[data-field="afiliacion"]').value = data.afiliacion;
+    if (data.name) node.querySelector('[data-field="name"]').value = data.name;
+    if (data.title) node.querySelector('[data-field="title"]').value = data.title;
+    if (data.affiliation) node.querySelector('[data-field="affiliation"]').value = data.affiliation;
     if (data.bio) node.querySelector('[data-field="bio"]').value = data.bio;
     list.appendChild(node);
     refreshPonentesUI();
@@ -300,11 +300,11 @@ function refreshPonentesUI() {
 }
 function collectPonentes() {
     return Array.from(document.querySelectorAll('#ponentes-list .ponente-row')).map(row => ({
-        nombre: row.querySelector('[data-field="nombre"]').value.trim(),
-        titulo: row.querySelector('[data-field="titulo"]').value.trim(),
-        afiliacion: row.querySelector('[data-field="afiliacion"]').value.trim(),
+        name: row.querySelector('[data-field="name"]').value.trim(),
+        title: row.querySelector('[data-field="title"]').value.trim(),
+        affiliation: row.querySelector('[data-field="affiliation"]').value.trim(),
         bio: row.querySelector('[data-field="bio"]').value.trim(),
-    })).filter(p => p.nombre);
+    })).filter(p => p.name);
 }
 
 document.getElementById('session-form').addEventListener('submit', async (e) => {
@@ -316,16 +316,16 @@ document.getElementById('session-form').addEventListener('submit', async (e) => 
     errBox.classList.add('hidden');
 
     const fd = new FormData(e.target);
-    fd.delete('capacidad');
-    fd.set('capacidad', document.getElementById('cap-ilimitada').checked ? '0' : (document.getElementById('cap-input').value || '0'));
+    fd.delete('capacity');
+    fd.set('capacity', document.getElementById('cap-ilimitada').checked ? '0' : (document.getElementById('cap-input').value || '0'));
     fd.set('ponentes_json', JSON.stringify(collectPonentes()));
     // Descripción: usar HTML del CKEditor en vez del textarea oculto
     if (typeof window.getDescriptionHTML === 'function') {
-        fd.set('descripcion', window.getDescriptionHTML());
+        fd.set('description', window.getDescriptionHTML());
     }
     // Banner: forzar inclusión del input externo
     const bannerFile = document.getElementById('banner-input').files[0];
-    if (bannerFile) fd.set('imagen_banner', bannerFile);
+    if (bannerFile) fd.set('banner_image', bannerFile);
 
     try {
         const res = await fetch('/api/v1/admin/sessions/', {

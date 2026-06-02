@@ -8,14 +8,14 @@ import uuid
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 
-from core.models import Certificado, LoteCertificados, Participante
+from core.models import Certificate, CertificateBatch, Participant
 from ._shared import admin_required, _log_audit
 
 
 @admin_required
 def add_certificate(request, id):
     """POST form del batch_detail para agregar un certificado al lote."""
-    lote = get_object_or_404(LoteCertificados, id=id)
+    lote = get_object_or_404(CertificateBatch, id=id)
 
     if request.method != 'POST':
         return redirect('panel:batch_detail', id=lote.id)
@@ -35,37 +35,37 @@ def add_certificate(request, id):
 
         participante = None
         if real_cedula:
-            participante = Participante.objects.filter(cedula=real_cedula).first()
+            participante = Participant.objects.filter(national_id=real_cedula).first()
         if not participante and email_raw:
-            participante = Participante.objects.filter(email__iexact=email_raw).first()
+            participante = Participant.objects.filter(email__iexact=email_raw).first()
 
         if participante:
             updated = []
-            if real_cedula and not participante.cedula:
-                participante.cedula = real_cedula
-                updated.append('cedula')
-            if celular_raw and not participante.celular:
-                participante.celular = celular_raw
-                updated.append('celular')
+            if real_cedula and not participante.national_id:
+                participante.national_id = real_cedula
+                updated.append('national_id')
+            if celular_raw and not participante.phone:
+                participante.phone = celular_raw
+                updated.append('phone')
             if updated:
                 participante.save(update_fields=updated)
         else:
-            participante = Participante.objects.create(
-                cedula=real_cedula, nombres=nombres_raw, apellidos=apellidos_raw,
-                email=email_raw, celular=celular_raw,
+            participante = Participant.objects.create(
+                national_id=real_cedula, first_name=nombres_raw, last_name=apellidos_raw,
+                email=email_raw, phone=celular_raw,
             )
 
-        Certificado.objects.create(
-            lote=lote, participante=participante,
-            cedula=cedula_raw or f'GEN-{uuid.uuid4().hex[:8].upper()}',
-            nombres=nombres_raw, apellidos=apellidos_raw, email=email_raw,
-            curso=request.POST.get('curso'),
-            horas=int(request.POST.get('horas', 0)),
-            fecha_curso=fecha_curso,
+        Certificate.objects.create(
+            batch=lote, participant=participante,
+            national_id=cedula_raw or f'GEN-{uuid.uuid4().hex[:8].upper()}',
+            first_name=nombres_raw, last_name=apellidos_raw, email=email_raw,
+            course=request.POST.get('curso'),
+            hours=int(request.POST.get('horas', 0)),
+            course_date=fecha_curso,
         )
         _log_audit(
-            request.user, 'AGREGAR_CERTIFICADO',
-            f'Certificado agregado manual: {cedula_raw} en lote {lote.nombre_lote}',
+            request.user, 'CREATE',
+            f'Certificado agregado manual: {cedula_raw} en lote {lote.name}',
         )
         messages.success(request, 'Certificado agregado correctamente.')
     except Exception as e:

@@ -7,15 +7,15 @@ def get_dashboard_metrics() -> dict:
     from datetime import timedelta
     from django.utils import timezone
     from django.db.models import Count
-    from core.models import Certificado, SesionAsistencia, ConfirmacionAsistencia, RegistroAsistencia
+    from core.models import Certificate, Event, Enrollment, Attendance
 
     now = timezone.now()
     last_30 = now - timedelta(days=30)
     prev_30 = now - timedelta(days=60)
 
-    certs_this = Certificado.objects.filter(created_at__gte=last_30).count()
-    certs_prev = Certificado.objects.filter(created_at__gte=prev_30, created_at__lt=last_30).count()
-    sesiones_mes = SesionAsistencia.objects.filter(fecha__gte=last_30.date()).count()
+    certs_this = Certificate.objects.filter(created_at__gte=last_30).count()
+    certs_prev = Certificate.objects.filter(created_at__gte=prev_30, created_at__lt=last_30).count()
+    sesiones_mes = Event.objects.filter(date__gte=last_30.date()).count()
 
     return {
         'mes_actual': {

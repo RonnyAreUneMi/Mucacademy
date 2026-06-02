@@ -6,13 +6,13 @@ import factory
 from factory.django import DjangoModelFactory
 
 from core.models import (
-    Usuario, LoteCertificados, Participante, Certificado, SesionAsistencia,
+    User, CertificateBatch, Participant, Certificate, Event,
 )
 
 
-class UsuarioFactory(DjangoModelFactory):
+class UserFactory(DjangoModelFactory):
     class Meta:
-        model = Usuario
+        model = User
 
     username = factory.Sequence(lambda n: f'admin{n}')
     email = factory.Sequence(lambda n: f'admin{n}@example.com')
@@ -21,8 +21,7 @@ class UsuarioFactory(DjangoModelFactory):
     is_staff = True
     is_superuser = False
     is_active = True
-    activo = True
-    rol = 'admin'
+    role = 'admin'
 
     @factory.post_generation
     def password(obj, create, extracted, **kwargs):
@@ -31,60 +30,60 @@ class UsuarioFactory(DjangoModelFactory):
             obj.save()
 
 
-class SuperAdminFactory(UsuarioFactory):
+class SuperAdminFactory(UserFactory):
     is_superuser = True
-    rol = 'superadmin'
+    role = 'superadmin'
 
 
-class LoteFactory(DjangoModelFactory):
+class BatchFactory(DjangoModelFactory):
     class Meta:
-        model = LoteCertificados
+        model = CertificateBatch
 
-    nombre_lote = factory.Sequence(lambda n: f'Lote Test {n}')
-    facultad = 'FACI'
-    plantilla = 'clasico'
-    activo = True
+    name = factory.Sequence(lambda n: f'Lote Test {n}')
+    faculty = 'FACI'
+    template = 'classic'
+    is_active = True
 
 
-class ParticipanteFactory(DjangoModelFactory):
+class ParticipantFactory(DjangoModelFactory):
     class Meta:
-        model = Participante
+        model = Participant
 
-    cedula = factory.Sequence(lambda n: f'09{n:08d}')
-    nombres = 'Juan'
-    apellidos = 'Pérez'
+    national_id = factory.Sequence(lambda n: f'09{n:08d}')
+    first_name = 'Juan'
+    last_name = 'Pérez'
     email = factory.Sequence(lambda n: f'juan{n}@test.com')
-    celular = '0999999999'
-    es_lider = False
+    phone = '0999999999'
+    is_leader = False
 
 
-class SesionFactory(DjangoModelFactory):
+class EventFactory(DjangoModelFactory):
     class Meta:
-        model = SesionAsistencia
+        model = Event
 
-    lote = factory.SubFactory(LoteFactory)
-    titulo = factory.Sequence(lambda n: f'Sesión Test {n}')
-    descripcion = 'Descripción de prueba'
-    fecha = factory.LazyFunction(lambda: date.today() + timedelta(days=7))
-    hora_inicio = time(10, 0)
-    hora_fin = time(12, 0)
-    capacidad = 50
-    modalidad = 'presencial'
-    lugar = 'Auditorio Test'
-    activa = True
+    batch = factory.SubFactory(BatchFactory)
+    title = factory.Sequence(lambda n: f'Sesión Test {n}')
+    description = 'Descripción de prueba'
+    date = factory.LazyFunction(lambda: date.today() + timedelta(days=7))
+    start_time = time(10, 0)
+    end_time = time(12, 0)
+    capacity = 50
+    modality = 'in_person'
+    location = 'Auditorio Test'
+    is_active = True
 
 
-class CertificadoFactory(DjangoModelFactory):
+class CertificateFactory(DjangoModelFactory):
     class Meta:
-        model = Certificado
+        model = Certificate
 
-    lote = factory.SubFactory(LoteFactory)
-    participante = factory.SubFactory(ParticipanteFactory)
-    cedula = factory.Sequence(lambda n: f'09{n:08d}')
-    nombres = 'Juan'
-    apellidos = 'Pérez'
+    batch = factory.SubFactory(BatchFactory)
+    participant = factory.SubFactory(ParticipantFactory)
+    national_id = factory.Sequence(lambda n: f'09{n:08d}')
+    first_name = 'Juan'
+    last_name = 'Pérez'
     email = factory.Sequence(lambda n: f'juan{n}@test.com')
-    curso = 'Curso de Prueba'
-    fecha_curso = factory.LazyFunction(date.today)
-    horas = 40
-    hash_verificacion = factory.LazyFunction(lambda: str(uuid.uuid4()))
+    course = 'Curso de Prueba'
+    course_date = factory.LazyFunction(date.today)
+    hours = 40
+    verification_hash = factory.LazyFunction(lambda: str(uuid.uuid4()))

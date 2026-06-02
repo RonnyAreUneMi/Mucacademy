@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import (
-    SesionAsistencia, Participante, Certificado,
-    ConfirmacionAsistencia, RegistroAsistencia,
+    Event, Participant, Certificate,
+    Enrollment, Attendance,
 )
 
 
@@ -19,22 +19,22 @@ def _get_client_ip(request):
 
 
 class CheckinSessionView(APIView):
-    """GET → devuelve info básica de la sesión identificada por su código QR."""
+    """GET → devuelve info básica del evento identificado por su código QR."""
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, codigo_qr):
-        sesion = get_object_or_404(SesionAsistencia, codigo_qr=codigo_qr, activa=True)
+        sesion = get_object_or_404(Event, qr_code=codigo_qr, is_active=True)
         return Response({
             'id': sesion.id,
-            'codigo_qr': sesion.codigo_qr,
-            'titulo': sesion.titulo or sesion.dia_semana,
-            'descripcion': sesion.descripcion,
-            'dia_semana': sesion.dia_semana,
-            'fecha': sesion.fecha.strftime('%Y-%m-%d'),
-            'hora_inicio': sesion.hora_inicio.strftime('%H:%M'),
-            'hora_fin': sesion.hora_fin.strftime('%H:%M'),
-            'lugar': sesion.lugar,
-            'modalidad': sesion.modalidad,
+            'codigo_qr': sesion.qr_code,
+            'titulo': sesion.title or sesion.day_of_week,
+            'descripcion': sesion.description,
+            'dia_semana': sesion.day_of_week,
+            'fecha': sesion.date.strftime('%Y-%m-%d'),
+            'hora_inicio': sesion.start_time.strftime('%H:%M'),
+            'hora_fin': sesion.end_time.strftime('%H:%M'),
+            'lugar': sesion.location,
+            'modalidad': sesion.modality,
         })
 
 
@@ -43,30 +43,30 @@ class CheckinSearchView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, codigo_qr):
-        sesion = get_object_or_404(SesionAsistencia, codigo_qr=codigo_qr, activa=True)
+        sesion = get_object_or_404(Event, qr_code=codigo_qr, is_active=True)
         query = request.query_params.get('q', '').strip()
         if len(query) < 3:
             return Response({'results': []})
 
         tokens = query.split()
-        q_filter = Q(cedula__icontains=query) | Q(email__icontains=query)
+        q_filter = Q(national_id__icontains=query) | Q(email__icontains=query)
         for t in tokens:
-            q_filter |= Q(nombres__icontains=t) | Q(apellidos__icontains=t)
+            q_filter |= Q(first_name__icontains=t) | Q(last_name__icontains=t)
 
-        participantes = Participante.objects.filter(q_filter)[:15]
+        participantes = Participant.objects.filter(q_filter)[:15]
         results = []
         for p in participantes:
             results.append({
                 'id': p.id,
-                'cedula': p.cedula,
-                'nombres': p.nombres,
-                'apellidos': p.apellidos,
+                'cedula': p.national_id,
+                'nombres': p.first_name,
+                'apellidos': p.last_name,
                 'email': p.email,
-                'already_registered': RegistroAsistencia.objects.filter(
-                    sesion=sesion, participante=p
+                'already_registered': Attendance.objects.filter(
+                    event=sesion, participant=p
                 ).exists(),
-                'is_confirmed': ConfirmacionAsistencia.objects.filter(
-                    sesion=sesion, participante=p, confirmado=True
+                'is_confirmed': Enrollment.objects.filter(
+                    event=sesion, participant=p, confirmed=True
                 ).exists(),
             })
         return Response({'results': results})
@@ -77,7 +77,7 @@ class CheckinRegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, codigo_qr):
-        sesion = get_object_or_404(SesionAsistencia, codigo_qr=codigo_qr, activa=True)
+        sesion = get_object_or_404(Event, qr_code=codigo_qr, is_active=True)
 
         pid = request.data.get('id') or request.data.get('cert_id')
         if not pid:
@@ -86,12 +86,12 @@ class CheckinRegisterView(APIView):
 
         participante = None
         try:
-            participante = Participante.objects.get(id=pid)
-        except Participante.DoesNotExist:
+            participante = Participant.objects.get(id=pid)
+        except Participant.DoesNotExist:
             try:
-                cert = Certificado.objects.get(id=pid)
-                participante = cert.participante
-            except Certificado.DoesNotExist:
+                cert = Certificate.objects.get(id=pid)
+                participante = cert.participant
+            except Certificate.DoesNotExist:
                 pass
 
         if not participante:
@@ -99,8 +99,8 @@ class CheckinRegisterView(APIView):
                             status=status.HTTP_404_NOT_FOUND)
 
         # Bloqueo por inasistencias previas
-        blocked = ConfirmacionAsistencia.objects.filter(
-            participante=participante, bloqueado=True
+        blocked = Enrollment.objects.filter(
+            participant=participante, blocked=True
         ).exists()
         if blocked:
             return Response({
@@ -109,17 +109,17 @@ class CheckinRegisterView(APIView):
             }, status=status.HTTP_403_FORBIDDEN)
 
         # Confirmación previa requerida
-        is_confirmed = ConfirmacionAsistencia.objects.filter(
-            participante=participante, sesion=sesion, confirmado=True
+        is_confirmed = Enrollment.objects.filter(
+            participant=participante, event=sesion, confirmed=True
         ).exists()
         if not is_confirmed:
             return Response({
                 'ok': False,
-                'error': f'No tienes una confirmación de cupo registrada para la sesión de {sesion.dia_semana} {sesion.label}.',
+                'error': f'No tienes una confirmación de cupo registrada para el evento de {sesion.day_of_week} {sesion.label}.',
             }, status=status.HTTP_403_FORBIDDEN)
 
-        registro, created = RegistroAsistencia.objects.get_or_create(
-            sesion=sesion, participante=participante,
+        registro, created = Attendance.objects.get_or_create(
+            event=sesion, participant=participante,
             defaults={'ip_address': _get_client_ip(request)},
         )
 
@@ -127,12 +127,12 @@ class CheckinRegisterView(APIView):
             return Response({
                 'ok': True, 'already': True,
                 'message': '¡Ya registraste tu asistencia anteriormente!',
-                'nombre': f'{participante.nombres} {participante.apellidos}',
+                'nombre': f'{participante.first_name} {participante.last_name}',
             })
 
         return Response({
             'ok': True, 'already': False,
             'message': '¡Gracias por estar aquí! Tu asistencia fue registrada exitosamente.',
-            'nombre': f'{participante.nombres} {participante.apellidos}',
+            'nombre': f'{participante.first_name} {participante.last_name}',
             'hora': timezone.now().strftime('%H:%M'),
         })

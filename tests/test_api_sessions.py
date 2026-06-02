@@ -1,50 +1,50 @@
 """Tests de API de sesiones (CRUD + custom actions + auditoría)."""
 import pytest
 
-from tests.factories import SesionFactory
+from tests.factories import EventFactory
 
 
 @pytest.mark.django_db
-class TestSesionAPI:
+class TestEventAPI:
     def test_list_requires_admin(self, api_client):
         res = api_client.get('/api/v1/admin/sessions/')
         assert res.status_code == 401
 
     def test_admin_can_list(self, admin_client):
-        SesionFactory()
-        SesionFactory()
+        EventFactory()
+        EventFactory()
         res = admin_client.get('/api/v1/admin/sessions/')
         assert res.status_code == 200
         assert res.data['count'] == 2
 
-    def test_toggle_flips_activa(self, admin_client, sesion):
-        assert sesion.activa is True
-        res = admin_client.post(f'/api/v1/admin/sessions/{sesion.id}/toggle/')
+    def test_toggle_flips_is_active(self, admin_client, event):
+        assert event.is_active is True
+        res = admin_client.post(f'/api/v1/admin/sessions/{event.id}/toggle/')
         assert res.status_code == 200
-        assert res.data['activa'] is False
-        sesion.refresh_from_db()
-        assert sesion.activa is False
+        assert res.data['is_active'] is False
+        event.refresh_from_db()
+        assert event.is_active is False
 
-    def test_toggle_creates_audit_entry(self, admin_client, sesion):
-        from core.models import Auditoria
-        before = Auditoria.objects.filter(accion='TOGGLE_SESION').count()
-        admin_client.post(f'/api/v1/admin/sessions/{sesion.id}/toggle/')
-        after = Auditoria.objects.filter(accion='TOGGLE_SESION').count()
+    def test_toggle_creates_audit_entry(self, admin_client, event):
+        from core.models import AuditLog
+        before = AuditLog.objects.filter(action='UPDATE').count()
+        admin_client.post(f'/api/v1/admin/sessions/{event.id}/toggle/')
+        after = AuditLog.objects.filter(action='UPDATE').count()
         assert after == before + 1
 
-    def test_delete_rejects_with_confirmaciones(self, admin_client, sesion, participante):
-        from core.models import ConfirmacionAsistencia
-        ConfirmacionAsistencia.objects.create(
-            sesion=sesion, participante=participante, confirmado=True,
+    def test_delete_rejects_with_enrollments(self, admin_client, event, participant):
+        from core.models import Enrollment
+        Enrollment.objects.create(
+            event=event, participant=participant, confirmed=True,
         )
-        res = admin_client.delete(f'/api/v1/admin/sessions/{sesion.id}/')
+        res = admin_client.delete(f'/api/v1/admin/sessions/{event.id}/')
         assert res.status_code == 409
         assert 'error' in res.data
 
 
 @pytest.mark.django_db
-class TestPublicSesionAPI:
+class TestPublicEventAPI:
     def test_upcoming_is_public(self, api_client):
-        SesionFactory()
+        EventFactory()
         res = api_client.get('/api/v1/public/sessions/upcoming/')
         assert res.status_code == 200

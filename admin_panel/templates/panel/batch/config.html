@@ -29,7 +29,7 @@
                 <div class="rounded-2xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-900/10 p-5 flex items-start gap-4">
                     <label class="relative inline-flex items-center cursor-pointer mt-0.5">
                         <input type="checkbox" name="personalizar_diseno" id="personalizar_diseno"
-                               class="sr-only peer" {% if lote.personalizar_diseno %}checked{% endif %}>
+                               class="sr-only peer" {% if lote.customize_design %}checked{% endif %}>
                         <div class="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:ring-2 peer-focus:ring-unemi-blue rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-unemi-orange"></div>
                     </label>
                     <div class="flex-1">
@@ -52,7 +52,7 @@
                     <div class="grid grid-cols-3 gap-4">
                         <!-- Clásico -->
                         <label class="cursor-pointer group relative">
-                            <input type="radio" name="plantilla" value="clasico" {% if lote.plantilla == 'clasico' %}checked{% endif %} class="peer sr-only">
+                            <input type="radio" name="plantilla" value="classic" {% if lote.template == 'classic' %}checked{% endif %} class="peer sr-only">
                             <div class="aspect-video p-4 rounded-xl border-2 border-gray-100 dark:border-blue-900/30 peer-checked:border-unemi-blue peer-checked:bg-blue-50/50 dark:peer-checked:bg-blue-900/40 hover:border-gray-300 dark:hover:border-blue-700 transition-all text-center flex flex-col items-center justify-center gap-2">
                                 <div class="w-10 h-10 rounded-full bg-white dark:bg-white/10 shadow-sm flex items-center justify-center text-gray-400 peer-checked:text-unemi-blue peer-checked:scale-110 transition-transform">
                                     <i class="fa-solid fa-landmark text-lg"></i>
@@ -63,7 +63,7 @@
 
                         <!-- Moderno -->
                         <label class="cursor-pointer group relative">
-                            <input type="radio" name="plantilla" value="moderno" {% if lote.plantilla == 'moderno' %}checked{% endif %} class="peer sr-only">
+                            <input type="radio" name="plantilla" value="modern" {% if lote.template == 'modern' %}checked{% endif %} class="peer sr-only">
                             <div class="aspect-video p-4 rounded-xl border-2 border-gray-100 dark:border-blue-900/30 peer-checked:border-unemi-orange peer-checked:bg-orange-50/50 dark:peer-checked:bg-orange-900/20 hover:border-gray-300 dark:hover:border-blue-700 transition-all text-center flex flex-col items-center justify-center gap-2">
                                 <div class="w-10 h-10 rounded-full bg-white dark:bg-white/10 shadow-sm flex items-center justify-center text-gray-400 peer-checked:text-unemi-orange peer-checked:scale-110 transition-transform">
                                     <i class="fa-solid fa-pager text-lg"></i>
@@ -74,7 +74,7 @@
 
                         <!-- Geométrico -->
                         <label class="cursor-pointer group relative">
-                            <input type="radio" name="plantilla" value="geometrico" {% if lote.plantilla == 'geometrico' %}checked{% endif %} class="peer sr-only">
+                            <input type="radio" name="plantilla" value="geometric" {% if lote.template == 'geometric' %}checked{% endif %} class="peer sr-only">
                             <div class="aspect-video p-4 rounded-xl border-2 border-gray-100 dark:border-blue-900/30 peer-checked:border-pink-500 peer-checked:bg-pink-50/50 dark:peer-checked:bg-pink-900/20 hover:border-gray-300 dark:hover:border-blue-700 transition-all text-center flex flex-col items-center justify-center gap-2">
                                 <div class="w-10 h-10 rounded-full bg-white dark:bg-white/10 shadow-sm flex items-center justify-center text-gray-400 peer-checked:text-pink-500 peer-checked:scale-110 transition-transform">
                                     <i class="fa-solid fa-shapes text-lg"></i>
@@ -89,40 +89,40 @@
                         <div>
                             <label class="block text-[10px] font-bold uppercase text-gray-400 mb-2">Principal</label>
                             <div class="flex items-center gap-2">
-                                <input type="color" name="color_primario" value="{{ lote.color_primario }}" 
+                                <input type="color" name="color_primario" value="{{ lote.color_primary }}"
                                     class="h-12 w-16 p-1 rounded-lg border border-gray-200 cursor-pointer bg-white shadow-sm"
                                     onchange="document.getElementById('hexPri').value = this.value">
-                                <input type="text" id="hexPri" value="{{ lote.color_primario }}" 
+                                <input type="text" id="hexPri" value="{{ lote.color_primary }}"
                                     class="text-xs w-full font-mono bg-transparent border-b border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 focus:outline-none focus:border-unemi-blue" readonly>
                             </div>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold uppercase text-gray-400 mb-2">Secundario</label>
                             <div class="flex items-center gap-2">
-                                <input type="color" name="color_secundario" value="{{ lote.color_secundario }}" 
+                                <input type="color" name="color_secundario" value="{{ lote.color_secondary }}"
                                     class="h-12 w-16 p-1 rounded-lg border border-gray-200 cursor-pointer bg-white shadow-sm"
                                     onchange="document.getElementById('hexSec').value = this.value">
-                                <input type="text" id="hexSec" value="{{ lote.color_secundario }}" 
+                                <input type="text" id="hexSec" value="{{ lote.color_secondary }}"
                                     class="text-xs w-full font-mono bg-transparent border-b border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 focus:outline-none focus:border-unemi-blue" readonly>
                             </div>
                         </div>
                          <div>
                             <label class="block text-[10px] font-bold uppercase text-gray-400 mb-2">Detalles / Formas</label>
                             <div class="flex items-center gap-2">
-                                <input type="color" name="color_terciario" value="{{ lote.color_terciario }}" 
+                                <input type="color" name="color_terciario" value="{{ lote.color_tertiary }}"
                                     class="h-12 w-16 p-1 rounded-lg border border-gray-200 cursor-pointer bg-white shadow-sm"
                                     onchange="document.getElementById('hexTer').value = this.value">
-                                <input type="text" id="hexTer" value="{{ lote.color_terciario }}" 
+                                <input type="text" id="hexTer" value="{{ lote.color_tertiary }}"
                                     class="text-xs w-full font-mono bg-transparent border-b border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 focus:outline-none focus:border-unemi-blue" readonly>
                             </div>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold uppercase text-gray-400 mb-2">Texto</label>
                             <div class="flex items-center gap-2">
-                                <input type="color" name="color_texto" value="{{ lote.color_texto }}" 
+                                <input type="color" name="color_texto" value="{{ lote.color_text }}"
                                     class="h-12 w-16 p-1 rounded-lg border border-gray-200 cursor-pointer bg-white shadow-sm"
                                     onchange="document.getElementById('hexTxt').value = this.value">
-                                <input type="text" id="hexTxt" value="{{ lote.color_texto }}" 
+                                <input type="text" id="hexTxt" value="{{ lote.color_text }}"
                                     class="text-xs w-full font-mono bg-transparent border-b border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 focus:outline-none focus:border-unemi-blue" readonly>
                             </div>
                         </div>
@@ -137,8 +137,8 @@
                         </label>
                         <button type="button" onclick="bettoCertText()"
                                 class="betto-mini group inline-flex items-center gap-2 pl-1.5 pr-3.5 py-1 rounded-full transition-all"
-                                data-lote-nombre="{{ lote.nombre_lote|default:'' }}"
-                                data-lote-facultad="{{ lote.get_facultad_display|default:'' }}">
+                                data-lote-nombre="{{ lote.name|default:'' }}"
+                                data-lote-facultad="{{ lote.get_faculty_display|default:'' }}">
                             <span class="relative flex-shrink-0">
                                 <img src="{% static 'tiger_chase_loader.png' %}" alt="Betto"
                                      class="w-7 h-7 rounded-full bg-white object-cover ring-2 ring-[#F58830]/30">
@@ -152,7 +152,7 @@
                     </div>
                     <textarea id="cuerpo-certificado-textarea" name="cuerpo_certificado" rows="5"
                         class="block p-4 w-full text-sm text-gray-700 bg-gray-50 rounded-2xl border-transparent focus:border-unemi-blue focus:ring-4 focus:ring-blue-50/50 dark:bg-[#0F163A] dark:text-gray-200 dark:placeholder-gray-500 transition-all resize-none shadow-inner"
-                        placeholder="Por haber completado satisfactoriamente...">{{ lote.cuerpo_certificado }}</textarea>
+                        placeholder="Por haber completado satisfactoriamente...">{{ lote.body_text }}</textarea>
                     <div class="flex gap-2 mt-3">
                         <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded dark:bg-blue-900/30 dark:text-blue-300 border border-blue-100 dark:border-blue-900/50 cursor-pointer hover:bg-blue-100" onclick="insertTag('{curso}')">{curso}</span>
                         <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded dark:bg-blue-900/30 dark:text-blue-300 border border-blue-100 dark:border-blue-900/50 cursor-pointer hover:bg-blue-100" onclick="insertTag('{horas}')">{horas}</span>
@@ -189,25 +189,25 @@
                                         <option value="">-- {% if count == '1' %}Seleccionar{% else %}Ninguna{% endif %} --</option>
                                         {% for f in firmas_institucionales %}
                                         <option value="{{ f.id }}"
-                                            data-nombre="{{ f.nombre }}" data-cargo="{{ f.cargo }}" data-imagen="{{ f.imagen }}"
-                                            {% if count == '1' and lote.firma_inst_1_id == f.id %}selected
-                                            {% elif count == '2' and lote.firma_inst_2_id == f.id %}selected
-                                            {% elif count == '3' and lote.firma_inst_3_id == f.id %}selected{% endif %}>
-                                            {% if f.nombre %}{{ f.nombre }} &mdash; {% endif %}{{ f.cargo }}
+                                            data-nombre="{{ f.name }}" data-cargo="{{ f.role }}" data-imagen="{{ f.image }}"
+                                            {% if count == '1' and lote.signature_inst_1_id == f.id %}selected
+                                            {% elif count == '2' and lote.signature_inst_2_id == f.id %}selected
+                                            {% elif count == '3' and lote.signature_inst_3_id == f.id %}selected{% endif %}>
+                                            {% if f.name %}{{ f.name }} &mdash; {% endif %}{{ f.role }}
                                         </option>
                                         {% endfor %}
                                     </select>
                                 </div>
 
                                 <!-- Preview de la firma seleccionada -->
-                                <div id="firma_preview_{{ count }}" class="mt-3 flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-[#162054] {% if count == '1' and not lote.firma_inst_1_id %}hidden{% elif count == '2' and not lote.firma_inst_2_id %}hidden{% elif count == '3' and not lote.firma_inst_3_id %}hidden{% endif %}">
-                                    <img id="firma_preview_img_{{ count }}" src="{% if count == '1' and lote.firma_inst_1 and lote.firma_inst_1.imagen %}data:image/png;base64,{{ lote.firma_inst_1.imagen }}{% elif count == '2' and lote.firma_inst_2 and lote.firma_inst_2.imagen %}data:image/png;base64,{{ lote.firma_inst_2.imagen }}{% elif count == '3' and lote.firma_inst_3 and lote.firma_inst_3.imagen %}data:image/png;base64,{{ lote.firma_inst_3.imagen }}{% endif %}" class="h-12 object-contain bg-white dark:bg-white/10 rounded p-1" alt="Firma">
+                                <div id="firma_preview_{{ count }}" class="mt-3 flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-[#162054] {% if count == '1' and not lote.signature_inst_1_id %}hidden{% elif count == '2' and not lote.signature_inst_2_id %}hidden{% elif count == '3' and not lote.signature_inst_3_id %}hidden{% endif %}">
+                                    <img id="firma_preview_img_{{ count }}" src="{% if count == '1' and lote.signature_inst_1 and lote.signature_inst_1.image %}data:image/png;base64,{{ lote.signature_inst_1.image }}{% elif count == '2' and lote.signature_inst_2 and lote.signature_inst_2.image %}data:image/png;base64,{{ lote.signature_inst_2.image }}{% elif count == '3' and lote.signature_inst_3 and lote.signature_inst_3.image %}data:image/png;base64,{{ lote.signature_inst_3.image }}{% endif %}" class="h-12 object-contain bg-white dark:bg-white/10 rounded p-1" alt="Firma">
                                     <div>
                                         <p id="firma_preview_nombre_{{ count }}" class="text-xs font-semibold text-gray-700 dark:text-gray-200">
-                                            {% if count == '1' and lote.firma_inst_1 %}{{ lote.firma_inst_1.nombre }}{% elif count == '2' and lote.firma_inst_2 %}{{ lote.firma_inst_2.nombre }}{% elif count == '3' and lote.firma_inst_3 %}{{ lote.firma_inst_3.nombre }}{% endif %}
+                                            {% if count == '1' and lote.signature_inst_1 %}{{ lote.signature_inst_1.name }}{% elif count == '2' and lote.signature_inst_2 %}{{ lote.signature_inst_2.name }}{% elif count == '3' and lote.signature_inst_3 %}{{ lote.signature_inst_3.name }}{% endif %}
                                         </p>
                                         <p id="firma_preview_cargo_{{ count }}" class="text-[10px] text-gray-500 dark:text-gray-400">
-                                            {% if count == '1' and lote.firma_inst_1 %}{{ lote.firma_inst_1.cargo }}{% elif count == '2' and lote.firma_inst_2 %}{{ lote.firma_inst_2.cargo }}{% elif count == '3' and lote.firma_inst_3 %}{{ lote.firma_inst_3.cargo }}{% endif %}
+                                            {% if count == '1' and lote.signature_inst_1 %}{{ lote.signature_inst_1.role }}{% elif count == '2' and lote.signature_inst_2 %}{{ lote.signature_inst_2.role }}{% elif count == '3' and lote.signature_inst_3 %}{{ lote.signature_inst_3.role }}{% endif %}
                                         </p>
                                     </div>
                                 </div>
@@ -223,7 +223,7 @@
                     </div>
 
                     <!-- Firma Personalizada (Opcional) -->
-                    <details class="group rounded-xl border border-gray-100 dark:border-blue-900/30 bg-white dark:bg-[#0F163A] overflow-hidden" {% if lote.nombre_firma_4 %}open{% endif %}>
+                    <details class="group rounded-xl border border-gray-100 dark:border-blue-900/30 bg-white dark:bg-[#0F163A] overflow-hidden" {% if lote.signature_name_4 %}open{% endif %}>
                         <summary class="flex justify-between items-center p-4 cursor-pointer font-medium text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#162054]/50">
                             <span><i class="fa-solid fa-user-pen mr-1 text-unemi-orange"></i> Firma Personalizada (Opcional)</span>
                             <span class="transition group-open:rotate-180">
@@ -238,11 +238,11 @@
                                 <div class="space-y-3">
                                     <div>
                                         <label class="block text-[10px] font-medium text-gray-400 mb-1">Nombre Completo</label>
-                                        <input type="text" name="nombre_firma_4" value="{{ lote.nombre_firma_4 }}" placeholder="Ej: Ing. Juan Pérez" class="w-full bg-gray-50 dark:bg-[#162054] border-gray-200 dark:border-blue-900/50 text-sm rounded-lg p-2.5 text-gray-800 dark:text-white">
+                                        <input type="text" name="nombre_firma_4" value="{{ lote.signature_name_4 }}" placeholder="Ej: Ing. Juan Pérez" class="w-full bg-gray-50 dark:bg-[#162054] border-gray-200 dark:border-blue-900/50 text-sm rounded-lg p-2.5 text-gray-800 dark:text-white">
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-medium text-gray-400 mb-1">Cargo</label>
-                                        <input type="text" name="cargo_firma_4" value="{{ lote.cargo_firma_4 }}" placeholder="Ej: Director de Carrera" class="w-full bg-gray-50 dark:bg-[#162054] border-gray-200 dark:border-blue-900/50 text-sm rounded-lg p-2.5 text-gray-800 dark:text-white">
+                                        <input type="text" name="cargo_firma_4" value="{{ lote.signature_role_4 }}" placeholder="Ej: Director de Carrera" class="w-full bg-gray-50 dark:bg-[#162054] border-gray-200 dark:border-blue-900/50 text-sm rounded-lg p-2.5 text-gray-800 dark:text-white">
                                     </div>
                                     <div class="pt-1">
                                         <label class="flex items-center gap-3 cursor-pointer w-full group/file">
@@ -272,8 +272,8 @@
                         <div class="border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-center bg-white dark:bg-gray-800 shadow-sm relative group/item">
                             <span class="text-[10px] uppercase font-bold text-gray-400 block mb-2">Izquierda</span>
                             <div class="h-14 flex items-center justify-center mb-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
-                                {% if lote.logo_header_1 %}
-                                    <img src="{{lote.logo_header_1.url}}" class="h-full object-contain">
+                                {% if lote.header_logo_1 %}
+                                    <img src="{{lote.header_logo_1.url}}" class="h-full object-contain">
                                 {% else %}
                                     <img src="/static/img/muc.png" class="h-full object-contain" title="Logo por defecto">
                                 {% endif %}
@@ -290,8 +290,8 @@
                         <div class="border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-center bg-white dark:bg-gray-800 shadow-sm relative group/item">
                              <span class="text-[10px] uppercase font-bold text-gray-400 block mb-2">Centro</span>
                              <div class="h-14 flex items-center justify-center mb-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
-                                {% if lote.logo_header_2 %}
-                                    <img src="{{lote.logo_header_2.url}}" class="h-full object-contain">
+                                {% if lote.header_logo_2 %}
+                                    <img src="{{lote.header_logo_2.url}}" class="h-full object-contain">
                                 {% else %}
                                     <img src="/static/img/logo-unemi-removebg-preview.png" class="h-full object-contain" title="Logo por defecto">
                                 {% endif %}
@@ -308,8 +308,8 @@
                          <div class="border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-center bg-white dark:bg-gray-800 shadow-sm relative group/item">
                              <span class="text-[10px] uppercase font-bold text-gray-400 block mb-2">Derecha</span>
                              <div class="h-14 flex items-center justify-center mb-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
-                                {% if lote.logo_header_3 %}
-                                    <img src="{{lote.logo_header_3.url}}" class="h-full object-contain">
+                                {% if lote.header_logo_3 %}
+                                    <img src="{{lote.header_logo_3.url}}" class="h-full object-contain">
                                 {% else %}
                                     <img src="/static/img/feue.png" class="h-full object-contain" title="Logo por defecto">
                                 {% endif %}

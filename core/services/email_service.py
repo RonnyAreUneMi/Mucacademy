@@ -4,16 +4,16 @@ from django.utils.html import strip_tags
 from django.conf import settings
 import threading
 
-def send_certificate_email(certificado):
+def send_certificate_email(certificate):
     """
     Sends an email notification to the user about their new certificate.
     Uses threading to avoid blocking the main thread (simple async).
     """
     try:
-        if not certificado.email:
+        if not certificate.email:
             return False
 
-        subject = f"¡Felicidades {certificado.nombres}! Tu certificado está listo - MUC"
+        subject = f"¡Felicidades {certificate.first_name}! Tu certificado está listo - MUC"
 
         site_url = getattr(settings, 'SITE_URL', 'http://localhost:8001').rstrip('/')
         search_url = f"{site_url}/buscar/"
@@ -26,9 +26,9 @@ def send_certificate_email(certificado):
                         <h2 style="color: #162054;">¡Tu certificado está listo!</h2>
                     </div>
                     
-                    <p>Hola <strong>{certificado.nombres} {certificado.apellidos}</strong>,</p>
-                    
-                    <p>En el <strong>Movimiento Universitario por el Cambio (MUC)</strong> estamos orgullosos de tu participación en el seminario: <strong>{certificado.curso}</strong>.</p>
+                    <p>Hola <strong>{certificate.first_name} {certificate.last_name}</strong>,</p>
+
+                    <p>En el <strong>Movimiento Universitario por el Cambio (MUC)</strong> estamos orgullosos de tu participación en el seminario: <strong>{certificate.course}</strong>.</p>
                     
                     <p>Sabemos que este es un paso más en tu crecimiento académico y profesional. ¡Sigue adelante!</p>
                     
@@ -60,12 +60,12 @@ def send_certificate_email(certificado):
         # Start thread
         email_thread = threading.Thread(
             target=send_mail,
-            args=(subject, plain_message, from_email, [certificado.email]),
+            args=(subject, plain_message, from_email, [certificate.email]),
             kwargs={'html_message': html_message, 'fail_silently': False}
         )
         email_thread.start()
         
         return True
     except Exception as e:
-        print(f"Error sending email to {certificado.email}: {e}")
+        print(f"Error sending email to {certificate.email}: {e}")
         return False

@@ -2,11 +2,11 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import get_object_or_404, redirect, render
 
-from core.models import FirmaInstitucional
+from core.models import Signature
 
 
 def _is_superadmin(user):
-    return user.is_authenticated and user.rol == 'superadmin'
+    return user.is_authenticated and user.role == 'superadmin'
 
 
 @login_required
@@ -21,7 +21,7 @@ def firma_create(request):
 @user_passes_test(_is_superadmin)
 def firma_edit(request, id):
     return render(request, 'panel/firmas/form.html', {
-        'firma': get_object_or_404(FirmaInstitucional, id=id),
+        'firma': get_object_or_404(Signature, id=id),
         'title': 'Editar Firma Institucional',
     })
 

@@ -1,6 +1,6 @@
 {% extends 'emails/_base.html' %}
-{% block title %}Tu certificado de {{ sesion.titulo|default:sesion.dia_semana }} ya está listo{% endblock %}
-{% block preheader %}¡Felicitaciones, {{ p.nombres }}! Tu participación quedó certificada.{% endblock %}
+{% block title %}Tu certificado de {{ sesion.title|default:sesion.day_of_week }} ya está listo{% endblock %}
+{% block preheader %}¡Felicitaciones, {{ p.first_name }}! Tu participación quedó certificada.{% endblock %}
 
 {% block content %}
 
@@ -11,13 +11,13 @@
 
 <!-- Headline -->
 <h1 class="h1" style="margin:0 0 14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:30px;line-height:36px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;">
-    Lo lograste, {{ p.nombres }}.
+    Lo lograste, {{ p.first_name }}.
 </h1>
 
 <!-- Lede -->
 <p style="margin:0 0 28px;font-size:16px;line-height:1.6;color:#475569;">
     Tu esfuerzo tiene un nuevo reconocimiento. Acabamos de emitir tu certificado por participar en
-    <strong style="color:#0f172a;font-weight:600;">{{ sesion.titulo|default:sesion.dia_semana }}</strong>.
+    <strong style="color:#0f172a;font-weight:600;">{{ sesion.title|default:sesion.day_of_week }}</strong>.
     Ya está disponible en tu cuenta para descargar y compartir cuando quieras.
 </p>
 
@@ -29,7 +29,7 @@
                 Tu nuevo diploma
             </p>
             <h2 style="margin:0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:18px;line-height:24px;font-weight:700;color:#0f172a;letter-spacing:-0.2px;">
-                {{ sesion.titulo|default:sesion.dia_semana }}
+                {{ sesion.title|default:sesion.day_of_week }}
             </h2>
         </td>
     </tr>
@@ -41,7 +41,7 @@
                         Fecha del evento
                     </td>
                     <td style="padding:14px 0;font-size:13px;color:#0f172a;font-weight:500;border-bottom:1px solid #e2e8f0;text-align:right;">
-                        {{ sesion.fecha|date:"d \\d\\e F \\d\\e Y" }}
+                        {{ sesion.date|date:"d \\d\\e F \\d\\e Y" }}
                     </td>
                 </tr>
                 {% if cert_horas %}

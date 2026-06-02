@@ -1,5 +1,5 @@
 from django.db.models import Q
-from core.models import Certificado, LoteCertificados
+from core.models import Certificate, CertificateBatch
 
 def search_certificates(query):
     """
@@ -8,19 +8,19 @@ def search_certificates(query):
     """
     if not query:
         return []
-        
+
     query = query.strip()
-    
+
     # Validation constraint: Minimum 3 chars to search?
     if len(query) < 3:
         return []
 
-    return Certificado.objects.filter(
-        Q(cedula__icontains=query) | 
+    return Certificate.objects.filter(
+        Q(national_id__icontains=query) |
         Q(email__icontains=query) |
-        Q(nombres__icontains=query) |
-        Q(apellidos__icontains=query)
-    ).select_related('lote').order_by('-created_at')
+        Q(first_name__icontains=query) |
+        Q(last_name__icontains=query)
+    ).select_related('batch').order_by('-created_at')
 
-def get_certificate_by_hash(hash_verificacion):
-    return Certificado.objects.filter(hash_verificacion=hash_verificacion).first()
+def get_certificate_by_hash(verification_hash):
+    return Certificate.objects.filter(verification_hash=verification_hash).first()

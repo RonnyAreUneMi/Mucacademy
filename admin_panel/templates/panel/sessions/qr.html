@@ -16,28 +16,28 @@
             </div>
 
             <h1 class="text-3xl lg:text-4xl font-black text-[#162054] dark:text-white tracking-tight mt-3 leading-tight">
-                {{ sesion.titulo|default:sesion.dia_semana }}
+                {{ sesion.title|default:sesion.day_of_week }}
             </h1>
-            {% if sesion.titulo and sesion.dia_semana %}
-            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mt-1">{{ sesion.dia_semana|capfirst }}</p>
+            {% if sesion.title and sesion.day_of_week %}
+            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mt-1">{{ sesion.day_of_week|capfirst }}</p>
             {% endif %}
 
             <!-- Meta: fecha · hora · lugar — pills compactos -->
             <div class="flex flex-wrap items-center justify-center gap-2 mt-4">
                 <span class="inline-flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-full text-xs font-bold">
                     <i class="fa-regular fa-calendar text-[#F58830]"></i>
-                    {{ sesion.fecha|date:"d M Y" }}
+                    {{ sesion.date|date:"d M Y" }}
                 </span>
                 <span class="inline-flex items-center gap-1.5 bg-[#F58830]/10 text-[#F58830] px-3 py-1.5 rounded-full text-xs font-mono font-bold border border-[#F58830]/20">
                     <i class="fa-solid fa-clock"></i>
-                    {{ sesion.hora_inicio|time:"H:i" }} – {{ sesion.hora_fin|time:"H:i" }}
+                    {{ sesion.start_time|time:"H:i" }} – {{ sesion.end_time|time:"H:i" }}
                 </span>
-                {% if sesion.lugar %}
+                {% if sesion.location %}
                 <span class="inline-flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-full text-xs font-bold max-w-xs truncate">
                     <i class="fa-solid fa-location-dot text-red-500"></i>
-                    {{ sesion.lugar|truncatechars:42 }}
+                    {{ sesion.location|truncatechars:42 }}
                 </span>
-                {% elif sesion.modalidad == 'virtual' %}
+                {% elif sesion.modality == 'virtual' %}
                 <span class="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-full text-xs font-bold">
                     <i class="fa-solid fa-video"></i>
                     Virtual

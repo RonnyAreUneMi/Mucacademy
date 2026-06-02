@@ -1,7 +1,7 @@
 """Serializers del API de cuenta pública (mobile)."""
 from rest_framework import serializers
 
-from core.models import Certificado, Participante, SesionAsistencia
+from core.models import Certificate, Participant, Event
 
 
 class LoginInputSerializer(serializers.Serializer):
@@ -19,15 +19,15 @@ class RegisterInputSerializer(serializers.Serializer):
 
 
 class ParticipanteSerializer(serializers.ModelSerializer):
-    nombre_completo = serializers.CharField(read_only=True)
+    nombre_completo = serializers.CharField(source='full_name', read_only=True)
     initials        = serializers.CharField(read_only=True)
     avatar_url      = serializers.SerializerMethodField()
 
     class Meta:
-        model = Participante
+        model = Participant
         fields = [
-            'id', 'nombres', 'apellidos', 'email', 'cedula', 'celular',
-            'es_lider', 'nombre_completo', 'initials', 'avatar_url',
+            'id', 'first_name', 'last_name', 'email', 'national_id', 'phone',
+            'is_leader', 'nombre_completo', 'initials', 'avatar_url',
             'last_login', 'created_at',
         ]
         read_only_fields = fields
@@ -39,42 +39,42 @@ class ParticipanteSerializer(serializers.ModelSerializer):
 class CertificadoSerializer(serializers.ModelSerializer):
     download_url = serializers.SerializerMethodField()
     verify_url   = serializers.SerializerMethodField()
-    lote_nombre  = serializers.CharField(source='lote.nombre_lote', read_only=True)
+    lote_nombre  = serializers.CharField(source='batch.name', read_only=True)
 
     class Meta:
-        model = Certificado
+        model = Certificate
         fields = [
-            'id', 'curso', 'fecha_curso', 'horas',
-            'hash_verificacion', 'lote_nombre',
+            'id', 'course', 'course_date', 'hours',
+            'verification_hash', 'lote_nombre',
             'download_url', 'verify_url',
             'created_at',
         ]
         read_only_fields = fields
 
     def get_download_url(self, obj):
-        return f'/api/v1/public/certificates/{obj.hash_verificacion}/download/'
+        return f'/api/v1/public/certificates/{obj.verification_hash}/download/'
 
     def get_verify_url(self, obj):
-        return f'/verificar/{obj.hash_verificacion}/'
+        return f'/verificar/{obj.verification_hash}/'
 
 
 class SesionMobileSerializer(serializers.ModelSerializer):
-    es_virtual    = serializers.BooleanField(read_only=True)
+    es_virtual    = serializers.BooleanField(source='is_virtual', read_only=True)
     titulo_display = serializers.SerializerMethodField()
     banner_url    = serializers.SerializerMethodField()
 
     class Meta:
-        model = SesionAsistencia
+        model = Event
         fields = [
-            'id', 'titulo', 'titulo_display', 'descripcion',
-            'fecha', 'dia_semana', 'hora_inicio', 'hora_fin',
-            'modalidad', 'es_virtual', 'enlace_virtual', 'lugar',
-            'banner_url', 'activa',
+            'id', 'title', 'titulo_display', 'description',
+            'date', 'day_of_week', 'start_time', 'end_time',
+            'modality', 'es_virtual', 'meeting_url', 'location',
+            'banner_url', 'is_active',
         ]
         read_only_fields = fields
 
     def get_titulo_display(self, obj):
-        return obj.titulo or obj.dia_semana
+        return obj.title or obj.day_of_week
 
     def get_banner_url(self, obj):
-        return obj.imagen_banner.url if obj.imagen_banner else None
+        return obj.banner_image.url if obj.banner_image else None

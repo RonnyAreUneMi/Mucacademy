@@ -1,19 +1,19 @@
 def log_audit(user, action: str, detail: str) -> None:
-    """Crea un registro de auditoría. Seguro si user es None o anónimo."""
+    """Create an audit record. Safe if user is None or anonymous."""
     if user is None or not getattr(user, 'is_authenticated', False):
         return
-    # Import lazy para evitar circular imports con core.models
-    from core.models import Auditoria
-    Auditoria.objects.create(usuario=user, accion=action, detalle=detail)
+    # Lazy import to avoid circular imports with core.models
+    from core.models import AuditLog
+    AuditLog.objects.create(user=user, action=action, details=detail)
 
 
 class AuditLogMixin:
-    """Mixin para views/viewsets que registran auditoría.
+    """Mixin for views/viewsets that record audit logs.
 
-    Uso:
+    Usage:
         class MyView(AuditLogMixin, APIView):
-            audit_action = 'CREAR_COSA'
-            audit_detail_template = 'Cosa creada: {obj}'
+            audit_action = 'CREATE'
+            audit_detail_template = 'Thing created: {obj}'
     """
     audit_action = ''
     audit_detail_template = ''

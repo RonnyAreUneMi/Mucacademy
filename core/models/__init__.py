@@ -1,39 +1,39 @@
-"""
-Modelos del app core agrupados por dominio.
+"""Core app models, grouped by domain.
 
-Todos los modelos se re-exportan aquí para mantener compatibilidad con
-imports existentes como `from core.models import Usuario`.
+All models are re-exported here so imports stay stable:
+    from core.models import Participant, Certificate, Event
 """
-from .catalogos import FACULTADES_CHOICES, Facultad
-from .usuarios import Usuario, SolicitudAcceso
-from .firmas import FirmaInstitucional, DisenoGlobal
-from .participantes import Participante, ParticipanteToken
-from .certificados import LoteCertificados, Certificado
-from .sesiones import SesionAsistencia, RegistroAsistencia, ConfirmacionAsistencia, Ponente
-from .resumenes import ResumenSesion, EstadoProcesamiento, IntentoCuestionario
-from .auditoria import Auditoria
+from .catalogs import FACULTY_CHOICES, Faculty
+from .users import User, AccessRequest
+from .signatures import Signature, GlobalDesign
+from .participants import Participant, ParticipantToken
+from .certificates import CertificateBatch, Certificate
+from .events import Event, Speaker, Attendance, Enrollment
+from .summaries import SessionSummary, ProcessingStatus, QuizAttempt
+from .audit import AuditLog, AuditAction
 from .integrations import GoogleCredential, AIConfig, AIProvider, PROVIDER_MODELS
 from .design_system import UIDesignTokens
 
 __all__ = [
-    'FACULTADES_CHOICES',
-    'Facultad',
-    'Usuario',
-    'SolicitudAcceso',
-    'FirmaInstitucional',
-    'DisenoGlobal',
-    'Participante',
-    'ParticipanteToken',
-    'LoteCertificados',
-    'Certificado',
-    'SesionAsistencia',
-    'RegistroAsistencia',
-    'ConfirmacionAsistencia',
-    'Ponente',
-    'ResumenSesion',
-    'EstadoProcesamiento',
-    'IntentoCuestionario',
-    'Auditoria',
+    'FACULTY_CHOICES',
+    'Faculty',
+    'User',
+    'AccessRequest',
+    'Signature',
+    'GlobalDesign',
+    'Participant',
+    'ParticipantToken',
+    'CertificateBatch',
+    'Certificate',
+    'Event',
+    'Speaker',
+    'Attendance',
+    'Enrollment',
+    'SessionSummary',
+    'ProcessingStatus',
+    'QuizAttempt',
+    'AuditLog',
+    'AuditAction',
     'GoogleCredential',
     'AIConfig',
     'AIProvider',

@@ -1,25 +1,25 @@
 from rest_framework import serializers, permissions
 
-from core.models import FirmaInstitucional
+from core.models import Signature
 from api.common.viewsets import AuditedModelViewSet
 
 
 class FirmaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = FirmaInstitucional
-        fields = ['id', 'nombre', 'cargo', 'imagen', 'activa', 'orden', 'fecha_creacion']
-        read_only_fields = ('fecha_creacion',)
+        model = Signature
+        fields = ['id', 'name', 'role', 'image', 'is_active', 'sort_order', 'created_at']
+        read_only_fields = ('created_at',)
 
 
 class FirmaViewSet(AuditedModelViewSet):
-    queryset = FirmaInstitucional.objects.all()
+    queryset = Signature.objects.all()
     serializer_class = FirmaSerializer
     permission_classes = [permissions.IsAdminUser]
-    search_fields = ['nombre', 'cargo']
-    ordering_fields = ['orden', 'nombre']
-    ordering = ['orden', 'nombre']
+    search_fields = ['name', 'role']
+    ordering_fields = ['sort_order', 'name']
+    ordering = ['sort_order', 'name']
 
     audit_verbose_name = 'firma institucional'
 
     def audit_detail(self, instance, action):
-        return f'Firma #{instance.pk} ({instance.nombre} - {instance.cargo})'
+        return f'Firma #{instance.pk} ({instance.name} - {instance.role})'

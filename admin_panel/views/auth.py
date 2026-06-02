@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from core.models import SolicitudAcceso, Usuario
+from core.models import AccessRequest, User
 from ._shared import superadmin_required, _log_audit
 
 class CustomLoginView(DjangoLoginView):
@@ -23,13 +23,13 @@ class CustomLoginView(DjangoLoginView):
         """Route an authenticated user to the correct page based on their status."""
         # Check if user has pending access request
         try:
-            SolicitudAcceso.objects.get(usuario_creado=user, estado='pendiente')
+            AccessRequest.objects.get(created_user=user, status='pending')
             return redirect('panel:mi_estado')
-        except SolicitudAcceso.DoesNotExist:
+        except AccessRequest.DoesNotExist:
             pass
-        
+
         # Check if user is active admin
-        if user.activo and user.rol in ['admin', 'superadmin']:
+        if user.is_active and user.role in ['admin', 'superadmin']:
             return redirect('panel:dashboard')
         
         # Inactive user - send to mi_estado
@@ -59,13 +59,13 @@ class CustomLoginView(DjangoLoginView):
 def register(request):
     """Shell del formulario. Submit va a /api/v1/auth/register/ via fetch."""
     if request.user.is_authenticated:
-        if request.user.activo and request.user.rol in ['admin', 'superadmin']:
+        if request.user.is_active and request.user.role in ['admin', 'superadmin']:
             return redirect('panel:dashboard')
         return redirect('panel:mi_estado')
 
-    from core.models import FACULTADES_CHOICES
+    from core.models import FACULTY_CHOICES
     return render(request, 'panel/auth/register.html', {
-        'facultades_choices': FACULTADES_CHOICES,
+        'facultades_choices': FACULTY_CHOICES,
     })
 
 
@@ -74,15 +74,15 @@ def solicitud_pendiente(request, id):
     if request.user.is_authenticated:
         return redirect('panel:mi_estado')
     
-    solicitud = get_object_or_404(SolicitudAcceso, id=id)
-    
+    solicitud = get_object_or_404(AccessRequest, id=id)
+
     # Si está aprobada, redirigir a login
-    if solicitud.estado == 'aprobado':
+    if solicitud.status == 'approved':
         messages.success(request, 'Tu solicitud fue aprobada. Inicia sesión con tu correo y contraseña.')
         return redirect('panel:login')
-    
+
     # Si está rechazada, mostrar motivo
-    if solicitud.estado == 'rechazado':
+    if solicitud.status == 'rejected':
         return render(request, 'panel/auth/solicitud_rechazada.html', {'solicitud': solicitud})
     
     # Si está pendiente, redirigir a login para que inicie sesión
@@ -96,22 +96,22 @@ def mi_estado(request):
     user = request.user
     
     # Si el usuario está activo y es admin, redirigir al dashboard
-    if user.activo and user.rol in ['admin', 'superadmin']:
+    if user.is_active and user.role in ['admin', 'superadmin']:
         return redirect('panel:dashboard')
-    
+
     # Buscar la solicitud del usuario
     solicitud = None
-    estado = 'pendiente'
+    estado = 'pending'
     try:
-        solicitud = SolicitudAcceso.objects.get(usuario_creado=user)
-        estado = solicitud.estado
-    except SolicitudAcceso.DoesNotExist:
+        solicitud = AccessRequest.objects.get(created_user=user)
+        estado = solicitud.status
+    except AccessRequest.DoesNotExist:
         # Si no tiene solicitud pero no está activo, mostrar mensaje genérico
-        if not user.activo:
-            estado = 'desactivado'
-    
+        if not user.is_active:
+            estado = 'deactivated'
+
     # Si la solicitud fue aprobada, verificar si el usuario está activo
-    if estado == 'aprobado' and user.activo:
+    if estado == 'approved' and user.is_active:
         return redirect('panel:dashboard')
     
     context = {
@@ -125,20 +125,20 @@ def mi_estado(request):
 @superadmin_required
 def solicitudes_pendientes(request):
     """Admin view: lista de solicitudes de acceso pendientes"""
-    estado_filter = request.GET.get('estado', 'pendiente')
-    
-    solicitudes = SolicitudAcceso.objects.all().order_by('-fecha_solicitud')
-    
-    if estado_filter == 'pendiente':
-        solicitudes = solicitudes.filter(estado='pendiente')
-    elif estado_filter == 'aprobado':
-        solicitudes = solicitudes.filter(estado='aprobado')
-    elif estado_filter == 'rechazado':
-        solicitudes = solicitudes.filter(estado='rechazado')
-    
-    pendientes_count = SolicitudAcceso.objects.filter(estado='pendiente').count()
-    aprobadas_count = SolicitudAcceso.objects.filter(estado='aprobado').count()
-    rechazadas_count = SolicitudAcceso.objects.filter(estado='rechazado').count()
+    estado_filter = request.GET.get('estado', 'pending')
+
+    solicitudes = AccessRequest.objects.all().order_by('-requested_at')
+
+    if estado_filter == 'pending':
+        solicitudes = solicitudes.filter(status='pending')
+    elif estado_filter == 'approved':
+        solicitudes = solicitudes.filter(status='approved')
+    elif estado_filter == 'rejected':
+        solicitudes = solicitudes.filter(status='rejected')
+
+    pendientes_count = AccessRequest.objects.filter(status='pending').count()
+    aprobadas_count = AccessRequest.objects.filter(status='approved').count()
+    rechazadas_count = AccessRequest.objects.filter(status='rejected').count()
     
     context = {
         'solicitudes': solicitudes,
@@ -154,54 +154,54 @@ def solicitudes_pendientes(request):
 @require_http_methods(["POST"])
 def aprobar_solicitud(request, id):
     """Admin action: aprobar una solicitud de acceso - activa el usuario existente"""
-    solicitud = get_object_or_404(SolicitudAcceso, id=id)
-    
-    if solicitud.estado not in ['pendiente', 'rechazado']:
+    solicitud = get_object_or_404(AccessRequest, id=id)
+
+    if solicitud.status not in ['pending', 'rejected']:
         messages.error(request, 'Esta solicitud no puede ser procesada.')
         return redirect('panel:solicitudes_pendientes')
-    
+
     # Limpiar motivo de rechazo si existía
-    if solicitud.estado == 'rechazado':
-        solicitud.motivo_rechazo = ''
-    
+    if solicitud.status == 'rejected':
+        solicitud.rejection_reason = ''
+
     try:
-        if solicitud.usuario_creado:
+        if solicitud.created_user:
             # Activar el usuario existente (creado durante el registro)
-            usuario = solicitud.usuario_creado
-            usuario.activo = True
-            usuario.save(update_fields=['activo'])
+            usuario = solicitud.created_user
+            usuario.is_active = True
+            usuario.save(update_fields=['is_active'])
             nombre_usuario = usuario.username
         else:
             # Solicitud legacy sin usuario vinculado - crear uno nuevo
             nombre_usuario = solicitud.email.split('@')[0]
             base_username = nombre_usuario
             counter = 1
-            while Usuario.objects.filter(username=nombre_usuario).exists():
+            while User.objects.filter(username=nombre_usuario).exists():
                 nombre_usuario = f"{base_username}{counter}"
                 counter += 1
-            
-            usuario = Usuario.objects.create_user(
+
+            usuario = User.objects.create_user(
                 username=nombre_usuario,
                 email=solicitud.email,
-                first_name=solicitud.nombres,
-                last_name=solicitud.apellidos,
-                telefono=solicitud.telefono,
-                facultad=solicitud.facultad,
-                rol='admin',
-                activo=True,
+                first_name=solicitud.first_name,
+                last_name=solicitud.last_name,
+                phone=solicitud.phone,
+                faculty=solicitud.faculty,
+                role='admin',
+                is_active=True,
                 is_staff=False,
                 is_superuser=False,
             )
-            solicitud.usuario_creado = usuario
-        
+            solicitud.created_user = usuario
+
         # Actualizar solicitud
-        solicitud.estado = 'aprobado'
-        solicitud.aprobado_por = request.user
-        solicitud.fecha_respuesta = timezone.now()
+        solicitud.status = 'approved'
+        solicitud.approved_by = request.user
+        solicitud.responded_at = timezone.now()
         solicitud.save()
         
         # Log de auditoría
-        _log_audit(request.user, 'SOLICITUD_APROBADA', 
+        _log_audit(request.user, 'APPROVE',
                   f'Solicitud de {solicitud.email} aprobada. Usuario {nombre_usuario} activado.')
         
         messages.success(request, f'Solicitud aprobada. Usuario activado: {nombre_usuario}')
@@ -215,22 +215,22 @@ def aprobar_solicitud(request, id):
 @require_http_methods(["GET", "POST"])
 def rechazar_solicitud(request, id):
     """Admin action: rechazar una solicitud de acceso"""
-    solicitud = get_object_or_404(SolicitudAcceso, id=id)
-    
-    if solicitud.estado != 'pendiente':
+    solicitud = get_object_or_404(AccessRequest, id=id)
+
+    if solicitud.status != 'pending':
         messages.error(request, 'Esta solicitud ya ha sido procesada.')
         return redirect('panel:solicitudes_pendientes')
-    
+
     if request.method == 'POST':
         motivo = request.POST.get('motivo', '')
-        
-        solicitud.estado = 'rechazado'
-        solicitud.motivo_rechazo = motivo
-        solicitud.aprobado_por = request.user
-        solicitud.fecha_respuesta = timezone.now()
+
+        solicitud.status = 'rejected'
+        solicitud.rejection_reason = motivo
+        solicitud.approved_by = request.user
+        solicitud.responded_at = timezone.now()
         solicitud.save()
         
-        _log_audit(request.user, 'SOLICITUD_RECHAZADA', 
+        _log_audit(request.user, 'REJECT',
                   f'Solicitud de {solicitud.email} rechazada. Motivo: {motivo}')
         
         messages.success(request, f'Solicitud rechazada: {solicitud.email}')

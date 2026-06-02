@@ -77,18 +77,18 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-unemi-orange/10 flex items-center justify-center text-unemi-orange font-bold text-sm">
-                                    {{ p.nombres|first }}{{ p.apellidos|first }}
+                                    {{ p.first_name|first }}{{ p.last_name|first }}
                                 </div>
                                 <div>
-                                    <p class="text-sm font-bold text-gray-900 dark:text-white">{{ p.nombres }} {{ p.apellidos }}</p>
+                                    <p class="text-sm font-bold text-gray-900 dark:text-white">{{ p.first_name }} {{ p.last_name }}</p>
                                     <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">ACADÉMICO</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 font-mono">{{ p.cedula|default:"—" }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 font-mono">{{ p.national_id|default:"—" }}</td>
                         <td class="px-6 py-4">
                             <p class="text-sm text-gray-700 dark:text-gray-300">{{ p.email }}</p>
-                            <p class="text-xs text-gray-500">{{ p.celular|default:"" }}</p>
+                            <p class="text-xs text-gray-500">{{ p.phone|default:"" }}</p>
                         </td>
                         <td class="px-6 py-4 text-right">
                             <form method="POST" action="{% url 'panel:lideres_remove' p.id %}" class="inline">
@@ -97,7 +97,7 @@
                                     class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-all"
                                     onclick="showConfirm({
                                         title: 'Quitar Líder',
-                                        message: '¿Estás seguro de quitar a {{ p.nombres|escapejs }}?',
+                                        message: '¿Estás seguro de quitar a {{ p.first_name|escapejs }}?',
                                         type: 'danger',
                                         callback: () => this.closest('form').submit()
                                     })">

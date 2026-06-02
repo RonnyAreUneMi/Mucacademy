@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from core.models import Certificado
+from core.models import Certificate
 from api.common.viewsets import AuditedModelViewSet
 
 from .serializers import (
@@ -12,13 +12,13 @@ from .serializers import (
 
 class CertificadoViewSet(AuditedModelViewSet):
     """CRUD admin de certificados. La parte pública está en api/public/."""
-    queryset = Certificado.objects.with_relations()
+    queryset = Certificate.objects.with_relations()
     permission_classes = [permissions.IsAdminUser]
-    filterset_fields = ['lote', 'participante']
-    search_fields = ['cedula', 'email', 'nombres', 'apellidos', 'curso', 'hash_verificacion']
-    ordering_fields = ['created_at', 'descargas_count']
+    filterset_fields = ['batch', 'participant']
+    search_fields = ['national_id', 'email', 'first_name', 'last_name', 'course', 'verification_hash']
+    ordering_fields = ['created_at', 'download_count']
     ordering = ['-created_at']
-    lookup_field = 'hash_verificacion'
+    lookup_field = 'verification_hash'
 
     audit_verbose_name = 'certificado'
 
@@ -30,4 +30,4 @@ class CertificadoViewSet(AuditedModelViewSet):
         return CertificadoListSerializer
 
     def audit_detail(self, instance, action):
-        return f'Certificado #{instance.pk} ({instance.cedula} - {instance.curso})'
+        return f'Certificado #{instance.pk} ({instance.national_id} - {instance.course})'

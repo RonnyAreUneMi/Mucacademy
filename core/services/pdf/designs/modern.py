@@ -13,7 +13,7 @@ from .._logos import draw_smart_logos
 def draw_modern_wow(c, certificado, width, height, pri, sec, ter, txt):
     """Dibuja un certificado con estilo moderno (barra lateral + sello de roseta)."""
     register_fonts()
-    lote = certificado.lote
+    lote = certificado.batch
     SCRIPT_FONT = get_script_font()
 
     # --- SIDEBAR DECORATION ---
@@ -110,7 +110,7 @@ def draw_modern_wow(c, certificado, width, height, pri, sec, ter, txt):
     name_size = 52 if SCRIPT_FONT == 'GreatVibes' else 36
     c.setFont(SCRIPT_FONT, name_size)
     c.setFillColor(HexColor('#111111'))
-    nombre = f"{certificado.nombres} {certificado.apellidos}".title()
+    nombre = f"{certificado.first_name} {certificado.last_name}".title()
     c.drawCentredString(center_x, y_cursor, nombre)
 
     c.setStrokeColor(sec); c.setLineWidth(1.5)
@@ -130,7 +130,7 @@ def draw_modern_wow(c, certificado, width, height, pri, sec, ter, txt):
     # Fecha
     c.setFont("Times-Italic", 13)
     c.setFillColor(HexColor('#777777'))
-    c.drawRightString(width - 2.5*cm, 2.0*cm, get_current_date_text(certificado.fecha_curso))
+    c.drawRightString(width - 2.5*cm, 2.0*cm, get_current_date_text(certificado.course_date))
 
     # Firmas unificadas (respetan el sidebar)
     draw_signatures_universal(c, lote, width, line_color=sec,

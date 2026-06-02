@@ -1,9 +1,9 @@
 {% extends 'public/account/_base.html' %}
 {% load static %}
-{% block page_title %}Cuestionario · {{ sesion.titulo|default:sesion.dia_semana }}{% endblock %}
+{% block page_title %}Cuestionario · {{ event.title|default:event.day_of_week }}{% endblock %}
 
 {% block content %}
-{{ resumen.cuestionario|json_script:"quizData" }}
+{{ summary.quiz|json_script:"quizData" }}
 
 <style>
     /* Background animado tipo Quizizz */
@@ -311,13 +311,13 @@
 </style>
 
 <div class="space-y-4">
-    <a href="{% url 'public:account_evento_resumen' sesion.id %}" class="inline-flex items-center gap-1.5 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-[var(--ds-brand)] transition-colors">
+    <a href="{% url 'public:account_evento_resumen' event.id %}" class="inline-flex items-center gap-1.5 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-[var(--ds-brand)] transition-colors">
         <i class="fa-solid fa-arrow-left"></i> Volver al resumen
     </a>
 
     <div class="quiz-shell" id="quizShell"
-         data-submit-url="{% url 'public:account_evento_cuestionario_submit' sesion.id %}"
-         data-resumen-url="{% url 'public:account_evento_resumen' sesion.id %}"
+         data-submit-url="{% url 'public:account_evento_cuestionario_submit' event.id %}"
+         data-resumen-url="{% url 'public:account_evento_resumen' event.id %}"
          data-csrf="{{ csrf_token }}">
         <!-- Top bar: avatar Betto + progreso + timer -->
         <div class="quiz-topbar">
@@ -328,7 +328,7 @@
                     <div class="flex items-center gap-2">
                         <span class="quiz-counter" id="quizCounter">1 / 5</span>
                         <span class="quiz-counter" style="background: rgba(245,136,48,0.20); color: #FBBF24;">
-                            Intento {{ intento_numero }} / 2
+                            Intento {{ attempt_number }} / 2
                         </span>
                     </div>
                     <span class="quiz-timer" id="quizTimer"><i class="fa-solid fa-clock"></i> <span id="quizTime">30</span>s</span>
@@ -380,7 +380,7 @@
         progress.style.width = ((idx) / TOTAL * 100) + '%';
         startTimer();
 
-        const opts = (q.opciones || []).map((opt, i) => `
+        const opts = (q.options || []).map((opt, i) => `
             <button type="button" class="quiz-opt" data-opt="${i}">
                 <span class="quiz-letter">${String.fromCharCode(65 + i)}</span>
                 <span class="quiz-opt-text">${escapeHtml(opt)}</span>
@@ -390,7 +390,7 @@
 
         body.innerHTML = `
             <div class="quiz-question-wrap">
-                <h2 class="quiz-question">${escapeHtml(q.pregunta)}</h2>
+                <h2 class="quiz-question">${escapeHtml(q.question)}</h2>
                 <div class="quiz-options">${opts}</div>
                 <div id="quizFeedbackHost"></div>
             </div>
@@ -430,7 +430,7 @@
         clearTimers();
         answers[idx] = optIdx;
         const q = preguntas[idx];
-        const correctIdx = q.correcta_idx;
+        const correctIdx = q.correct_idx;
         const wasCorrect = optIdx === correctIdx;
 
         // Aplicar estados a los botones
@@ -452,7 +452,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="quiz-feedback-eyebrow">${wasCorrect ? '¡Correcto!' : (optIdx === null ? 'Tiempo agotado' : 'Incorrecto')}</p>
-                        ${q.explicacion ? `<p>${escapeHtml(q.explicacion)}</p>` : '<p>Seguí adelante.</p>'}
+                        ${q.explanation ? `<p>${escapeHtml(q.explanation)}</p>` : '<p>Seguí adelante.</p>'}
                     </div>
                 </div>
                 <button type="button" class="quiz-next" id="quizNextBtn">
@@ -478,7 +478,7 @@
     async function renderResult() {
         progress.style.width = '100%';
         timerEl.style.display = 'none';
-        const correct = answers.reduce((acc, a, i) => acc + (a === preguntas[i].correcta_idx ? 1 : 0), 0);
+        const correct = answers.reduce((acc, a, i) => acc + (a === preguntas[i].correct_idx ? 1 : 0), 0);
         const pct = Math.round(correct / TOTAL * 100);
         const avgTime = Math.round(timesUsed.reduce((a, b) => a + b, 0) / TOTAL);
         const tiempoTotal = timesUsed.reduce((a, b) => a + b, 0);
@@ -519,7 +519,7 @@
                 </div>
                 <p id="intentosInfo" class="text-sm text-white/70 mt-4">Guardando resultado…</p>
                 <div class="quiz-result-actions" id="quizActions" style="opacity: 0.5; pointer-events: none;">
-                    <a href="{% url 'public:account_evento_resumen' sesion.id %}" class="quiz-btn quiz-btn-ghost">
+                    <a href="{% url 'public:account_evento_resumen' event.id %}" class="quiz-btn quiz-btn-ghost">
                         <i class="fa-solid fa-book"></i> Volver al resumen
                     </a>
                 </div>
@@ -553,7 +553,7 @@
                 <button type="button" class="quiz-btn quiz-btn-primary" id="quizRestart">
                     <i class="fa-solid fa-rotate-right"></i> Volver a intentar
                 </button>
-                <a href="{% url 'public:account_evento_resumen' sesion.id %}" class="quiz-btn quiz-btn-ghost">
+                <a href="{% url 'public:account_evento_resumen' event.id %}" class="quiz-btn quiz-btn-ghost">
                     <i class="fa-solid fa-book"></i> Volver al resumen
                 </a>
             `;
@@ -562,7 +562,7 @@
         } else {
             info.innerHTML = `<i class="fa-solid fa-flag-checkered"></i> Usaste todos tus intentos. Tu mejor resultado se guardó en el resumen.`;
             actions.innerHTML = `
-                <a href="{% url 'public:account_evento_resumen' sesion.id %}" class="quiz-btn quiz-btn-primary">
+                <a href="{% url 'public:account_evento_resumen' event.id %}" class="quiz-btn quiz-btn-primary">
                     <i class="fa-solid fa-arrow-right"></i> Ver mis resultados
                 </a>
             `;

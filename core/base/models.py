@@ -1,8 +1,9 @@
+"""Abstract base models reused across all domains."""
 from django.db import models
 
 
 class TimestampedModel(models.Model):
-    """Mixin abstracto con created_at / updated_at."""
+    """Abstract mixin that adds `created_at` and `updated_at` timestamps."""
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -11,13 +12,14 @@ class TimestampedModel(models.Model):
 
 
 class SingletonModel(models.Model):
-    """Base para modelos con una sola instancia (ej. DisenoGlobal)."""
+    """Base for models that must have a single row (e.g. global settings)."""
 
     class Meta:
         abstract = True
 
     @classmethod
-    def get_solo(cls):
+    def load(cls):
+        """Return the singleton instance, creating it on first access."""
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
 

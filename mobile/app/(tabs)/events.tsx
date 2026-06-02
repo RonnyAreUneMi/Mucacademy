@@ -21,21 +21,21 @@ const GRID_PADDING = 14;
 const CARD_W = (SCREEN_W - GRID_PADDING * 2 - GRID_GAP) / 2;
 
 type Status = 'asisti' | 'inscrito' | 'no_asisti' | 'disponible';
-type Evento = {
+type Event = {
   id: number;
-  titulo: string;
+  title: string;
   titulo_display: string;
-  descripcion: string;
-  fecha: string;
-  dia_semana: string;
-  hora_inicio: string;
-  hora_fin: string;
-  modalidad: string;
+  description: string;
+  date: string;
+  day_of_week: string;
+  start_time: string;
+  end_time: string;
+  modality: string;
   es_virtual: boolean;
-  lugar: string;
-  enlace_virtual: string;
+  location: string;
+  meeting_url: string;
   banner_url: string | null;
-  activa: boolean;
+  is_active: boolean;
   status: Status;
   has_resumen?: boolean;
 };
@@ -43,7 +43,7 @@ type EventosResponse = {
   tab: 'mios' | 'disponibles';
   count_mios: number;
   count_disponibles: number;
-  results: Evento[];
+  results: Event[];
 };
 
 const STATUS_TONE: Record<Status, 'success' | 'brand' | 'danger' | 'info'> = {
@@ -165,7 +165,7 @@ function TabBtn({
   );
 }
 
-function EventoCard({ evento }: { evento: Evento }) {
+function EventoCard({ evento }: { evento: Event }) {
   const theme = useTheme();
   const t = themed(theme);
 
@@ -187,9 +187,9 @@ function EventoCard({ evento }: { evento: Evento }) {
     ? ['#1E3A8A', '#1E40AF', '#0F1F4D']
     : [brandScale[500], '#E8721C', brandScale[700]];
 
-  const dateBlock = formatDateBlock(evento.fecha);
-  const dayLabel = (evento.dia_semana || '').slice(0, 3).toUpperCase();
-  const time = evento.hora_inicio.slice(0, 5);
+  const dateBlock = formatDateBlock(evento.date);
+  const dayLabel = (evento.day_of_week || '').slice(0, 3).toUpperCase();
+  const time = evento.start_time.slice(0, 5);
 
   return (
     <Pressable
@@ -258,10 +258,10 @@ function EventoCard({ evento }: { evento: Evento }) {
             {dayLabel} · {time}
           </Text>
         </View>
-        {evento.lugar && !evento.es_virtual && !verResumenDirecto ? (
+        {evento.location && !evento.es_virtual && !verResumenDirecto ? (
           <View style={styles.cardMetaRow}>
             <Ionicons name="location" size={11} color={colors.brand} />
-            <Text style={[styles.cardMeta, { color: t.textMuted }]} numberOfLines={1}>{evento.lugar}</Text>
+            <Text style={[styles.cardMeta, { color: t.textMuted }]} numberOfLines={1}>{evento.location}</Text>
           </View>
         ) : null}
 

@@ -87,14 +87,14 @@
                         <i class="fas fa-calendar text-unemi-orange mt-1 mr-3 flex-shrink-0"></i>
                         <div>
                             <p class="text-gray-400 text-sm">Fecha de solicitud</p>
-                            <p class="text-white font-medium">{{ solicitud.fecha_solicitud|date:"d/m/Y H:i" }}</p>
+                            <p class="text-white font-medium">{{ solicitud.requested_at|date:"d/m/Y H:i" }}</p>
                         </div>
                     </div>
                     <div class="flex items-start">
                         <i class="fas fa-info-circle text-unemi-orange mt-1 mr-3 flex-shrink-0"></i>
                         <div>
                             <p class="text-gray-400 text-sm">Estado</p>
-                            <p class="text-yellow-400 font-medium">{{ solicitud.get_estado_display }}</p>
+                            <p class="text-yellow-400 font-medium">{{ solicitud.get_status_display }}</p>
                         </div>
                     </div>
                 </div>

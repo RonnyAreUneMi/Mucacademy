@@ -32,28 +32,28 @@ type Stats = {
   eventos_inscrito: number;
   eventos_asistido: number;
 };
-type Sesion = {
+type Event = {
   id: number;
   titulo_display: string;
-  fecha: string;
-  hora_inicio: string;
-  hora_fin: string;
+  date: string;
+  start_time: string;
+  end_time: string;
   es_virtual: boolean;
-  enlace_virtual?: string;
-  lugar?: string;
+  meeting_url?: string;
+  location?: string;
 };
-type Certificado = {
+type Certificate = {
   id: number;
-  curso: string;
-  fecha_curso: string | null;
-  horas: number;
+  course: string;
+  course_date: string | null;
+  hours: number;
   download_url: string;
 };
 type DashboardData = {
   stats: Stats;
-  proximos: Sesion[];
-  recomendados: Sesion[];
-  certificados_recientes?: Certificado[];
+  proximos: Event[];
+  recomendados: Event[];
+  certificados_recientes?: Certificate[];
 };
 
 export default function DashboardScreen() {
@@ -114,7 +114,7 @@ export default function DashboardScreen() {
               </Text>
               <View style={styles.heroTitleWrap}>
                 <GradientText style={styles.heroTitle}>
-                  {`${(participante?.nombres || '—').split(' ')[0]}.`}
+                  {`${(participante?.first_name || '—').split(' ')[0]}.`}
                 </GradientText>
               </View>
             </View>
@@ -151,7 +151,7 @@ export default function DashboardScreen() {
         {/* ═══ Próximos eventos (resto) ═══ */}
         {(data?.proximos.length ?? 0) > 1 ? (
           <Section title="MIS PRÓXIMOS EVENTOS" actionLabel="Ver todos" onAction={() => router.push('/(tabs)/events')}>
-            {data!.proximos.slice(1).map((s) => <SesionRow key={s.id} sesion={s} />)}
+            {data!.proximos.slice(1).map((s) => <EventRow key={s.id} sesion={s} />)}
           </Section>
         ) : null}
 
@@ -409,10 +409,10 @@ function StatTile({
   );
 }
 
-function NextEventCard({ evento }: { evento: Sesion }) {
+function NextEventCard({ evento }: { evento: Event }) {
   const theme = useTheme();
   const t = themed(theme);
-  const targetDate = new Date(`${evento.fecha}T${evento.hora_inicio}`);
+  const targetDate = new Date(`${evento.date}T${evento.start_time}`);
   const [remaining, setRemaining] = useState(() => calcRemaining(targetDate));
 
   useEffect(() => {
@@ -420,7 +420,7 @@ function NextEventCard({ evento }: { evento: Sesion }) {
     // así que no hace falta un timer por segundo.
     const timer = setInterval(() => setRemaining(calcRemaining(targetDate)), 60000);
     return () => clearInterval(timer);
-  }, [evento.fecha, evento.hora_inicio]);
+  }, [evento.date, evento.start_time]);
 
   return (
     <GlassCard onPress={() => router.push({ pathname: '/event/[id]', params: { id: String(evento.id) } })}>
@@ -448,13 +448,13 @@ function NextEventCard({ evento }: { evento: Sesion }) {
         <View style={styles.nextMetaItem}>
           <Ionicons name="calendar" size={13} color={colors.brand} />
           <Text style={[styles.nextMetaText, { color: t.textMuted }]}>
-            {formatDate(evento.fecha)}
+            {formatDate(evento.date)}
           </Text>
         </View>
         <View style={styles.nextMetaItem}>
           <Ionicons name="time" size={13} color={colors.brand} />
           <Text style={[styles.nextMetaText, { color: t.textMuted }]}>
-            {evento.hora_inicio.slice(0, 5)}
+            {evento.start_time.slice(0, 5)}
           </Text>
         </View>
       </View>
@@ -468,11 +468,11 @@ function NextEventCard({ evento }: { evento: Sesion }) {
       </View>
 
       {/* Botón Meet — sin caja propia, solo contenido dentro del GlassCard */}
-      {evento.es_virtual && evento.enlace_virtual ? (
+      {evento.es_virtual && evento.meeting_url ? (
         <Pressable
           onPress={(e: any) => {
             e?.stopPropagation?.();
-            Linking.openURL(evento.enlace_virtual!);
+            Linking.openURL(evento.meeting_url!);
           }}
           style={({ pressed }) => [
             styles.meetBtn,
@@ -517,7 +517,7 @@ function Section({
   );
 }
 
-function SesionRow({ sesion }: { sesion: Sesion }) {
+function EventRow({ sesion }: { sesion: Event }) {
   const t = themed(useTheme());
   return (
     <GlassCard onPress={() => router.push({ pathname: '/event/[id]', params: { id: String(sesion.id) } })}>
@@ -537,19 +537,19 @@ function SesionRow({ sesion }: { sesion: Sesion }) {
       <View style={styles.rowMeta}>
         <Ionicons name="calendar-outline" size={13} color={t.textMuted} />
         <Text style={[styles.rowMetaText, { color: t.textMuted }]}>
-          {formatDate(sesion.fecha)} · {sesion.hora_inicio.slice(0, 5)}
+          {formatDate(sesion.date)} · {sesion.start_time.slice(0, 5)}
         </Text>
       </View>
     </GlassCard>
   );
 }
 
-function RecoCard({ sesion }: { sesion: Sesion }) {
+function RecoCard({ sesion }: { sesion: Event }) {
   const t = themed(useTheme());
   const heroColors: [string, string, string] = sesion.es_virtual
     ? ['#1E3A8A', '#1E40AF', '#0F1F4D']
     : [brandScale[500], '#E8721C', brandScale[700]];
-  const dateBlock = dayBlockFromIso(sesion.fecha);
+  const dateBlock = dayBlockFromIso(sesion.date);
 
   return (
     <Pressable
@@ -602,7 +602,7 @@ function RecoCard({ sesion }: { sesion: Sesion }) {
         <View style={styles.recoMetaRow}>
           <Ionicons name="time" size={11} color={colors.brand} />
           <Text style={[styles.recoMeta, { color: t.textMuted }]} numberOfLines={1}>
-            {sesion.hora_inicio.slice(0, 5)} h
+            {sesion.start_time.slice(0, 5)} h
           </Text>
         </View>
       </View>
@@ -610,7 +610,7 @@ function RecoCard({ sesion }: { sesion: Sesion }) {
   );
 }
 
-function CertCard({ cert }: { cert: Certificado }) {
+function CertCard({ cert }: { cert: Certificate }) {
   const t = themed(useTheme());
   return (
     <Pressable
@@ -638,7 +638,7 @@ function CertCard({ cert }: { cert: Certificado }) {
         <View style={styles.certTopRow}>
           <View style={styles.certHoursPill}>
             <Ionicons name="time" size={11} color="#FFFFFF" />
-            <Text style={styles.certHoursText}>{cert.horas}h</Text>
+            <Text style={styles.certHoursText}>{cert.hours}h</Text>
           </View>
           <View style={styles.certDownloadCircle}>
             <Ionicons name="download" size={13} color="#FFFFFF" />
@@ -655,11 +655,11 @@ function CertCard({ cert }: { cert: Certificado }) {
         {/* Bottom: título + fecha */}
         <View style={{ marginTop: 'auto' }}>
           <Text style={styles.certEyebrow}>CERTIFICADO</Text>
-          <Text style={styles.certTitleBig} numberOfLines={2}>{cert.curso}</Text>
-          {cert.fecha_curso ? (
+          <Text style={styles.certTitleBig} numberOfLines={2}>{cert.course}</Text>
+          {cert.course_date ? (
             <Text style={styles.certDate}>
               <Ionicons name="calendar" size={11} color="rgba(255,255,255,0.85)" />{' '}
-              {formatDate(cert.fecha_curso)}
+              {formatDate(cert.course_date)}
             </Text>
           ) : null}
         </View>

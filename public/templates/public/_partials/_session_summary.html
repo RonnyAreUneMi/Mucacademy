@@ -14,37 +14,37 @@ Uso:
         sesion=sesion cupos=cupos capacidad_ilimitada=capacidad_ilimitada %}
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}
-{% if sesion.imagen_banner and show_banner|default:True %}
+{% if sesion.banner_image and show_banner|default:True %}
 <div class="rounded-2xl overflow-hidden shadow-lg border border-gray-100 dark:border-blue-900/30 mb-6 bg-white dark:bg-[#162054]">
-    <img src="{{ sesion.imagen_banner.url }}" alt="{{ sesion.titulo }}" class="w-full max-h-64 object-cover">
+    <img src="{{ sesion.banner_image.url }}" alt="{{ sesion.title }}" class="w-full max-h-64 object-cover">
 </div>
 {% endif %}
 
 <div class="bg-white dark:bg-[#162054] rounded-2xl shadow-lg border border-gray-100 dark:border-blue-900/30 p-6 mb-6">
     <div class="flex items-start gap-4">
-        <div class="{% if sesion.es_virtual %}bg-blue-500/10 text-blue-500{% else %}bg-[#F58830]/10 text-[#F58830]{% endif %} rounded-xl w-14 h-14 flex items-center justify-center shrink-0">
-            <i class="fa-solid {% if sesion.es_virtual %}fa-video{% else %}fa-calendar-check{% endif %} text-2xl"></i>
+        <div class="{% if sesion.is_virtual %}bg-blue-500/10 text-blue-500{% else %}bg-[#F58830]/10 text-[#F58830]{% endif %} rounded-xl w-14 h-14 flex items-center justify-center shrink-0">
+            <i class="fa-solid {% if sesion.is_virtual %}fa-video{% else %}fa-calendar-check{% endif %} text-2xl"></i>
         </div>
         <div class="flex-1 min-w-0">
             <h1 class="text-2xl font-black text-gray-800 dark:text-white tracking-tight">
-                {{ sesion.titulo|default:'Registro de asistencia' }}
+                {{ sesion.title|default:'Registro de asistencia' }}
             </h1>
-            {% if sesion.descripcion %}
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ sesion.descripcion|striptags|truncatewords:30 }}</p>
+            {% if sesion.description %}
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ sesion.description|striptags|truncatewords:30 }}</p>
             {% endif %}
 
             <div class="flex flex-wrap gap-3 mt-3 text-sm text-gray-500 dark:text-gray-400">
-                <span><i class="fa-solid fa-calendar-day mr-1 text-[#F58830]"></i>{{ sesion.fecha|date:'d/m/Y' }}</span>
-                <span><i class="fa-solid fa-clock mr-1 text-[#F58830]"></i>{{ sesion.hora_inicio|time:'H:i' }} – {{ sesion.hora_fin|time:'H:i' }}</span>
-                {% if sesion.es_virtual %}
-                    <span><i class="fa-solid fa-video mr-1 text-blue-500"></i>{{ sesion.plataforma_display_safe }}</span>
-                {% elif sesion.lugar %}
-                    <span><i class="fa-solid fa-location-dot mr-1 text-[#F58830]"></i>{{ sesion.lugar }}</span>
+                <span><i class="fa-solid fa-calendar-day mr-1 text-[#F58830]"></i>{{ sesion.date|date:'d/m/Y' }}</span>
+                <span><i class="fa-solid fa-clock mr-1 text-[#F58830]"></i>{{ sesion.start_time|time:'H:i' }} – {{ sesion.end_time|time:'H:i' }}</span>
+                {% if sesion.is_virtual %}
+                    <span><i class="fa-solid fa-video mr-1 text-blue-500"></i>{{ sesion.platform_display_safe }}</span>
+                {% elif sesion.location %}
+                    <span><i class="fa-solid fa-location-dot mr-1 text-[#F58830]"></i>{{ sesion.location }}</span>
                 {% endif %}
             </div>
 
             <div class="mt-3 flex flex-wrap gap-2">
-                {% if sesion.es_virtual %}
+                {% if sesion.is_virtual %}
                     {% include 'public/_components/_badge.html' with variant='info' icon='fa-video' label='Evento virtual' %}
                 {% else %}
                     {% include 'public/_components/_badge.html' with variant='primary' icon='fa-building' label='Evento presencial' %}

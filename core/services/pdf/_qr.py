@@ -23,8 +23,8 @@ def _draw_geometric_verification_page(c, certificado, width, height, pri, sec):
     Segunda página: Solo verificación con QR.
     Sin logos, sin nombre. Minimalista para que un empleador escanee.
     """
-    lote = certificado.lote
-    
+    lote = certificado.batch
+
     # --- GEOMETRIC CORNERS (smaller version) ---
     def draw_corner_mini(origin_x, origin_y, rotation, main_col, acc_col):
         c.saveState()
@@ -78,7 +78,7 @@ def _draw_geometric_verification_page(c, certificado, width, height, pri, sec):
         from io import BytesIO as QRBytesIO
         
         base_url = getattr(settings, 'SITE_URL', 'https://certifai.up.railway.app')
-        verify_url = f"{base_url}/verificar/{certificado.hash_verificacion}/"
+        verify_url = f"{base_url}/verificar/{certificado.verification_hash}/"
         
         qr = qrcode.QRCode(
             version=1,
@@ -145,7 +145,7 @@ def _draw_geometric_verification_page(c, certificado, width, height, pri, sec):
     # Verification ID
     c.setFont("Helvetica", 8)
     c.setFillColor(HexColor('#999999'))
-    c.drawCentredString(center_x, info_y - 1.5*cm, f"ID: {certificado.hash_verificacion}")
+    c.drawCentredString(center_x, info_y - 1.5*cm, f"ID: {certificado.verification_hash}")
     
     # Footer text
     c.setFont("Times-Italic", 9)

@@ -86,7 +86,7 @@
                 {% include 'panel/includes/_quick_pill.html' with url='panel:batch_create' icon='fa-upload' label='Lote' color='info' %}
                 {% include 'panel/includes/_quick_pill.html' with url='panel:session_list' icon='fa-calendar-days' label='Eventos' color='success' %}
                 {% include 'panel/includes/_quick_pill.html' with url='panel:participantes_list' icon='fa-user-graduate' label='Personas' color='accent' %}
-                {% if user.rol == 'superadmin' %}
+                {% if user.role == 'superadmin' %}
                 {% include 'panel/includes/_quick_pill.html' with url='panel:solicitudes_pendientes' icon='fa-user-clock' label='Solicit.' color='warning' badge=pendientes_count %}
                 {% include 'panel/includes/_quick_pill.html' with url='panel:ai_config' icon='fa-microchip' label='IA' color='danger' %}
                 {% else %}

@@ -44,9 +44,9 @@ def draw_smart_logos(c, lote, x_start, y_start, max_w, max_h, align='center'):
         return None
 
     # Load 3 slots
-    l1 = get_path(lote.logo_header_1, 'muc.png')
-    l2 = get_path(lote.logo_header_2, 'logo-unemi-removebg-preview.png')
-    l3 = get_path(lote.logo_header_3, 'feue.png')
+    l1 = get_path(lote.header_logo_1, 'muc.png')
+    l2 = get_path(lote.header_logo_2, 'logo-unemi-removebg-preview.png')
+    l3 = get_path(lote.header_logo_3, 'feue.png')
     
     # Filter valid ones
     active_logos = [l for l in [l1, l2, l3] if l]

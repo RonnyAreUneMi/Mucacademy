@@ -9,8 +9,8 @@ from rest_framework.response import Response
 from api.public.account.authentication import ParticipanteTokenAuthentication
 
 from core.models import (
-    SesionAsistencia, Participante, ConfirmacionAsistencia, Certificado,
-    ResumenSesion, IntentoCuestionario, RegistroAsistencia,
+    Event, Participant, Enrollment, Certificate,
+    SessionSummary, QuizAttempt, Attendance,
 )
 
 from .resumen_serializers import ResumenSesionSerializer, IntentoCuestionarioSerializer
@@ -19,21 +19,21 @@ from .utils import sesion_payload
 
 
 class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
-    """Endpoint público: listar sesiones activas e inscribirse."""
-    queryset = SesionAsistencia.objects.active().select_related('lote')
+    """Endpoint público: listar eventos activos e inscribirse."""
+    queryset = Event.objects.active().select_related('batch')
     permission_classes = [permissions.AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['modalidad']
-    search_fields = ['titulo', 'descripcion', 'lugar']
-    ordering_fields = ['fecha', 'hora_inicio']
-    ordering = ['fecha', 'hora_inicio']
+    filterset_fields = ['modality']
+    search_fields = ['title', 'description', 'location']
+    ordering_fields = ['date', 'start_time']
+    ordering = ['date', 'start_time']
 
     def get_serializer_class(self):
         return SesionDetailSerializer if self.action == 'retrieve' else SesionListSerializer
 
     @action(detail=False, methods=['get'])
     def upcoming(self, request):
-        qs = SesionAsistencia.objects.upcoming().select_related('lote')
+        qs = Event.objects.upcoming().select_related('batch')
         page = self.paginate_queryset(qs)
         ser = self.get_serializer(page or qs, many=True)
         if page is not None:
@@ -42,7 +42,7 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'])
     def past(self, request):
-        qs = SesionAsistencia.objects.past().select_related('lote')[:50]
+        qs = Event.objects.past().select_related('batch')[:50]
         return Response(self.get_serializer(qs, many=True).data)
 
     # ── Inscripción pública ─────────────────────────────────────
@@ -55,35 +55,35 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({'found': False, 'results': []})
 
         tokens = query.split()
-        q_filter = Q(cedula__icontains=query) | Q(email__icontains=query)
+        q_filter = Q(national_id__icontains=query) | Q(email__icontains=query)
         for t in tokens:
-            q_filter |= Q(nombres__icontains=t) | Q(apellidos__icontains=t)
-        participantes = list(Participante.objects.filter(q_filter).distinct()[:15])
+            q_filter |= Q(first_name__icontains=t) | Q(last_name__icontains=t)
+        participantes = list(Participant.objects.filter(q_filter).distinct()[:15])
 
         if not participantes:
             return Response({'found': False, 'results': []})
 
         def _data(p):
-            ya = ConfirmacionAsistencia.objects.filter(
-                participante=p, sesion=sesion, confirmado=True
+            ya = Enrollment.objects.filter(
+                participant=p, event=sesion, confirmed=True
             ).exists()
-            q_cursos = Q(participante=p)
-            if p.cedula:
-                q_cursos |= Q(cedula__iexact=p.cedula)
+            q_cursos = Q(participant=p)
+            if p.national_id:
+                q_cursos |= Q(national_id__iexact=p.national_id)
             if p.email:
                 q_cursos |= Q(email__iexact=p.email)
             cursos = list(
-                Certificado.objects.filter(q_cursos)
-                .values_list('lote__nombre_lote', flat=True).distinct()[:10]
+                Certificate.objects.filter(q_cursos)
+                .values_list('batch__name', flat=True).distinct()[:10]
             )
             missing = []
-            for field in ('cedula', 'email', 'nombres', 'apellidos'):
+            for field in ('national_id', 'email', 'first_name', 'last_name'):
                 if not getattr(p, field):
                     missing.append(field)
             return {
-                'id': p.id, 'cedula': p.cedula, 'email': p.email,
-                'nombres': p.nombres, 'apellidos': p.apellidos,
-                'celular': p.celular or '',
+                'id': p.id, 'cedula': p.national_id, 'email': p.email,
+                'nombres': p.first_name, 'apellidos': p.last_name,
+                'celular': p.phone or '',
                 'cursos': [c for c in cursos if c],
                 'missing_info': missing, 'ya_confirmado': ya,
             }
@@ -93,8 +93,8 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({
                 'found': True, 'count': 1,
                 'participante': _data(p),
-                'ya_confirmado': ConfirmacionAsistencia.objects.filter(
-                    participante=p, sesion=sesion, confirmado=True
+                'ya_confirmado': Enrollment.objects.filter(
+                    participant=p, event=sesion, confirmed=True
                 ).exists(),
             })
 
@@ -111,44 +111,47 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({'ok': False, 'error': 'Datos incompletos.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            p = Participante.objects.get(id=pid)
-        except Participante.DoesNotExist:
+            p = Participant.objects.get(id=pid)
+        except Participant.DoesNotExist:
             return Response({'ok': False, 'error': 'Participante no encontrado.'},
                             status=status.HTTP_404_NOT_FOUND)
 
-        if sesion.solo_lideres and not p.es_lider:
+        if sesion.leaders_only and not p.is_leader:
             return Response({'ok': False, 'error': 'Este evento es exclusivo para Líderes Académicos.'},
                             status=status.HTTP_403_FORBIDDEN)
 
         fields = []
-        for name in ('celular', 'email', 'cedula', 'nombres', 'apellidos'):
-            val = (request.data.get(name) or '').strip()
+        for req_name, attr_name in (
+            ('celular', 'phone'), ('email', 'email'), ('cedula', 'national_id'),
+            ('nombres', 'first_name'), ('apellidos', 'last_name'),
+        ):
+            val = (request.data.get(req_name) or '').strip()
             if not val:
                 continue
-            current = getattr(p, name)
-            if name in ('celular', 'email'):
+            current = getattr(p, attr_name)
+            if req_name in ('celular', 'email'):
                 if val != current:
-                    setattr(p, name, val)
-                    fields.append(name)
+                    setattr(p, attr_name, val)
+                    fields.append(attr_name)
             elif not current:
-                setattr(p, name, val)
-                fields.append(name)
+                setattr(p, attr_name, val)
+                fields.append(attr_name)
         if fields:
             p.save(update_fields=fields)
 
-        if sesion.esta_llena:
-            return Response({'ok': False, 'error': 'Esta sesión ya alcanzó el cupo máximo.'},
+        if sesion.is_full:
+            return Response({'ok': False, 'error': 'Este evento ya alcanzó el cupo máximo.'},
                             status=status.HTTP_409_CONFLICT)
 
-        conf, created = ConfirmacionAsistencia.objects.get_or_create(
-            participante=p, sesion=sesion, defaults={'confirmado': True}
+        conf, created = Enrollment.objects.get_or_create(
+            participant=p, event=sesion, defaults={'confirmed': True}
         )
         if not created:
-            return Response({'ok': True, 'already': True, 'message': 'Ya estás registrado en esta sesión.'})
+            return Response({'ok': True, 'already': True, 'message': 'Ya estás registrado en este evento.'})
 
         return Response({
             'ok': True, 'already': False,
-            'message': f'Registro exitoso para {p.nombres}.',
+            'message': f'Registro exitoso para {p.first_name}.',
             'sesion': sesion_payload(sesion),
         })
 
@@ -160,48 +163,48 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
         permission_classes=[permissions.AllowAny],  # endpoint público (read-only)
     )
     def resumen(self, request, pk=None):
-        """Devuelve el ResumenSesion + grabación + intentos del participante.
+        """Devuelve el SessionSummary + grabación + intentos del participante.
 
-        Si el request viene autenticado con ParticipanteToken, también incluye:
-          - intentos: lista de IntentoCuestionario del participante
-          - mejor_intento: el con mayor `correctas`
-          - intentos_disponibles: int (MAX_INTENTOS - usados)
+        Si el request viene autenticado con ParticipantToken, también incluye:
+          - intentos: lista de QuizAttempt del participante
+          - mejor_intento: el con mayor `correct`
+          - intentos_disponibles: int (MAX_ATTEMPTS - usados)
           - asistio: bool
           - inscrito: bool
           - recording: { name, web_link } o null
 
         Estados:
           - 200 + payload → resumen disponible
-          - 200 + {estado: 'no_existe'} → sesión válida pero sin resumen aún
-          - 404 → sesión no existe
+          - 200 + {estado: 'no_existe'} → evento válido pero sin resumen aún
+          - 404 → evento no existe
         """
         sesion = self.get_object()
-        resumen = ResumenSesion.objects.filter(sesion=sesion).first()
+        resumen = SessionSummary.objects.filter(event=sesion).first()
 
         # Datos del participante (si viene autenticado)
         participante = None
         principal = getattr(request, 'user', None)
         if principal is not None and getattr(principal, 'is_authenticated', False):
-            participante = getattr(principal, 'participante', None)
+            participante = getattr(principal, 'participant', None)
 
         intentos_data = []
         mejor_intento = None
-        intentos_disponibles = IntentoCuestionario.MAX_INTENTOS
+        intentos_disponibles = QuizAttempt.MAX_ATTEMPTS
         asistio = False
         inscrito = False
         if participante is not None:
-            intentos = list(IntentoCuestionario.objects.filter(participante=participante, sesion=sesion))
+            intentos = list(QuizAttempt.objects.filter(participant=participante, event=sesion))
             intentos_data = IntentoCuestionarioSerializer(intentos, many=True).data
             if intentos:
-                mejor = max(intentos, key=lambda x: x.correctas)
+                mejor = max(intentos, key=lambda x: x.correct)
                 mejor_intento = IntentoCuestionarioSerializer(mejor).data
-            intentos_disponibles = max(0, IntentoCuestionario.MAX_INTENTOS - len(intentos))
-            asistio = RegistroAsistencia.objects.filter(participante=participante, sesion=sesion).exists()
-            inscrito = ConfirmacionAsistencia.objects.filter(participante=participante, sesion=sesion).exists()
+            intentos_disponibles = max(0, QuizAttempt.MAX_ATTEMPTS - len(intentos))
+            asistio = Attendance.objects.filter(participant=participante, event=sesion).exists()
+            inscrito = Enrollment.objects.filter(participant=participante, event=sesion).exists()
 
-        # Grabación de Drive (lazy, solo si resumen LISTO)
+        # Grabación de Drive (lazy, solo si resumen READY)
         recording = None
-        if resumen and resumen.estado == 'listo':
+        if resumen and resumen.status == 'ready':
             try:
                 from core.services.meet.drive_client import find_recording_for_session
                 rec = find_recording_for_session(sesion)
@@ -217,12 +220,12 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
         if resumen is None:
             return Response({
                 'estado': 'no_existe',
-                'message': 'Esta sesión todavía no tiene resumen IA generado.',
-                'transcripcion_habilitada': sesion.transcripcion_habilitada,
+                'message': 'Este evento todavía no tiene resumen IA generado.',
+                'transcripcion_habilitada': sesion.transcription_enabled,
                 'intentos': intentos_data,
                 'intentos_disponibles': intentos_disponibles,
                 'mejor_intento': mejor_intento,
-                'max_intentos': IntentoCuestionario.MAX_INTENTOS,
+                'max_intentos': QuizAttempt.MAX_ATTEMPTS,
                 'recording': None,
                 'asistio': asistio,
                 'inscrito': inscrito,
@@ -233,7 +236,7 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
             'intentos': intentos_data,
             'mejor_intento': mejor_intento,
             'intentos_disponibles': intentos_disponibles,
-            'max_intentos': IntentoCuestionario.MAX_INTENTOS,
+            'max_intentos': QuizAttempt.MAX_ATTEMPTS,
             'recording': recording,
             'asistio': asistio,
             'inscrito': inscrito,
@@ -245,7 +248,7 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
         permission_classes=[permissions.IsAuthenticated],
     )
     def resumen_pdf(self, request, pk=None):
-        """Devuelve el PDF del resumen IA — autenticado con ParticipanteToken.
+        """Devuelve el PDF del resumen IA — autenticado con ParticipantToken.
 
         Diferencia con la versión web (`/cuenta/eventos/<id>/resumen/pdf/`):
         esta acepta el header `Authorization: Token <key>` que envía el
@@ -257,22 +260,22 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
         from core.services.pdf.resumen_pdf import generar_resumen_pdf
 
         sesion = self.get_object()
-        participante = getattr(request.user, 'participante', None)
+        participante = getattr(request.user, 'participant', None)
         if participante is None:
             return Response({'ok': False, 'error': 'Auth requerida.'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        inscrito = ConfirmacionAsistencia.objects.filter(participante=participante, sesion=sesion).exists()
-        asistio  = RegistroAsistencia.objects.filter(participante=participante, sesion=sesion).exists()
+        inscrito = Enrollment.objects.filter(participant=participante, event=sesion).exists()
+        asistio  = Attendance.objects.filter(participant=participante, event=sesion).exists()
         if not (inscrito or asistio):
             return Response({'ok': False, 'error': 'Sin acceso al resumen.'}, status=status.HTTP_403_FORBIDDEN)
 
-        resumen = ResumenSesion.objects.filter(sesion=sesion).first()
-        if not resumen or resumen.estado != 'listo':
+        resumen = SessionSummary.objects.filter(event=sesion).first()
+        if not resumen or resumen.status != 'ready':
             return Response({'ok': False, 'error': 'El resumen aún no está listo.'}, status=status.HTTP_400_BAD_REQUEST)
 
         pdf_bytes = generar_resumen_pdf(resumen)
-        titulo_slug = slugify(sesion.titulo or sesion.dia_semana or 'evento')[:50] or 'resumen'
-        fecha_slug = sesion.fecha.strftime('%Y-%m-%d') if sesion.fecha else 'sf'
+        titulo_slug = slugify(sesion.title or sesion.day_of_week or 'evento')[:50] or 'resumen'
+        fecha_slug = sesion.date.strftime('%Y-%m-%d') if sesion.date else 'sf'
         filename = f'Resumen-Betto-{titulo_slug}-{fecha_slug}.pdf'
 
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
@@ -292,49 +295,49 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
         Devuelve: { ok, intento, intentos_restantes }
         """
         sesion = self.get_object()
-        participante = getattr(request.user, 'participante', None)
+        participante = getattr(request.user, 'participant', None)
         if participante is None:
             return Response({'ok': False, 'error': 'Auth requerida.'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        inscrito = ConfirmacionAsistencia.objects.filter(participante=participante, sesion=sesion).exists()
-        asistio  = RegistroAsistencia.objects.filter(participante=participante, sesion=sesion).exists()
+        inscrito = Enrollment.objects.filter(participant=participante, event=sesion).exists()
+        asistio  = Attendance.objects.filter(participant=participante, event=sesion).exists()
         if not (inscrito or asistio):
             return Response({'ok': False, 'error': 'Sin acceso al cuestionario.'}, status=status.HTTP_403_FORBIDDEN)
 
-        resumen = ResumenSesion.objects.filter(sesion=sesion).first()
-        if not resumen or resumen.estado != 'listo' or not resumen.cuestionario:
+        resumen = SessionSummary.objects.filter(event=sesion).first()
+        if not resumen or resumen.status != 'ready' or not resumen.quiz:
             return Response({'ok': False, 'error': 'Cuestionario no disponible.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        intentos_count = IntentoCuestionario.objects.filter(participante=participante, sesion=sesion).count()
-        if intentos_count >= IntentoCuestionario.MAX_INTENTOS:
+        intentos_count = QuizAttempt.objects.filter(participant=participante, event=sesion).count()
+        if intentos_count >= QuizAttempt.MAX_ATTEMPTS:
             return Response({
                 'ok': False,
-                'error': f'Ya alcanzaste el máximo de {IntentoCuestionario.MAX_INTENTOS} intentos.',
+                'error': f'Ya alcanzaste el máximo de {QuizAttempt.MAX_ATTEMPTS} intentos.',
             }, status=status.HTTP_409_CONFLICT)
 
         respuestas = request.data.get('respuestas') or []
         tiempo_total = int(request.data.get('tiempo_total_seg') or 0)
 
-        preguntas = resumen.cuestionario
+        preguntas = resumen.quiz
         total = len(preguntas)
         correctas = 0
         for i, q in enumerate(preguntas):
             if i < len(respuestas) and respuestas[i] is not None:
-                if respuestas[i] == q.get('correcta_idx'):
+                if respuestas[i] == q.get('correct_idx'):
                     correctas += 1
 
-        intento = IntentoCuestionario.objects.create(
-            participante=participante,
-            sesion=sesion,
-            correctas=correctas,
+        intento = QuizAttempt.objects.create(
+            participant=participante,
+            event=sesion,
+            correct=correctas,
             total=total,
-            tiempo_total_seg=tiempo_total,
-            respuestas=respuestas,
+            total_time_seconds=tiempo_total,
+            answers=respuestas,
         )
         return Response({
             'ok': True,
             'intento': IntentoCuestionarioSerializer(intento).data,
-            'intentos_restantes': IntentoCuestionario.MAX_INTENTOS - (intentos_count + 1),
+            'intentos_restantes': QuizAttempt.MAX_ATTEMPTS - (intentos_count + 1),
         }, status=status.HTTP_201_CREATED)
 
     @action(
@@ -348,15 +351,15 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
         Requiere autenticación: token de participante o sesión de admin Django.
         Esto evita que cualquier visitante sin auth queme tokens IA gratis.
         """
-        from core.tasks.transcript_tasks import procesar_transcript_sesion
+        from core.tasks.transcript_tasks import process_event_transcript
 
         sesion = self.get_object()
-        if not sesion.transcripcion_habilitada:
+        if not sesion.transcription_enabled:
             return Response(
-                {'ok': False, 'error': 'La transcripción IA está deshabilitada para esta sesión.'},
+                {'ok': False, 'error': 'La transcripción IA está deshabilitada para este evento.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        procesar_transcript_sesion.delay(sesion.id)
+        process_event_transcript.delay(sesion.id)
         return Response(
             {'ok': True, 'message': 'Procesamiento encolado.', 'sesion_id': sesion.id},
             status=status.HTTP_202_ACCEPTED,
@@ -380,45 +383,45 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
 
         p = None
         if cedula:
-            p = Participante.objects.filter(cedula=cedula).first()
+            p = Participant.objects.filter(national_id=cedula).first()
         if not p and email:
-            p = Participante.objects.filter(email__iexact=email).first()
+            p = Participant.objects.filter(email__iexact=email).first()
 
-        if sesion.solo_lideres and (not p or not p.es_lider):
+        if sesion.leaders_only and (not p or not p.is_leader):
             return Response({'ok': False, 'error': 'Este evento es exclusivo para Líderes Académicos.'},
                             status=status.HTTP_403_FORBIDDEN)
 
         with transaction.atomic():
             if p:
                 fields = []
-                if celular and not p.celular:
-                    p.celular = celular; fields.append('celular')
-                if cedula and not p.cedula:
-                    p.cedula = cedula; fields.append('cedula')
+                if celular and not p.phone:
+                    p.phone = celular; fields.append('phone')
+                if cedula and not p.national_id:
+                    p.national_id = cedula; fields.append('national_id')
                 if email and not p.email:
                     p.email = email; fields.append('email')
                 if fields:
                     p.save(update_fields=fields)
             else:
-                p = Participante.objects.create(
-                    cedula=cedula, nombres=nombres, apellidos=apellidos,
-                    email=email, celular=celular,
+                p = Participant.objects.create(
+                    national_id=cedula, first_name=nombres, last_name=apellidos,
+                    email=email, phone=celular,
                 )
 
-            if sesion.esta_llena:
-                return Response({'ok': False, 'error': 'Esta sesión ya alcanzó el cupo máximo.'},
+            if sesion.is_full:
+                return Response({'ok': False, 'error': 'Este evento ya alcanzó el cupo máximo.'},
                                 status=status.HTTP_409_CONFLICT)
 
-            conf, created = ConfirmacionAsistencia.objects.get_or_create(
-                participante=p, sesion=sesion, defaults={'confirmado': True}
+            conf, created = Enrollment.objects.get_or_create(
+                participant=p, event=sesion, defaults={'confirmed': True}
             )
 
         if not created:
-            return Response({'ok': True, 'already': True, 'message': 'Ya estás registrado en esta sesión.'})
+            return Response({'ok': True, 'already': True, 'message': 'Ya estás registrado en este evento.'})
 
         return Response({
             'ok': True, 'already': False,
-            'message': f'Registro exitoso para {p.nombres} {p.apellidos}.',
-            'participante': {'id': p.id, 'nombres': p.nombres, 'apellidos': p.apellidos},
+            'message': f'Registro exitoso para {p.first_name} {p.last_name}.',
+            'participante': {'id': p.id, 'nombres': p.first_name, 'apellidos': p.last_name},
             'sesion': sesion_payload(sesion),
         })

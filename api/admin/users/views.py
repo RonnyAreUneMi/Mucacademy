@@ -2,7 +2,7 @@ from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from core.models import Usuario
+from core.models import User
 from api.common.viewsets import AuditedModelViewSet
 
 from .serializers import UsuarioListSerializer, UsuarioWriteSerializer, PasswordResetSerializer
@@ -11,14 +11,14 @@ from .serializers import UsuarioListSerializer, UsuarioWriteSerializer, Password
 class IsSuperAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         u = request.user
-        return bool(u and u.is_authenticated and (u.is_superuser or getattr(u, 'rol', '') == 'superadmin'))
+        return bool(u and u.is_authenticated and (u.is_superuser or getattr(u, 'role', '') == 'superadmin'))
 
 
 class UsuarioViewSet(AuditedModelViewSet):
     """Gestión de usuarios admin. Solo superadmin."""
-    queryset = Usuario.objects.all()
+    queryset = User.objects.all()
     permission_classes = [IsSuperAdmin]
-    filterset_fields = ['rol', 'facultad', 'is_active', 'activo']
+    filterset_fields = ['role', 'faculty', 'is_active']
     search_fields = ['username', 'email', 'first_name', 'last_name']
     ordering_fields = ['date_joined', 'username']
     ordering = ['-date_joined']

@@ -52,10 +52,10 @@ de código (sin ```json).
   "proximos_pasos": ["string", "string", ...], // 3 a 5 items
   "cuestionario": [
     {
-      "pregunta": "string",
-      "opciones": ["A", "B", "C", "D"],   // exactamente 4 opciones
-      "correcta_idx": 0,                   // 0-3
-      "explicacion": "string corta"
+      "question": "string",
+      "options": ["A", "B", "C", "D"],   // exactamente 4 opciones
+      "correct_idx": 0,                   // 0-3
+      "explanation": "string corta"
     },
     ... (5 preguntas en total)
   ]
@@ -138,13 +138,13 @@ def _validate_summary(data: dict) -> None:
     for i, q in enumerate(data['cuestionario']):
         if not isinstance(q, dict):
             raise ValueError(f'Pregunta #{i} no es objeto')
-        for f in ('pregunta', 'opciones', 'correcta_idx'):
+        for f in ('question', 'options', 'correct_idx'):
             if f not in q:
                 raise ValueError(f'Pregunta #{i} no tiene {f}')
-        if not isinstance(q['opciones'], list) or len(q['opciones']) != 4:
+        if not isinstance(q['options'], list) or len(q['options']) != 4:
             raise ValueError(f'Pregunta #{i} debe tener exactamente 4 opciones')
-        if not isinstance(q['correcta_idx'], int) or not 0 <= q['correcta_idx'] <= 3:
-            raise ValueError(f'Pregunta #{i} tiene correcta_idx fuera de rango')
+        if not isinstance(q['correct_idx'], int) or not 0 <= q['correct_idx'] <= 3:
+            raise ValueError(f'Pregunta #{i} tiene correct_idx fuera de rango')
 
 
 def summarize_transcript(
