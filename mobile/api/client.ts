@@ -6,7 +6,7 @@
  *
  * Uso:
  *   import { api } from '@/api/client';
- *   const me = await api.get<Participante>('/api/v1/public/account/me/');
+ *   const me = await api.get<Participant>('/api/v1/public/account/me/');
  *   const res = await api.post('/api/v1/public/account/login/', { email, password });
  */
 import Constants from 'expo-constants';

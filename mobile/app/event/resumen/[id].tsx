@@ -32,46 +32,48 @@ import {
 import { useTheme } from '@/stores/theme';
 import { BettoLogo, Button, Loader, NeuCard, useToast } from '@/components/ui';
 
-type Estado =
-  | 'no_existe' | 'pendiente' | 'buscando' | 'procesando'
-  | 'listo' | 'sin_transcript' | 'fallido';
+type Status =
+  | 'no_existe' | 'pending' | 'searching' | 'processing'
+  | 'ready' | 'no_transcript' | 'failed';
 
-type Pregunta = {
-  pregunta: string;
-  opciones: string[];
-  correcta_idx: number;
-  explicacion?: string;
+type Question = {
+  question: string;
+  options: string[];
+  correct_idx: number;
+  explanation?: string;
 };
 
-type Intento = {
+type Attempt = {
   id: number;
-  correctas: number;
+  correct: number;
   total: number;
   porcentaje: number;
-  tiempo_total_seg: number;
+  total_time_seconds: number;
   created_at: string;
 };
 
 type Recording = { file_id: string; name: string; web_link: string };
 
-type ResumenPayload = {
-  estado: Estado;
+type SummaryPayload = {
+  // Cuando hay resumen el backend emite `status`; cuando no existe, `estado: 'no_existe'`.
+  status?: Status;
+  estado?: Status;
   estado_display?: string;
   is_ready?: boolean;
   has_failed?: boolean;
   message?: string;
-  resumen_md?: string;
-  puntos_clave?: string[];
-  proximos_pasos?: string[];
-  cuestionario?: Pregunta[];
-  duracion_minutos?: number;
+  summary_md?: string;
+  key_points?: string[];
+  next_steps?: string[];
+  quiz?: Question[];
+  duration_minutes?: number;
   ai_model?: string;
-  procesado_at?: string | null;
+  processed_at?: string | null;
   transcripcion_habilitada?: boolean;
 
   // Enriquecido cuando viene auth de participante
-  intentos?: Intento[];
-  mejor_intento?: Intento | null;
+  intentos?: Attempt[];
+  mejor_intento?: Attempt | null;
   intentos_disponibles?: number;
   max_intentos?: number;
   recording?: Recording | null;
@@ -80,7 +82,12 @@ type ResumenPayload = {
 };
 
 const POLL_INTERVAL_MS = 8000;
-const PROCESSING_STATES: Estado[] = ['pendiente', 'buscando', 'procesando'];
+const PROCESSING_STATES: Status[] = ['pending', 'searching', 'processing'];
+
+/** El estado efectivo: `status` (resumen existente) o `estado` (sentinela no_existe). */
+function effectiveStatus(d: SummaryPayload): Status {
+  return d.status ?? d.estado ?? 'no_existe';
+}
 
 export default function ResumenScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -89,13 +96,13 @@ export default function ResumenScreen() {
   const t = themed(theme);
   const toast = useToast();
 
-  const [data, setData] = useState<ResumenPayload | null>(null);
+  const [data, setData] = useState<SummaryPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const res = await api.get<ResumenPayload>(`/api/v1/public/sessions/${id}/resumen/`);
+      const res = await api.get<SummaryPayload>(`/api/v1/public/sessions/${id}/resumen/`);
       setData(res);
     } catch (e: any) {
       toast.error(e?.message ?? 'No pudimos cargar el resumen.', 'Error');
@@ -107,7 +114,7 @@ export default function ResumenScreen() {
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    if (!data || !PROCESSING_STATES.includes(data.estado)) return;
+    if (!data || !PROCESSING_STATES.includes(effectiveStatus(data))) return;
     const handle = setInterval(load, POLL_INTERVAL_MS);
     return () => clearInterval(handle);
   }, [data, load]);
@@ -173,23 +180,23 @@ export default function ResumenScreen() {
               {/* Lo dejamos en blanco si no hay datos; el resumen NO trae el título */}
               Resumen del evento
             </Text>
-            {data.duracion_minutos ? (
+            {data.duration_minutes ? (
               <Text style={[styles.heroMeta, { color: t.textMuted }]}>
                 <Ionicons name="time" size={11} color={colors.brand} />{' '}
-                {data.duracion_minutos} min de transcript
+                {data.duration_minutes} min de transcript
               </Text>
             ) : null}
           </View>
         </View>
 
         {/* Cuerpo según estado */}
-        {data.estado === 'listo' ? (
+        {effectiveStatus(data) === 'ready' ? (
           <ListoView data={data} sesionId={String(id)} />
-        ) : PROCESSING_STATES.includes(data.estado) ? (
-          <ProcessingView estado={data.estado} />
-        ) : data.estado === 'sin_transcript' ? (
+        ) : PROCESSING_STATES.includes(effectiveStatus(data)) ? (
+          <ProcessingView estado={effectiveStatus(data)} />
+        ) : effectiveStatus(data) === 'no_transcript' ? (
           <SinTranscriptView triggering={triggering} onRetry={trigger} />
-        ) : data.estado === 'fallido' ? (
+        ) : effectiveStatus(data) === 'failed' ? (
           <FallidoView triggering={triggering} onRetry={trigger} />
         ) : (
           <NoExisteView triggering={triggering} onTrigger={trigger} />
@@ -225,14 +232,14 @@ function NoExisteView({ triggering, onTrigger }: { triggering: boolean; onTrigge
   );
 }
 
-function ProcessingView({ estado }: { estado: Estado }) {
+function ProcessingView({ estado }: { estado: Status }) {
   const t = themed(useTheme());
   const labels: Record<string, { eyebrow: string; title: string; body: string }> = {
-    pendiente:  { eyebrow: 'EN COLA', title: 'Encolado para procesar', body: 'En segundos comenzaremos.' },
-    buscando:   { eyebrow: 'BUSCANDO', title: 'Buscando el transcript', body: 'Estamos revisando Google Drive.' },
-    procesando: { eyebrow: 'IA TRABAJANDO', title: 'Betto está pensando…', body: 'Generando resumen + cuestionario. Esto toma 30-90 segundos.' },
+    pending:    { eyebrow: 'EN COLA', title: 'Encolado para procesar', body: 'En segundos comenzaremos.' },
+    searching:  { eyebrow: 'BUSCANDO', title: 'Buscando el transcript', body: 'Estamos revisando Google Drive.' },
+    processing: { eyebrow: 'IA TRABAJANDO', title: 'Betto está pensando…', body: 'Generando resumen + cuestionario. Esto toma 30-90 segundos.' },
   };
-  const lbl = labels[estado] ?? labels.procesando;
+  const lbl = labels[estado] ?? labels.processing;
   return (
     <View style={styles.section}>
       <NeuCard style={styles.stateCard}>
@@ -296,7 +303,7 @@ function FallidoView({ triggering, onRetry }: { triggering: boolean; onRetry: ()
   );
 }
 
-function ListoView({ data, sesionId }: { data: ResumenPayload; sesionId: string }) {
+function ListoView({ data, sesionId }: { data: SummaryPayload; sesionId: string }) {
   const t = themed(useTheme());
   const toast = useToast();
   const [downloadingPdf, setDownloadingPdf] = useState(false);
@@ -450,7 +457,7 @@ function ListoView({ data, sesionId }: { data: ResumenPayload; sesionId: string 
       </View>
 
       {/* Resumen ejecutivo */}
-      {data.resumen_md ? (
+      {data.summary_md ? (
         <View style={styles.section}>
           <View style={styles.sectionHead}>
             <View style={[styles.sectionEyebrowIcon, { backgroundColor: 'rgba(245,136,48,0.14)' }]}>
@@ -460,13 +467,13 @@ function ListoView({ data, sesionId }: { data: ResumenPayload; sesionId: string 
           </View>
           <Text style={[styles.sectionTitle, { color: t.text }]}>De qué se habló</Text>
           <NeuCard style={{ marginTop: spacing.base }}>
-            <MarkdownText source={data.resumen_md} />
+            <MarkdownText source={data.summary_md} />
           </NeuCard>
         </View>
       ) : null}
 
       {/* Puntos clave */}
-      {data.puntos_clave && data.puntos_clave.length > 0 ? (
+      {data.key_points && data.key_points.length > 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHead}>
             <View style={[styles.sectionEyebrowIcon, { backgroundColor: 'rgba(245,136,48,0.14)' }]}>
@@ -476,7 +483,7 @@ function ListoView({ data, sesionId }: { data: ResumenPayload; sesionId: string 
           </View>
           <Text style={[styles.sectionTitle, { color: t.text }]}>Puntos clave</Text>
           <View style={{ gap: spacing.sm, marginTop: spacing.base }}>
-            {data.puntos_clave.map((p, i) => (
+            {data.key_points.map((p, i) => (
               <View key={i} style={[styles.bulletCard, { backgroundColor: t.cardSoft, borderColor: t.border }]}>
                 <View style={styles.bulletNum}>
                   <Text style={styles.bulletNumText}>{i + 1}</Text>
@@ -489,7 +496,7 @@ function ListoView({ data, sesionId }: { data: ResumenPayload; sesionId: string 
       ) : null}
 
       {/* Próximos pasos */}
-      {data.proximos_pasos && data.proximos_pasos.length > 0 ? (
+      {data.next_steps && data.next_steps.length > 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHead}>
             <View style={[styles.sectionEyebrowIcon, { backgroundColor: 'rgba(16,185,129,0.14)' }]}>
@@ -499,7 +506,7 @@ function ListoView({ data, sesionId }: { data: ResumenPayload; sesionId: string 
           </View>
           <Text style={[styles.sectionTitle, { color: t.text }]}>Próximos pasos</Text>
           <View style={{ gap: spacing.sm, marginTop: spacing.base }}>
-            {data.proximos_pasos.map((p, i) => (
+            {data.next_steps.map((p, i) => (
               <View key={i} style={[styles.actionCard, { backgroundColor: t.cardSoft, borderColor: t.border }]}>
                 <View style={[styles.actionIcon, { backgroundColor: 'rgba(16,185,129,0.14)' }]}>
                   <Ionicons name="arrow-forward" size={14} color={colors.success} />
@@ -512,7 +519,7 @@ function ListoView({ data, sesionId }: { data: ResumenPayload; sesionId: string 
       ) : null}
 
       {/* Cuestionario: CTA o resultados previos */}
-      {data.cuestionario && data.cuestionario.length > 0 ? (
+      {data.quiz && data.quiz.length > 0 ? (
         <View style={styles.section}>
           <CuestionarioBlock data={data} sesionId={sesionId} />
         </View>
@@ -531,7 +538,7 @@ function ListoView({ data, sesionId }: { data: ResumenPayload; sesionId: string 
 
 // ── Bloque del cuestionario (CTA o resultados previos) ────────────
 
-function CuestionarioBlock({ data, sesionId }: { data: ResumenPayload; sesionId: string }) {
+function CuestionarioBlock({ data, sesionId }: { data: SummaryPayload; sesionId: string }) {
   const t = themed(useTheme());
   const intentos = data.intentos ?? [];
   const disponibles = data.intentos_disponibles ?? 2;
@@ -565,7 +572,7 @@ function CuestionarioBlock({ data, sesionId }: { data: ResumenPayload; sesionId:
 
           <Text style={styles.quizMeta}>
             {intentos.length} de {maxInt} intentos usados
-            {data.mejor_intento ? `  ·  Mejor: ${data.mejor_intento.correctas}/${data.mejor_intento.total} (${data.mejor_intento.porcentaje}%)` : ''}
+            {data.mejor_intento ? `  ·  Mejor: ${data.mejor_intento.correct}/${data.mejor_intento.total} (${data.mejor_intento.porcentaje}%)` : ''}
           </Text>
 
           <View style={{ gap: 8, marginTop: spacing.base }}>
@@ -576,11 +583,11 @@ function CuestionarioBlock({ data, sesionId }: { data: ResumenPayload; sesionId:
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={styles.intentoMain}>
-                    {it.correctas}/{it.total} correctas · {it.porcentaje}%
+                    {it.correct}/{it.total} correctas · {it.porcentaje}%
                   </Text>
                   <Text style={styles.intentoMeta}>
                     <Ionicons name="time-outline" size={10} color="rgba(255,255,255,0.65)" />{' '}
-                    {it.tiempo_total_seg}s
+                    {it.total_time_seconds}s
                   </Text>
                 </View>
                 <View style={styles.intentoBar}>
@@ -655,7 +662,7 @@ function CuestionarioBlock({ data, sesionId }: { data: ResumenPayload; sesionId:
           </View>
         </View>
         <Text style={styles.recordingFile}>
-          {data.cuestionario?.length} preguntas · 30 seg c/u · {maxInt} intentos
+          {data.quiz?.length} preguntas · 30 seg c/u · {maxInt} intentos
         </Text>
         <View style={[styles.quizCtaPill]}>
           <Ionicons name="flash" size={11} color="#FFFFFF" />

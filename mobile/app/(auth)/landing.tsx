@@ -16,19 +16,19 @@ import {
   Badge, BrandLogo, Button, Carousel, GradientText, NeuCard, VBackground,
 } from '@/components/ui';
 
-type EventoHero = {
+type EventHero = {
   id: number;
   titulo_display: string;
-  fecha: string;
-  dia_semana: string;
-  hora_inicio: string;
-  hora_fin: string;
+  date: string;
+  day_of_week: string;
+  start_time: string;
+  end_time: string;
   es_virtual: boolean;
-  lugar: string;
+  location: string;
   banner_url: string | null;
 };
 type LandingResponse = {
-  eventos_hero: EventoHero[];
+  eventos_hero: EventHero[];
   stats: {
     total_certificados: number;
     total_eventos: number;
@@ -361,10 +361,10 @@ function Stepper({ steps }: { steps: { title: string; text: string }[] }) {
   );
 }
 
-function HeroSlide({ evento }: { evento: EventoHero }) {
-  const formattedDate = formatDate(evento.fecha);
-  const horaInicio = evento.hora_inicio.slice(0, 5);
-  const horaFin = evento.hora_fin.slice(0, 5);
+function HeroSlide({ evento }: { evento: EventHero }) {
+  const formattedDate = formatDate(evento.date);
+  const horaInicio = evento.start_time.slice(0, 5);
+  const horaFin = evento.end_time.slice(0, 5);
 
   return (
     <View style={styles.slide}>
@@ -420,10 +420,10 @@ function HeroSlide({ evento }: { evento: EventoHero }) {
           </View>
         </View>
 
-        {evento.lugar && !evento.es_virtual ? (
+        {evento.location && !evento.es_virtual ? (
           <View style={styles.slideMetaItem}>
             <Ionicons name="location" size={13} color={colors.brand} />
-            <Text style={styles.slideMetaText} numberOfLines={1}>{evento.lugar}</Text>
+            <Text style={styles.slideMetaText} numberOfLines={1}>{evento.location}</Text>
           </View>
         ) : null}
       </View>

@@ -15,19 +15,19 @@ import {
 import { useTheme } from '@/stores/theme';
 import { Loader, NeuCard, ScreenHeader, VBackground } from '@/components/ui';
 
-type Certificado = {
+type Certificate = {
   id: number;
-  curso: string;
-  fecha_curso: string | null;
-  horas: number;
-  hash_verificacion: string;
+  course: string;
+  course_date: string | null;
+  hours: number;
+  verification_hash: string;
   lote_nombre: string | null;
   download_url: string;
   verify_url: string;
 };
 
 export default function CertificadosScreen() {
-  const [data, setData]       = useState<Certificado[]>([]);
+  const [data, setData]       = useState<Certificate[]>([]);
   const [count, setCount]     = useState(0);
   const [q, setQ]             = useState('');
   const [loading, setLoading] = useState(true);
@@ -38,7 +38,7 @@ export default function CertificadosScreen() {
   async function load() {
     try {
       const params = q ? `?q=${encodeURIComponent(q)}` : '';
-      const res = await api.get<{ count: number; results: Certificado[] }>(
+      const res = await api.get<{ count: number; results: Certificate[] }>(
         `/api/v1/public/account/certificates/${params}`
       );
       setData(res.results);
@@ -109,9 +109,9 @@ export default function CertificadosScreen() {
   );
 }
 
-function CertificadoCard({ cert }: { cert: Certificado }) {
+function CertificadoCard({ cert }: { cert: Certificate }) {
   const t = themed(useTheme());
-  const dateBlock = parseDateBlock(cert.fecha_curso);
+  const dateBlock = parseDateBlock(cert.course_date);
 
   function download() {
     Linking.openURL(`${api.baseUrl}${cert.download_url}`);
@@ -136,7 +136,7 @@ function CertificadoCard({ cert }: { cert: Certificado }) {
         </View>
         {/* Sello horas */}
         <View style={styles.previewSeal}>
-          <Text style={styles.previewSealNum}>{cert.horas}</Text>
+          <Text style={styles.previewSealNum}>{cert.hours}</Text>
           <Text style={styles.previewSealLabel}>HORAS</Text>
         </View>
       </View>
@@ -145,7 +145,7 @@ function CertificadoCard({ cert }: { cert: Certificado }) {
       <View style={styles.body}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.cardTitle, { color: t.text }]} numberOfLines={2}>
-            {cert.curso}
+            {cert.course}
           </Text>
           {cert.lote_nombre ? (
             <Text style={[styles.cardLote, { color: t.textMuted }]} numberOfLines={1}>
