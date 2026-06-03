@@ -6,7 +6,7 @@ All models are re-exported here so imports stay stable:
 from .catalogs import FACULTY_CHOICES, Faculty
 from .users import User, AccessRequest
 from .signatures import Signature, GlobalDesign
-from .participants import Participant, ParticipantToken
+from .participants import Participant, ParticipantToken, PasswordResetToken
 from .certificates import CertificateBatch, Certificate
 from .events import Event, Speaker, Attendance, Enrollment
 from .summaries import SessionSummary, ProcessingStatus, QuizAttempt
@@ -23,6 +23,7 @@ __all__ = [
     'GlobalDesign',
     'Participant',
     'ParticipantToken',
+    'PasswordResetToken',
     'CertificateBatch',
     'Certificate',
     'Event',

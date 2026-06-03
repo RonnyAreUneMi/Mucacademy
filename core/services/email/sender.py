@@ -95,6 +95,31 @@ def send_welcome_email(participante: Participant, request=None) -> bool:
 
 
 # ════════════════════════════════════════════════════════════════
+# Recuperación de contraseña
+# ════════════════════════════════════════════════════════════════
+
+def send_password_reset_email(participante: Participant, *, reset_url: str, code: str, request=None) -> bool:
+    """Envía el correo de recuperación con el magic link + código de 6 dígitos."""
+    from django.utils import timezone
+    site = _site_url(request)
+    return _safe_send(
+        template='emails/password_reset.html',
+        subject='Recupera tu contraseña — CertifAI',
+        to=participante.email,
+        context={
+            'p': participante,
+            'to_email': participante.email,
+            'site_url': site,
+            'reset_url': reset_url,
+            'code': code,
+            'requested_at': timezone.localtime(),
+            'device': _user_agent_short(request),
+            'ip': _client_ip(request),
+        },
+    )
+
+
+# ════════════════════════════════════════════════════════════════
 # Notificación de inicio de sesión
 # ════════════════════════════════════════════════════════════════
 

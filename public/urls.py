@@ -42,6 +42,14 @@ urlpatterns = [
     path('cuenta/escanear/',           account_views.escanear_view,      name='account_escanear'),
     path('cuenta/escanear/registrar/', account_views.escanear_registrar, name='account_escanear_registrar'),
 
+    # ── Recuperación de contraseña ──────────────────────────
+    path('cuenta/recuperar/',              account_views.password_reset_request,     name='account_password_reset_request'),
+    path('cuenta/recuperar/enviado/',      account_views.password_reset_sent,        name='account_password_reset_sent'),
+    path('cuenta/recuperar/codigo/',       account_views.password_reset_verify_code, name='account_password_reset_verify_code'),
+    path('cuenta/recuperar/r/<uuid:token>/', account_views.password_reset_link,      name='account_password_reset_link'),
+    path('cuenta/recuperar/nueva/',        account_views.password_reset_new,         name='account_password_reset_new'),
+    path('cuenta/recuperar/status/',       account_views.password_reset_status,      name='account_password_reset_status'),
+
     # ── Google Sign-In ──────────────────────────────────────
     path('cuenta/google/start/',    account_views.google_signin_start,    name='account_google_start'),
     path('cuenta/google/callback/', account_views.google_signin_callback, name='account_google_callback'),

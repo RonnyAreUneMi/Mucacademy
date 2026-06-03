@@ -19,6 +19,7 @@ from core.models import (
     ProcessingStatus,
     QuizAttempt,
     Participant,
+    PasswordResetToken,
     Attendance,
     SessionSummary,
     Event,
@@ -809,3 +810,167 @@ def google_signin_callback(request):
     if next_url and next_url.startswith('/'):
         return redirect(next_url)
     return redirect('public:account_dashboard')
+
+
+# ════════════════════════════════════════════════════════════════
+# Recuperación de contraseña
+# ════════════════════════════════════════════════════════════════
+# Flujo:
+#   1. /cuenta/recuperar/         -> usuario ingresa email (request)
+#   2. /cuenta/recuperar/enviado/ -> "revisa tu correo" + input para código
+#   3a. magic link en correo -> /cuenta/recuperar/r/<uuid>/ -> verifica + sesión efímera
+#   3b. código manual -> POST a /cuenta/recuperar/codigo/   -> verifica + sesión efímera
+#   4. /cuenta/recuperar/nueva/   -> formulario de nueva contraseña (requiere paso 3)
+#
+# La "sesión efímera" es request.session['pwd_reset_verified_participant_id']
+# fijado en el paso 3 y consumido en el paso 4 (luego se borra).
+
+PWD_RESET_SESSION_KEY = 'pwd_reset_verified_participant_id'
+PWD_RESET_REQUEST_KEY = 'pwd_reset_request_id'  # para polling cross-device
+
+
+def _client_ip(request) -> str:
+    fwd = request.META.get('HTTP_X_FORWARDED_FOR')
+    if fwd:
+        return fwd.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', '') or ''
+
+
+@require_http_methods(['GET', 'POST'])
+def password_reset_request(request):
+    """Paso 1: pide el email y dispara el envío del correo."""
+    if request.method == 'POST':
+        email = (request.POST.get('email') or '').strip()
+        # Nunca revelar si el email existe (evita enumeración).
+        # Siempre redirigir a la página "enviado".
+        try:
+            participant = Participant.objects.get(email__iexact=email)
+            if participant.has_account:
+                token, code = PasswordResetToken.issue(
+                    participant,
+                    ip=_client_ip(request),
+                    user_agent=request.META.get('HTTP_USER_AGENT', '')[:255],
+                )
+                site = f'{request.scheme}://{request.get_host()}'
+                reset_url = f'{site}/cuenta/recuperar/r/{token.token}/'
+                email_sender.send_password_reset_email(
+                    participant,
+                    reset_url=reset_url,
+                    code=code,
+                    request=request,
+                )
+                request.session[PWD_RESET_REQUEST_KEY] = str(token.token)
+        except Participant.DoesNotExist:
+            # Igual seguimos al "enviado" para no revelar existencia.
+            pass
+
+        return redirect('public:account_password_reset_sent')
+
+    return render(request, 'public/account/password_reset_request.html')
+
+
+@require_http_methods(['GET'])
+def password_reset_sent(request):
+    """Paso 2: pantalla 'revisa tu correo' con entrada para el código de 6 dígitos."""
+    return render(request, 'public/account/password_reset_sent.html', {
+        'request_id': request.session.get(PWD_RESET_REQUEST_KEY, ''),
+    })
+
+
+@require_http_methods(['GET'])
+def password_reset_link(request, token: str):
+    """Paso 3a: el usuario hace clic en el magic link del correo."""
+    try:
+        prt = PasswordResetToken.objects.select_related('participant').get(token=token)
+    except (PasswordResetToken.DoesNotExist, ValueError, Exception):
+        messages.error(request, 'Este enlace no es válido o ya fue usado.')
+        return redirect('public:account_password_reset_request')
+
+    if not prt.is_active:
+        messages.error(request, 'Este enlace expiró o ya fue usado. Pídelo de nuevo.')
+        return redirect('public:account_password_reset_request')
+
+    prt.consume()
+    request.session[PWD_RESET_SESSION_KEY] = prt.participant_id
+    return redirect('public:account_password_reset_new')
+
+
+@require_POST
+def password_reset_verify_code(request):
+    """Paso 3b: el usuario tipea el código de 6 dígitos."""
+    code = (request.POST.get('code') or '').strip().replace(' ', '').replace('-', '')
+
+    # Buscar tokens activos cuyo code_hash coincida
+    candidates = PasswordResetToken.objects.filter(
+        used_at__isnull=True, expires_at__gt=timezone.now(),
+    ).select_related('participant')
+
+    matched = None
+    for prt in candidates:
+        if prt.matches_code(code):
+            matched = prt
+            break
+
+    if matched is None:
+        messages.error(request, 'Código inválido o expirado. Pídelo de nuevo si pasaron más de 15 minutos.')
+        return redirect('public:account_password_reset_sent')
+
+    matched.consume()
+    request.session[PWD_RESET_SESSION_KEY] = matched.participant_id
+    return redirect('public:account_password_reset_new')
+
+
+@require_http_methods(['GET'])
+def password_reset_status(request):
+    """Endpoint de polling: ¿el token del request actual ya fue usado en otro dispositivo?
+
+    Lo consulta la página /enviado/ cada N segundos para auto-avanzar cuando
+    el usuario hace clic en el magic link desde el celular.
+    """
+    rid = request.session.get(PWD_RESET_REQUEST_KEY)
+    if not rid:
+        return JsonResponse({'status': 'idle'})
+    try:
+        prt = PasswordResetToken.objects.get(token=rid)
+    except (PasswordResetToken.DoesNotExist, ValueError):
+        return JsonResponse({'status': 'unknown'})
+    if prt.used_at:
+        return JsonResponse({'status': 'verified'})
+    if timezone.now() >= prt.expires_at:
+        return JsonResponse({'status': 'expired'})
+    return JsonResponse({'status': 'pending'})
+
+
+@require_http_methods(['GET', 'POST'])
+def password_reset_new(request):
+    """Paso 4: el usuario establece su nueva contraseña."""
+    pid = request.session.get(PWD_RESET_SESSION_KEY)
+    if not pid:
+        messages.info(request, 'Tu verificación expiró. Inicia el proceso nuevamente.')
+        return redirect('public:account_password_reset_request')
+
+    try:
+        participant = Participant.objects.get(pk=pid)
+    except Participant.DoesNotExist:
+        request.session.pop(PWD_RESET_SESSION_KEY, None)
+        return redirect('public:account_password_reset_request')
+
+    if request.method == 'POST':
+        pw1 = request.POST.get('password', '')
+        pw2 = request.POST.get('password_confirm', '')
+        if len(pw1) < 8:
+            messages.error(request, 'La contraseña debe tener al menos 8 caracteres.')
+        elif pw1 != pw2:
+            messages.error(request, 'Las contraseñas no coinciden.')
+        else:
+            participant.set_password(pw1)
+            participant.save(update_fields=['password_hash'])
+            # Limpiar la sesión de reset
+            request.session.pop(PWD_RESET_SESSION_KEY, None)
+            request.session.pop(PWD_RESET_REQUEST_KEY, None)
+            messages.success(request, '¡Listo! Tu contraseña fue actualizada. Inicia sesión.')
+            return redirect('public:account_login')
+
+    return render(request, 'public/account/password_reset_new.html', {
+        'participant': participant,
+    })

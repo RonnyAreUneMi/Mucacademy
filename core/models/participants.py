@@ -1,5 +1,7 @@
 """Participants (final users) and their API auth tokens."""
+import hashlib
 import secrets
+import uuid
 from datetime import timedelta
 
 from django.contrib.auth.hashers import check_password, make_password
@@ -138,3 +140,82 @@ class ParticipantToken(TimestampedModel):
     @property
     def is_expired(self) -> bool:
         return timezone.now() >= self.expires_at
+
+
+class PasswordResetToken(TimestampedModel):
+    """Short-lived token for password recovery.
+
+    A single request creates one row containing:
+      - `token`  : URL-safe UUID used for the magic link (clickable from email).
+      - `code_hash` : SHA-256 of a 6-digit code for cross-device entry.
+      - `expires_at` : 15 minutes from creation.
+      - `used_at` : null until consumed (single-use guarantee).
+
+    Either the magic link OR the code can verify the request — whichever wins
+    first marks the token as used, invalidating the other path.
+    """
+    TOKEN_TTL = timedelta(minutes=15)
+
+    participant = models.ForeignKey(
+        Participant, on_delete=models.CASCADE, related_name='password_reset_tokens',
+    )
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    code_hash = models.CharField(max_length=64, help_text='SHA-256 of the 6-digit code.')
+    expires_at = models.DateTimeField(db_index=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    requested_ip = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=255, blank=True, default='')
+
+    class Meta:
+        verbose_name = 'Password reset token'
+        verbose_name_plural = 'Password reset tokens'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['token', 'used_at']),
+            models.Index(fields=['expires_at']),
+        ]
+
+    def __str__(self):
+        return f'PasswordReset<{self.participant_id}, {"used" if self.used_at else "active"}>'
+
+    # ── Factory ─────────────────────────────────────────────────
+    @classmethod
+    def issue(cls, participant: Participant, *, ip: str = '', user_agent: str = '') -> tuple['PasswordResetToken', str]:
+        """Create a new token. Returns (instance, plaintext_code).
+
+        Invalidates any previous active tokens for the same participant so
+        only the latest request can succeed.
+        """
+        cls.objects.filter(
+            participant=participant, used_at__isnull=True, expires_at__gt=timezone.now(),
+        ).update(used_at=timezone.now())
+
+        code = f'{secrets.randbelow(1_000_000):06d}'
+        instance = cls.objects.create(
+            participant=participant,
+            code_hash=cls._hash_code(code),
+            expires_at=timezone.now() + cls.TOKEN_TTL,
+            requested_ip=ip or None,
+            user_agent=user_agent[:255],
+        )
+        return instance, code
+
+    @staticmethod
+    def _hash_code(code: str) -> str:
+        return hashlib.sha256(code.strip().encode('utf-8')).hexdigest()
+
+    # ── Validation ──────────────────────────────────────────────
+    @property
+    def is_active(self) -> bool:
+        return self.used_at is None and timezone.now() < self.expires_at
+
+    def matches_code(self, code: str) -> bool:
+        """Constant-time comparison against the stored hash."""
+        if not self.is_active or not code:
+            return False
+        return secrets.compare_digest(self.code_hash, self._hash_code(code))
+
+    def consume(self) -> None:
+        """Mark as used (single-use enforcement)."""
+        self.used_at = timezone.now()
+        self.save(update_fields=['used_at'])
