@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>CertifAI · Documentación visual</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Modelo de datos, pantallas móviles y diseño web del sistema CertifAI · UNEMI">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Outfit:wght@400;500;600;700;800;900&family=Sora:wght@800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0A1535;
+    --panel: #152448;
+    --border: rgba(255,255,255,0.10);
+    --text: #E2E8F0;
+    --text-dim: #94A3B8;
+    --brand: #F58830;
+    --brand-dark: #D97520;
+    --accent: #162054;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    overflow-x: hidden;
+  }
+  body {
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 0%, rgba(245,136,48,0.15), transparent 70%),
+      radial-gradient(ellipse 50% 40% at 80% 100%, rgba(167,139,250,0.10), transparent 70%),
+      radial-gradient(ellipse 40% 30% at 50% 50%, rgba(236,72,153,0.05), transparent 70%),
+      var(--bg);
+  }
+
+  /* ═══════════ Top bar ═══════════ */
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 40px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,21,53,0.65);
+  }
+  .brand {
+    display: inline-flex; align-items: center; gap: 12px;
+    text-decoration: none;
+  }
+  .b-logo {
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; flex-shrink: 0;
+  }
+  .b-logo::before {
+    content: '';
+    position: absolute; inset: 4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245,136,48,0.55) 0%, transparent 70%);
+    filter: blur(10px);
+    z-index: 0;
+    animation: tiger-halo 3.2s ease-in-out infinite;
+  }
+  @keyframes tiger-halo {
+    0%, 100% { opacity: 0.55; transform: scale(0.92); }
+    50%      { opacity: 0.95; transform: scale(1.10); }
+  }
+  .b-logo img {
+    position: relative; z-index: 1;
+    width: 40px; height: 40px;
+    object-fit: contain;
+    filter:
+      drop-shadow(0 4px 10px rgba(245,136,48,0.45))
+      drop-shadow(0 2px 4px rgba(0,0,0,0.30));
+    animation: tiger-bob 4s ease-in-out infinite alternate;
+  }
+  @keyframes tiger-bob {
+    0%   { transform: translateY(0)    rotate(-2deg); }
+    100% { transform: translateY(-2px) rotate(2deg); }
+  }
+  .b-text { display: flex; flex-direction: column; line-height: 1; }
+  .b-text .b-name {
+    font-family: 'Comfortaa', 'Outfit', system-ui, sans-serif;
+    font-weight: 700; font-size: 22px;
+    letter-spacing: -0.01em; text-transform: lowercase;
+    color: white;
+  }
+  .b-text .b-name .ai {
+    background: linear-gradient(135deg, var(--brand) 0%, #ec4899 55%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+  .b-text .b-sub {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .top-meta {
+    font-size: 11px; color: var(--text-dim);
+    font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  /* ═══════════ Hero ═══════════ */
+  .hero {
+    text-align: center;
+    padding: 80px 32px 56px;
+    max-width: 980px; margin: 0 auto;
+    position: relative;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(245,136,48,0.10);
+    border: 1px solid rgba(245,136,48,0.25);
+    color: var(--brand);
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .hero-eyebrow .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--brand);
+    box-shadow: 0 0 8px var(--brand);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .hero h1 {
+    font-family: 'Sora', 'Outfit', sans-serif;
+    font-size: clamp(34px, 5.5vw, 60px);
+    line-height: 1.05; letter-spacing: -0.025em;
+    color: white;
+    margin-bottom: 18px;
+  }
+  .hero h1 .accent {
+    background: linear-gradient(135deg, var(--brand) 0%, #ec4899 55%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+  .hero p {
+    font-size: 17px; line-height: 1.55;
+    color: var(--text-dim);
+    max-width: 640px; margin: 0 auto;
+  }
+
+  /* ═══════════ Cards grid ═══════════ */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 22px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px 80px;
+  }
+
+  .card {
+    position: relative;
+    display: flex; flex-direction: column;
+    padding: 28px 26px 26px;
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    text-decoration: none;
+    color: inherit;
+    transition: all .3s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+    min-height: 360px;
+  }
+  .card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 80% 0%, var(--card-glow, rgba(245,136,48,0.18)) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    border-color: var(--card-border, rgba(245,136,48,0.4));
+    box-shadow:
+      0 20px 50px -20px rgba(0,0,0,0.6),
+      0 0 0 1px var(--card-border, rgba(245,136,48,0.4));
+  }
+  .card:hover::before { opacity: 1; }
+
+  .card .icon {
+    width: 64px; height: 64px;
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 22px;
+    background: var(--icon-bg, linear-gradient(135deg, rgba(245,136,48,0.15), rgba(245,136,48,0.06)));
+    border: 1px solid var(--icon-border, rgba(245,136,48,0.30));
+    position: relative;
+  }
+  .card .icon svg { width: 30px; height: 30px; color: var(--icon-color, var(--brand)); }
+
+  .card .badge {
+    position: absolute; top: 24px; right: 24px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    font-size: 10px; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .card .badge.ext { color: #60A5FA; background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.25); }
+  .card .badge.live { color: #10B981; background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.25); }
+
+  .card h2 {
+    font-family: 'Sora', 'Outfit', sans-serif;
+    font-size: 22px; font-weight: 900;
+    letter-spacing: -0.015em;
+    color: white;
+    margin-bottom: 8px;
+  }
+  .card .lead {
+    font-size: 14px; line-height: 1.55;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  .card .meta {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 22px;
+  }
+  .card .meta span {
+    font-size: 10.5px; font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+  }
+
+  .card .cta {
+    margin-top: auto;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 800;
+    color: var(--brand);
+    letter-spacing: 0.02em;
+    transition: gap .2s;
+  }
+  .card:hover .cta { gap: 14px; }
+  .card .cta svg { width: 16px; height: 16px; }
+
+  /* Card variants */
+  .card.purple {
+    --card-glow: rgba(167,139,250,0.18);
+    --card-border: rgba(167,139,250,0.4);
+    --icon-bg: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(167,139,250,0.06));
+    --icon-border: rgba(167,139,250,0.30);
+    --icon-color: #A78BFA;
+  }
+  .card.purple .cta { color: #A78BFA; }
+
+  .card.blue {
+    --card-glow: rgba(96,165,250,0.18);
+    --card-border: rgba(96,165,250,0.4);
+    --icon-bg: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(96,165,250,0.06));
+    --icon-border: rgba(96,165,250,0.30);
+    --icon-color: #60A5FA;
+  }
+  .card.blue .cta { color: #60A5FA; }
+
+  /* ═══════════ Sección extra ═══════════ */
+  .extras {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px 100px;
+  }
+  .extras-title {
+    font-size: 12px; font-weight: 800;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .extras-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .extra-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--text);
+    transition: all .2s;
+  }
+  .extra-card:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(245,136,48,0.30);
+    transform: translateY(-2px);
+  }
+  .extra-card .ic {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(245,136,48,0.10);
+    color: var(--brand);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .extra-card .info { flex: 1; min-width: 0; }
+  .extra-card .info .ttl { font-weight: 700; font-size: 14px; }
+  .extra-card .info .sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+  /* ═══════════ Footer ═══════════ */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 32px 36px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  footer strong { color: var(--text); }
+  footer .links { margin-top: 6px; }
+  footer .links a {
+    color: var(--brand);
+    text-decoration: none;
+    margin: 0 6px;
+    font-weight: 700;
+  }
+  footer .links a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ Top bar ═══════════ -->
+<header class="top">
+  <a href="#" class="brand">
+    <div class="b-logo">
+      <img id="tiger-img" alt="UNEMI">
+    </div>
+    <div class="b-text">
+      <div class="b-name"><span>certif</span><span class="ai">ai</span></div>
+      <div class="b-sub">Documentación visual</div>
+    </div>
+  </a>
+  <div class="top-meta">UNEMI · 2026</div>
+</header>
+
+<!-- ═══════════ Hero ═══════════ -->
+<section class="hero">
+  <div class="hero-eyebrow">
+    <span class="dot"></span> Tesis · Plataforma de certificación con IA
+  </div>
+  <h1>Modelo de datos, app móvil y<br><span class="accent">diseño web</span> de CertifAI.</h1>
+  <p>
+    Centralizamos todo el material visual del proyecto en un solo lugar. Explorá el esquema de
+    base de datos interactivo, recorré las pantallas de la app móvil pantalla por pantalla, y
+    accedé al diseño web original en Figma.
+  </p>
+</section>
+
+<!-- ═══════════ Cards ═══════════ -->
+<section class="grid">
+
+  <!-- ─── ERD interactivo ─── -->
+  <a class="card" href="erd-viewer.html">
+    <span class="badge live">● En vivo</span>
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <ellipse cx="12" cy="5" rx="9" ry="3"/>
+        <path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        <path d="M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6"/>
+      </svg>
+    </div>
+    <h2>Modelo de datos</h2>
+    <p class="lead">
+      Diagrama ERD interactivo con las 20 entidades del sistema. Patas de gallo,
+      filtros por dominio, búsqueda, tooltips y narrativa por tabla explicando cada relación.
+    </p>
+    <div class="meta">
+      <span>20 entidades</span>
+      <span>26 relaciones</span>
+      <span>8 dominios</span>
+      <span>SVG · sin libs</span>
+    </div>
+    <span class="cta">
+      Abrir ERD
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </span>
+  </a>
+
+  <!-- ─── Pantallas móviles ─── -->
+  <a class="card purple" href="04-mobile/00-index.html">
+    <span class="badge live">● En vivo</span>
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2.5"/>
+        <line x1="12" y1="18" x2="12" y2="18"/>
+      </svg>
+    </div>
+    <h2>App móvil</h2>
+    <p class="lead">
+      Las 12 pantallas de la app de participantes en una galería navegable.
+      Landing, login, dashboard, certificados, eventos, asistencia, perfil, scanner QR,
+      resumen IA y cuestionario.
+    </p>
+    <div class="meta">
+      <span>12 pantallas</span>
+      <span>React Native · Expo</span>
+      <span>iPhone frame</span>
+    </div>
+    <span class="cta">
+      Ver galería
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </span>
+  </a>
+
+  <!-- ─── Diseño web Figma ─── -->
+  <a class="card blue" href="https://www.figma.com/design/sGxfPTPsRteQ3pOFt7NSn6/Certifai-proyect-betta?node-id=17-675&t=QRkoM9ExgVQQamBG-1" target="_blank" rel="noopener">
+    <span class="badge ext">↗ Externo</span>
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z"/>
+        <path d="M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z"/>
+        <path d="M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z"/>
+        <path d="M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z"/>
+        <path d="M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z"/>
+      </svg>
+    </div>
+    <h2>Diseño web</h2>
+    <p class="lead">
+      Archivo de Figma con todas las pantallas del sitio público y panel admin diseñadas:
+      landing, login, dashboard, certificados, eventos, panel administrativo, emails y más.
+    </p>
+    <div class="meta">
+      <span>Figma</span>
+      <span>Web + Admin</span>
+      <span>Sistema de diseño</span>
+    </div>
+    <span class="cta">
+      Abrir en Figma
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </span>
+  </a>
+
+</section>
+
+<!-- ═══════════ Extras ═══════════ -->
+<section class="extras">
+  <div class="extras-title">Recursos rápidos</div>
+  <div class="extras-grid">
+    <a class="extra-card" href="04-mobile/01-landing.html">
+      <div class="ic">🚀</div>
+      <div class="info">
+        <div class="ttl">Landing móvil</div>
+        <div class="sub">Pantalla de bienvenida</div>
+      </div>
+    </a>
+    <a class="extra-card" href="04-mobile/04-dashboard.html">
+      <div class="ic">📊</div>
+      <div class="info">
+        <div class="ttl">Dashboard</div>
+        <div class="sub">Pantalla principal con stats</div>
+      </div>
+    </a>
+    <a class="extra-card" href="04-mobile/11-resumen-betto.html">
+      <div class="ic">🤖</div>
+      <div class="info">
+        <div class="ttl">Resumen Betto (IA)</div>
+        <div class="sub">Asistente de eventos</div>
+      </div>
+    </a>
+    <a class="extra-card" href="04-mobile/12-cuestionario.html">
+      <div class="ic">📝</div>
+      <div class="info">
+        <div class="ttl">Cuestionario</div>
+        <div class="sub">Quiz post-evento</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════ Footer ═══════════ -->
+<footer>
+  <strong>CertifAI</strong> · Plataforma de certificación con inteligencia artificial
+  <div class="links">
+    <a href="erd-viewer.html">ERD</a>·
+    <a href="04-mobile/00-index.html">Galería móvil</a>·
+    <a href="https://www.figma.com/design/sGxfPTPsRteQ3pOFt7NSn6/Certifai-proyect-betta" target="_blank" rel="noopener">Figma web</a>
+  </div>
+  <div style="margin-top:12px; font-size:11px; color:#475569;">
+    Universidad Estatal de Milagro · UNEMI · 2026
+  </div>
+</footer>
+
+<!-- Carga del tigre — vendrá inyectado por el siguiente script o fallback estático -->
+<script>
+  // Si el archivo erd-viewer.html está al lado, intentamos cargar la misma imagen embebida
+  // (para que se vea exactamente igual en el branding). Si no existe, usamos un placeholder svg.
+  (function(){
+    const img = document.getElementById('tiger-img');
+    // Intentamos la ruta local relativa
+    img.src = "tiger.png";
+    img.onerror = () => {
+      // Fallback: emoji
+      const parent = img.parentElement;
+      parent.removeChild(img);
+      const span = document.createElement('span');
+      span.style.fontSize = '34px';
+      span.textContent = '🐯';
+      parent.appendChild(span);
+    };
+  })();
+</script>
+
+</body>
+</html>
