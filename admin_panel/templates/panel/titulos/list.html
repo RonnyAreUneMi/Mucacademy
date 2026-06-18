@@ -1,0 +1,167 @@
+{% extends 'panel/base.html' %}
+
+{% block content %}
+<div class="space-y-6" x-data="titulosPage()">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <span class="p-2 bg-unemi-orange/10 rounded-lg">
+                    <i class="fa-solid fa-user-graduate text-unemi-orange"></i>
+                </span>
+                Títulos académicos
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+                <span class="font-bold text-unemi-orange">{{ total }}</span> títulos en el catálogo. Se usan para los ponentes de los eventos.
+            </p>
+        </div>
+        <button @click="openCreate()" class="bg-[#F58830] hover:bg-[#D97520] text-white font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-sm shadow-sm hover:shadow-md">
+            <i class="fa-solid fa-plus"></i> Nuevo título
+        </button>
+    </div>
+
+    <!-- Search -->
+    <div class="bg-white dark:bg-[#1a2b4d] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 p-3">
+        <form method="GET" class="flex gap-2">
+            <div class="flex-1 relative group">
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-unemi-orange transition-colors"></i>
+                <input type="text" name="q" value="{{ q }}" placeholder="Buscar título..." class="w-full pl-11 p-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/10 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-unemi-orange transition-all">
+            </div>
+            <button type="submit" class="bg-unemi-blue dark:bg-blue-600 text-white font-bold px-6 py-3 rounded-xl transition-all text-sm shadow-sm">Buscar</button>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white dark:bg-[#1a2b4d] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 dark:bg-black/20 border-b border-gray-100 dark:border-white/10">
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Abreviado</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Nombre completo</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-center">Orden</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-center">Estado</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
+                    {% for t in titulos %}
+                    <tr class="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-bold bg-unemi-orange/10 text-unemi-orange">{{ t.abbreviation }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-800 dark:text-gray-200">{{ t.name }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 text-center font-mono">{{ t.sort_order }}</td>
+                        <td class="px-6 py-4 text-center">
+                            {% if t.is_active %}
+                            <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Activo</span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 text-xs font-bold text-gray-400"><span class="w-2 h-2 rounded-full bg-gray-400"></span> Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right whitespace-nowrap">
+                            <button type="button"
+                                @click="openEdit({{ t.id }})"
+                                class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 rounded-lg transition-all" title="Editar">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <form method="POST" action="{% url 'panel:titulos_delete' t.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="button"
+                                    class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-all" title="Eliminar"
+                                    onclick="showConfirm({
+                                        title: 'Eliminar título',
+                                        message: '¿Eliminar &quot;{{ t.abbreviation|escapejs }}&quot; del catálogo?',
+                                        type: 'danger',
+                                        callback: () => this.closest('form').submit()
+                                    })">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="w-16 h-16 bg-gray-50 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fa-solid fa-user-graduate text-2xl text-gray-300"></i>
+                            </div>
+                            <p class="text-gray-500 font-medium">No hay títulos en el catálogo.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal create/edit -->
+    <div x-show="open" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="display:none;">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="open = false"></div>
+        <div class="relative bg-white dark:bg-[#152448] rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-white/10">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
+                <h3 class="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-graduate text-unemi-orange"></i>
+                    <span x-text="isEdit ? 'Editar título' : 'Nuevo título'"></span>
+                </h3>
+                <button @click="open = false" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form method="POST" :action="formAction" class="p-6 space-y-4">
+                {% csrf_token %}
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Abreviado <span class="text-red-500">*</span></label>
+                        <input type="text" name="abbreviation" x-model="form.abbreviation" required maxlength="20" placeholder="Dr." class="w-full bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-gray-800 dark:text-white focus:ring-2 focus:ring-unemi-orange focus:border-transparent transition-all">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Nombre completo <span class="text-red-500">*</span></label>
+                        <input type="text" name="name" x-model="form.name" required maxlength="80" placeholder="Doctor" class="w-full bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-gray-800 dark:text-white focus:ring-2 focus:ring-unemi-orange focus:border-transparent transition-all">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 items-end">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Orden</label>
+                        <input type="number" name="sort_order" x-model="form.sort_order" min="0" class="w-full bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-gray-800 dark:text-white focus:ring-2 focus:ring-unemi-orange focus:border-transparent transition-all">
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer pb-2.5">
+                        <input type="checkbox" name="is_active" x-model="form.is_active" class="w-4 h-4 rounded text-unemi-orange focus:ring-unemi-orange">
+                        <span class="text-sm font-bold text-gray-700 dark:text-gray-200">Activo</span>
+                    </label>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="open = false" class="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 font-bold text-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all">Cancelar</button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-unemi-orange hover:bg-orange-600 text-white font-bold text-sm shadow-lg transition-all">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{ titulos_json|json_script:"titulos-data" }}
+<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
+<script>
+    const TITULOS = JSON.parse(document.getElementById('titulos-data').textContent);
+    const EMPTY_FORM = { abbreviation: '', name: '', sort_order: 0, is_active: true };
+    function titulosPage() {
+        return {
+            open: false,
+            isEdit: false,
+            formAction: '{% url "panel:titulos_create" %}',
+            form: Object.assign({}, EMPTY_FORM),
+            openCreate() {
+                this.isEdit = false;
+                this.formAction = '{% url "panel:titulos_create" %}';
+                this.form = Object.assign({}, EMPTY_FORM);
+                this.open = true;
+            },
+            openEdit(id) {
+                this.isEdit = true;
+                this.formAction = '/panel/titulos/' + id + '/edit/';
+                this.form = Object.assign({}, EMPTY_FORM, TITULOS[id]);
+                this.open = true;
+            },
+        }
+    }
+</script>
+<style>[x-cloak]{display:none!important;}</style>
+{% endblock %}

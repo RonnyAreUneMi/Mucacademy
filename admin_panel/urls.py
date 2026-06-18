@@ -29,6 +29,8 @@ from .views import (
     # leaders
     lideres_list, lideres_add_manual, lideres_upload_excel,
     lideres_process_mapping,
+    # academic titles (catalog)
+    titulos_list, titulos_create, titulos_update, titulos_delete,
 )
 from . import views_firmas
 from .views import google_oauth as google_views
@@ -123,6 +125,12 @@ urlpatterns = [
     path('lideres/<int:id>/remove/',
          RedirectView.as_view(url='/api/v1/admin/participants/%(id)s/toggle_leader/', permanent=False),
          name='lideres_remove'),
+
+    # Títulos académicos (catálogo)
+    path('titulos/', titulos_list, name='titulos_list'),
+    path('titulos/add/', titulos_create, name='titulos_create'),
+    path('titulos/<int:id>/edit/', titulos_update, name='titulos_update'),
+    path('titulos/<int:id>/delete/', titulos_delete, name='titulos_delete'),
 
     # ── Pages migradas a shell + API ──────────────────────────
     # Usuarios (superadmin)

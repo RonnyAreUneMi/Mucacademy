@@ -90,10 +90,11 @@ def nav_menu(request):
         {
             'label': 'Admin',
             'icon': 'fa-gears',
-            'match_keywords': ['solicitudes', 'firma', 'design', 'ai_config', 'usuarios'],
+            'match_keywords': ['solicitudes', 'firma', 'design', 'ai_config', 'usuarios', 'titulos'],
             'visible': is_superadmin,
             'items': [
-                {'label': 'Solicitudes',      'icon': 'fa-user-clock',  'url': _safe_url('panel:solicitudes_pendientes'), 'badge': 'pendientes_count', 'color': 'warning'},
+                {'label': 'Solicitudes',      'icon': 'fa-user-clock',     'url': _safe_url('panel:solicitudes_pendientes'), 'badge': 'pendientes_count', 'color': 'warning'},
+                {'label': 'Títulos académicos','icon': 'fa-user-graduate', 'url': _safe_url('panel:titulos_list'),           'color': 'info'},
                 {'label': 'Firmas inst.',     'icon': 'fa-signature',   'url': _safe_url('panel:firma_list'),             'color': 'accent'},
                 {'label': 'Diseño global',    'icon': 'fa-palette',     'url': _safe_url('panel:design_global'),          'color': 'success'},
                 {'label': 'Design System',    'icon': 'fa-swatchbook',  'url': _safe_url('panel:design_system'),          'color': 'brand',  'highlight': True},

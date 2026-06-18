@@ -213,7 +213,10 @@
             </button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input type="text" data-field="title" placeholder="Dr., Mgs., Ing..." class="{{ css }} text-sm">
+            <select data-field="title" class="{{ css }} text-sm">
+                <option value="">Título…</option>
+                {% for abbr in titulos %}<option value="{{ abbr }}">{{ abbr }}</option>{% endfor %}
+            </select>
             <input type="text" data-field="name" placeholder="Nombre completo *" required class="{{ css }} text-sm md:col-span-2">
         </div>
         <input type="text" data-field="affiliation" placeholder="Afiliación / Institución (opcional)" class="{{ css }} text-sm">
@@ -284,7 +287,14 @@ function addPonente(data = {}) {
     const tpl = document.getElementById('ponente-template');
     const node = tpl.content.firstElementChild.cloneNode(true);
     if (data.name) node.querySelector('[data-field="name"]').value = data.name;
-    if (data.title) node.querySelector('[data-field="title"]').value = data.title;
+    if (data.title) {
+        const sel = node.querySelector('[data-field="title"]');
+        // Conserva títulos legados que no estén en el catálogo actual.
+        if (![...sel.options].some(o => o.value === data.title)) {
+            sel.add(new Option(data.title, data.title));
+        }
+        sel.value = data.title;
+    }
     if (data.affiliation) node.querySelector('[data-field="affiliation"]').value = data.affiliation;
     if (data.bio) node.querySelector('[data-field="bio"]').value = data.bio;
     list.appendChild(node);

@@ -3,7 +3,7 @@
 All models are re-exported here so imports stay stable:
     from core.models import Participant, Certificate, Event
 """
-from .catalogs import FACULTY_CHOICES, Faculty
+from .catalogs import FACULTY_CHOICES, Faculty, AcademicTitle
 from .users import User, AccessRequest
 from .signatures import Signature, GlobalDesign
 from .participants import Participant, ParticipantToken, PasswordResetToken
@@ -17,6 +17,7 @@ from .design_system import UIDesignTokens
 __all__ = [
     'FACULTY_CHOICES',
     'Faculty',
+    'AcademicTitle',
     'User',
     'AccessRequest',
     'Signature',

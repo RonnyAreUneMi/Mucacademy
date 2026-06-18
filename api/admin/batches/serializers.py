@@ -39,6 +39,7 @@ class LoteWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = CertificateBatch
         fields = [
+            'id',
             'name', 'faculty', 'template', 'customize_design',
             'color_primary', 'color_secondary', 'color_tertiary', 'color_text',
             'body_text', 'excel_file', 'is_active',

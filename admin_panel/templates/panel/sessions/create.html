@@ -218,7 +218,10 @@
             </button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input type="text" data-field="title" placeholder="Dr., Mgs., Ing..." class="{{ css }} text-sm">
+            <select data-field="title" class="{{ css }} text-sm">
+                <option value="">Título…</option>
+                {% for abbr in titulos %}<option value="{{ abbr }}">{{ abbr }}</option>{% endfor %}
+            </select>
             <input type="text" data-field="name" placeholder="Nombre completo *" required class="{{ css }} text-sm md:col-span-2">
         </div>
         <input type="text" data-field="affiliation" placeholder="Afiliación / Institución (opcional)" class="{{ css }} text-sm">

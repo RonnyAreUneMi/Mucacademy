@@ -13,6 +13,7 @@ from .enums import (
     VirtualPlatform,
 )
 from .faculty import Faculty
+from .academic_title import AcademicTitle
 
 __all__ = [
     'FACULTY_CHOICES',
@@ -22,4 +23,5 @@ __all__ = [
     'EventModality',
     'VirtualPlatform',
     'Faculty',
+    'AcademicTitle',
 ]

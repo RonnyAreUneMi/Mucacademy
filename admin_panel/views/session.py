@@ -10,8 +10,15 @@ from django.contrib import messages
 from django.db.models import Count, F
 from django.shortcuts import get_object_or_404, redirect, render
 
-from core.models import Enrollment, CertificateBatch, Event
+from core.models import AcademicTitle, Enrollment, CertificateBatch, Event
 from ._shared import admin_required
+
+
+def _active_titles():
+    """Abreviados de títulos académicos activos para el form de ponentes."""
+    return list(
+        AcademicTitle.objects.filter(is_active=True).values_list('abbreviation', flat=True)
+    )
 
 
 @admin_required
@@ -51,7 +58,9 @@ def session_create(request):
 
     El submit hace POST a /api/v1/admin/sessions/ vía fetch (igual que edit).
     """
-    return render(request, 'panel/sessions/create.html')
+    return render(request, 'panel/sessions/create.html', {
+        'titulos': _active_titles(),
+    })
 
 
 @admin_required
@@ -62,6 +71,7 @@ def session_edit(request, id):
     return render(request, 'panel/sessions/edit.html', {
         'sesion': sesion,
         'ponentes_json': ponentes,
+        'titulos': _active_titles(),
     })
 
 

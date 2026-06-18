@@ -27,6 +27,12 @@ from .design import (  # noqa: F401
     design_global_preview,
 )
 from .design_system import design_system_edit, design_system_reset  # noqa: F401
+from .academic_titles import (  # noqa: F401
+    titulos_list,
+    titulos_create,
+    titulos_update,
+    titulos_delete,
+)
 from .leaders import (  # noqa: F401
     lideres_list,
     lideres_add_manual,
