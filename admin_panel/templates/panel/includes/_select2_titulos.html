@@ -1,0 +1,79 @@
+{% comment %}
+Select2 para el campo "Título" de los ponentes (catálogo de títulos académicos).
+Incluye CDN (jQuery + Select2), estilos del tema CertifAI (claro/oscuro) y el
+helper global `initTitleSelect(el)` para inicializarlo sobre un <select>.
+{% endcomment %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+    /* ── Select2 · tema CertifAI ───────────────────────────── */
+    .select2-container { width: 100% !important; }
+    .select2-container--default .select2-selection--single {
+        height: 42px;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        display: flex;
+        align-items: center;
+        padding: 0 0.25rem;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #1f2937;
+        line-height: normal;
+        padding-left: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__placeholder { color: #9ca3af; }
+    .select2-container--default .select2-selection--single .select2-selection__arrow { height: 40px; }
+    .select2-container--default.select2-container--focus .select2-selection--single,
+    .select2-container--default.select2-container--open  .select2-selection--single {
+        border-color: #F58830;
+        box-shadow: 0 0 0 2px rgba(245,136,48,0.25);
+    }
+    .select2-dropdown {
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,.12);
+        background: #ffffff;
+    }
+    .select2-container--default .select2-results__option { font-size: 0.875rem; color: #374151; }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] { background: #F58830; color: #fff; }
+    .select2-container--default .select2-results__option[aria-selected="true"] { background: rgba(245,136,48,0.12); color: #b45309; font-weight: 600; }
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        border-radius: 0.5rem; border: 1px solid #e5e7eb; padding: 0.45rem 0.6rem;
+        outline: none;
+    }
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus { border-color: #F58830; }
+
+    /* ── Dark mode ─────────────────────────────────────────── */
+    .dark .select2-container--default .select2-selection--single {
+        background: #0F163A; border-color: rgba(255,255,255,0.1);
+    }
+    .dark .select2-container--default .select2-selection--single .select2-selection__rendered { color: #fff; }
+    .dark .select2-container--default .select2-selection--single .select2-selection__placeholder { color: #94a3b8; }
+    .dark .select2-dropdown { background: #152448; border-color: rgba(255,255,255,0.1); box-shadow: 0 10px 25px rgba(0,0,0,.4); }
+    .dark .select2-container--default .select2-results__option { color: #e2e8f0; background: #152448; }
+    .dark .select2-container--default .select2-results__option--highlighted[aria-selected] { background: #F58830; color: #fff; }
+    .dark .select2-container--default .select2-results__option[aria-selected="true"] { background: rgba(245,136,48,0.18); color: #fdba74; }
+    .dark .select2-container--default .select2-search--dropdown .select2-search__field {
+        background: #0F163A; color: #fff; border-color: rgba(255,255,255,0.1);
+    }
+</style>
+
+<script>
+    function initTitleSelect(el) {
+        if (!(window.jQuery && jQuery.fn.select2) || !el) return;
+        // Evita doble init si el nodo ya fue convertido.
+        if (jQuery(el).hasClass('select2-hidden-accessible')) return;
+        jQuery(el).select2({
+            width: '100%',
+            placeholder: 'Título…',
+            allowClear: true,
+        });
+    }
+</script>

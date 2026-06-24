@@ -226,6 +226,8 @@
 
 {% endwith %}
 
+{% include 'panel/includes/_select2_titulos.html' %}
+
 {{ ponentes_json|json_script:"ponentes-init-data" }}
 
 <script>
@@ -298,6 +300,7 @@ function addPonente(data = {}) {
     if (data.affiliation) node.querySelector('[data-field="affiliation"]').value = data.affiliation;
     if (data.bio) node.querySelector('[data-field="bio"]').value = data.bio;
     list.appendChild(node);
+    initTitleSelect(node.querySelector('[data-field="title"]'));
     refreshPonentesUI();
 }
 function removePonente(btn) { btn.closest('.ponente-row').remove(); refreshPonentesUI(); }

@@ -104,7 +104,8 @@
         let ponentesText = '';
         if (ponentes.length === 1) {
             const p = ponentes[0];
-            ponentesText = (p.titulo ? p.titulo + ' ' : '') + p.nombre;
+            const pt = p.title || p.titulo;
+            ponentesText = (pt ? pt + ' ' : '') + (p.name || p.nombre || '');
         } else if (ponentes.length > 1) {
             ponentesText = `${ponentes.length} ponentes`;
         }
