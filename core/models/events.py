@@ -61,6 +61,18 @@ class Event(models.Model):
         help_text='Only participants marked as leaders can register',
     )
     is_active = models.BooleanField(default=True)
+
+    # Versionamiento / seminarios en partes
+    has_parts = models.BooleanField(
+        default=False, verbose_name='Seminario dividido en partes',
+        help_text='Si está activo, este evento es parte de una serie (parte 1, 2, …).',
+    )
+    parent_event = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='parts', verbose_name='Primera parte de la serie',
+        help_text='Para continuaciones: apunta al evento que es la primera parte.',
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Google Meet integration
@@ -101,6 +113,16 @@ class Event(models.Model):
     @property
     def label(self):
         return f"{self.start_time:%H:%M} – {self.end_time:%H:%M}"
+
+    @property
+    def is_series_root(self) -> bool:
+        """True si es la primera parte de una serie (catálogo de series)."""
+        return self.has_parts and self.parent_event_id is None
+
+    @property
+    def series_root(self):
+        """Devuelve la primera parte de la serie (o sí mismo si lo es)."""
+        return self.parent_event if self.parent_event_id else self
 
     @property
     def is_unlimited(self):

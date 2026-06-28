@@ -710,7 +710,7 @@
     </style>
 </head>
 
-<body class="bg-slate-50 text-gray-800 dark:bg-[#0a1535] dark:text-gray-100 transition-colors duration-300 relative">
+<body class="bg-slate-50 text-gray-800 dark:bg-[#0a1535] dark:text-gray-100 transition-colors duration-300 relative flex flex-col min-h-screen">
     {# Liquid Glass background — orbes flotantes globales detrás de TODO #}
     <div class="lg-bg" aria-hidden="true"><span></span></div>
     {% include 'components/background_decor.html' %}
@@ -863,7 +863,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-80px)]">
+    <main class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{% block page_title %}{% endblock %}</h1>
             <div class="flex items-center gap-3">{% block page_actions %}{% endblock %}</div>

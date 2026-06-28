@@ -16,6 +16,8 @@
     <form id="session-form" class="space-y-6">
         <div id="error-box" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-700 dark:text-red-400 text-sm"></div>
 
+        {% include 'panel/includes/_event_series.html' %}
+
         <!-- ──────── 1. Detalles del evento ──────── -->
         <section class="lg-card rounded-2xl p-6 md:p-8 space-y-5">
             <div class="flex items-center gap-2 mb-1">
@@ -54,6 +56,7 @@
                     </div>
                 </label>
                 <input id="banner-input" type="file" name="banner_image" accept="image/*" class="hidden">
+                {% include 'panel/includes/_ai_banner_button.html' %}
             </div>
         </section>
 
@@ -325,6 +328,7 @@ document.getElementById('session-form').addEventListener('submit', async (e) => 
     fd.delete('capacity');
     fd.set('capacity', document.getElementById('cap-ilimitada').checked ? '0' : (document.getElementById('cap-input').value || '0'));
     fd.set('ponentes_json', JSON.stringify(collectPonentes()));
+    if (window.applyEventSeriesToFD) window.applyEventSeriesToFD(fd);
     // Descripción: usar HTML del CKEditor en vez del textarea oculto
     if (typeof window.getDescriptionHTML === 'function') {
         fd.set('description', window.getDescriptionHTML());
@@ -350,6 +354,7 @@ document.getElementById('session-form').addEventListener('submit', async (e) => 
             btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Crear Evento';
             return;
         }
+        if (window.__clearEventDraft) window.__clearEventDraft();
         window.location.href = "{% url 'panel:session_list' %}";
     } catch (err) {
         errBox.textContent = 'Error de red: ' + err.message;
@@ -359,4 +364,126 @@ document.getElementById('session-form').addEventListener('submit', async (e) => 
     }
 });
 </script>
+
+<script>
+// ── Autosave de borrador (preserva info + banner IA al recargar) ──────────
+(function () {
+    const KEY = 'certifai_event_draft_v1';
+    const form = document.getElementById('session-form');
+    if (!form) return;
+    const $ = sel => form.querySelector(sel);
+
+    function bannerDataUrl() {
+        const img = document.getElementById('banner-img');
+        return (img && img.src && img.src.startsWith('data:')) ? img.src : '';
+    }
+
+    function snapshot() {
+        return {
+            title: $('input[name="title"]')?.value || '',
+            description: (window.getDescriptionHTML && window.getDescriptionHTML()) || '',
+            modality: form.querySelector('input[name="modality"]:checked')?.value || '',
+            location: $('input[name="location"]')?.value || '',
+            date: $('input[name="date"]')?.value || '',
+            start_time: $('input[name="start_time"]')?.value || '',
+            end_time: $('input[name="end_time"]')?.value || '',
+            faculty: $('[name="faculty"]')?.value || '',
+            cap_ilimitada: document.getElementById('cap-ilimitada')?.checked || false,
+            cap_input: document.getElementById('cap-input')?.value || '',
+            ponentes: (typeof collectPonentes === 'function') ? collectPonentes() : [],
+            banner: bannerDataUrl(),
+            banner_name: document.getElementById('banner-filename')?.textContent || '',
+        };
+    }
+
+    function persist(obj) {
+        try {
+            localStorage.setItem(KEY, JSON.stringify(obj));
+        } catch (e) {
+            // Cuota excedida (banner grande) → guardar sin el banner.
+            try { localStorage.setItem(KEY, JSON.stringify({ ...obj, banner: '', banner_name: '' })); } catch (_) {}
+        }
+    }
+
+    let t;
+    function save() { clearTimeout(t); t = setTimeout(() => persist(snapshot()), 400); }
+    window.__eventDraftSave = save;
+    window.__clearEventDraft = function () { try { localStorage.removeItem(KEY); } catch (e) {} };
+
+    function isEmpty(d) {
+        return !d.title && !d.description && !d.location && !d.date &&
+               !d.start_time && !d.end_time && !(d.ponentes || []).length && !d.banner;
+    }
+
+    function applyBanner(dataUrl, name) {
+        try {
+            const [meta, b64] = dataUrl.split(',');
+            const mime = (meta.match(/data:(.*?);/) || [])[1] || 'image/png';
+            const bin = atob(b64); const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            const file = new File([bytes], 'banner.png', { type: mime });
+            const input = document.getElementById('banner-input');
+            const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+            const img = document.getElementById('banner-img'); if (img) img.src = dataUrl;
+            document.getElementById('banner-empty')?.classList.add('hidden');
+            document.getElementById('banner-preview')?.classList.remove('hidden');
+            const fn = document.getElementById('banner-filename'); if (fn) fn.textContent = name || 'Banner restaurado';
+        } catch (e) {}
+    }
+
+    function restore() {
+        let raw; try { raw = localStorage.getItem(KEY); } catch (e) { return; }
+        if (!raw) return;
+        let d; try { d = JSON.parse(raw); } catch (e) { return; }
+        if (isEmpty(d)) return;
+
+        const set = (sel, v) => { const el = $(sel); if (el && v != null) el.value = v; };
+        set('input[name="title"]', d.title);
+        set('input[name="location"]', d.location);
+        set('input[name="date"]', d.date);
+        set('input[name="start_time"]', d.start_time);
+        set('input[name="end_time"]', d.end_time);
+        if (d.faculty) set('[name="faculty"]', d.faculty);
+        if (d.modality) {
+            const r = form.querySelector(`input[name="modality"][value="${d.modality}"]`);
+            if (r) { r.checked = true; if (typeof toggleModalidad === 'function') toggleModalidad(); }
+        }
+        if (window.setDescriptionHTML) window.setDescriptionHTML(d.description);
+        const capCb = document.getElementById('cap-ilimitada'), capIn = document.getElementById('cap-input');
+        if (capCb) { capCb.checked = !!d.cap_ilimitada; if (typeof toggleCapacidad === 'function') toggleCapacidad(); }
+        if (capIn && d.cap_input != null) capIn.value = d.cap_input;
+        if (Array.isArray(d.ponentes) && typeof addPonente === 'function') d.ponentes.forEach(p => addPonente(p));
+        if (d.banner) applyBanner(d.banner, d.banner_name);
+        // Avisar al día de semana derivado de la fecha
+        $('input[name="date"]')?.dispatchEvent(new Event('change', { bubbles: true }));
+
+        showRestoredNotice();
+    }
+
+    function showRestoredNotice() {
+        const bar = document.createElement('div');
+        bar.className = 'mb-4 flex items-center justify-between gap-3 px-4 py-3 rounded-xl ' +
+            'bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/40 ' +
+            'text-amber-800 dark:text-amber-300 text-sm';
+        bar.innerHTML = '<span><i class="fa-solid fa-clock-rotate-left mr-2"></i>' +
+            'Restauramos tu borrador (incluido el banner). Tu info y tokens no se perdieron.</span>';
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'font-bold underline hover:no-underline whitespace-nowrap';
+        btn.textContent = 'Descartar borrador';
+        btn.addEventListener('click', () => { window.__clearEventDraft(); bar.remove(); location.reload(); });
+        bar.appendChild(btn);
+        form.prepend(bar);
+    }
+
+    // Restaurar y enganchar autosave
+    restore();
+    form.addEventListener('input', save);
+    form.addEventListener('change', save);
+    const img = document.getElementById('banner-img');
+    if (img) new MutationObserver(save).observe(img, { attributes: true, attributeFilter: ['src'] });
+    const pl = document.getElementById('ponentes-list');
+    if (pl) new MutationObserver(save).observe(pl, { childList: true, subtree: true });
+})();
+</script>
+{% include 'panel/includes/_apple_pickers.html' %}
 {% endblock %}

@@ -1,0 +1,103 @@
+{% comment %}
+Botón "Generar banner con IA" + panel de prompt ajustable (JS vanilla).
+Reusa el input de archivo del banner (#banner-input, #banner-img, #banner-empty,
+#banner-preview, #banner-filename) y el campo de título (input[name="title"]).
+Incluir justo después del bloque de subida de banner.
+{% endcomment %}
+<div class="mt-3">
+    <button type="button" id="ai-banner-toggle"
+        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+               bg-gradient-to-r from-[#F58830]/15 to-[#162054]/15
+               hover:from-[#F58830]/25 hover:to-[#162054]/25
+               border border-[#F58830]/40 text-[#F58830] dark:text-orange-300
+               font-bold text-sm transition-all">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        Generar banner con IA (branding UNEMI)
+    </button>
+
+    <div id="ai-banner-panel" class="hidden mt-3 p-4 rounded-xl bg-gray-50 dark:bg-[#0F163A]/60 border border-gray-200 dark:border-blue-900/40 space-y-3">
+        <div>
+            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                Ajusta el prompt (opcional)
+            </label>
+            <textarea id="ai-banner-prompt" rows="2"
+                placeholder="Ej: aula moderna con estudiantes y tecnología, tonos cálidos…"
+                class="{{ css }} text-sm resize-none"></textarea>
+            <p class="text-[11px] text-gray-400 mt-1">
+                Se usa el <strong>título del evento</strong> + tu prompt. El branding UNEMI
+                (logo, tigre y texto) se añade siempre automáticamente.
+            </p>
+        </div>
+        <button type="button" id="ai-banner-generate"
+            class="w-full py-2.5 rounded-xl bg-[#F58830] hover:bg-orange-600 disabled:opacity-50
+                   text-white font-bold text-sm transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-bolt"></i> <span>Generar</span>
+        </button>
+        <p id="ai-banner-error" class="hidden text-xs text-red-500 font-medium"></p>
+        <p id="ai-banner-hint" class="hidden text-[11px] text-gray-400">La IA tarda ~10-20s en crear la imagen, esperá un momento.</p>
+    </div>
+</div>
+
+<script>
+(function () {
+    const toggle = document.getElementById('ai-banner-toggle');
+    const panel = document.getElementById('ai-banner-panel');
+    const genBtn = document.getElementById('ai-banner-generate');
+    const errEl = document.getElementById('ai-banner-error');
+    const hintEl = document.getElementById('ai-banner-hint');
+    const csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+
+    toggle.addEventListener('click', () => panel.classList.toggle('hidden'));
+
+    function setLoading(on) {
+        genBtn.disabled = on;
+        genBtn.innerHTML = on
+            ? '<i class="fa-solid fa-spinner fa-spin"></i> <span>Generando…</span>'
+            : '<i class="fa-solid fa-bolt"></i> <span>Generar</span>';
+        hintEl.classList.toggle('hidden', !on);
+    }
+    function showError(msg) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+    function clearError() { errEl.classList.add('hidden'); }
+
+    function applyImage(dataUrl, filename) {
+        const [meta, b64] = dataUrl.split(',');
+        const mime = (meta.match(/data:(.*?);/) || [])[1] || 'image/png';
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const file = new File([bytes], filename, { type: mime });
+        const input = document.getElementById('banner-input');
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        const img = document.getElementById('banner-img');
+        if (img) img.src = dataUrl;
+        document.getElementById('banner-empty')?.classList.add('hidden');
+        document.getElementById('banner-preview')?.classList.remove('hidden');
+        const fn = document.getElementById('banner-filename');
+        if (fn) fn.textContent = 'Generado con IA · ' + filename;
+    }
+
+    genBtn.addEventListener('click', async () => {
+        const titulo = (document.querySelector('input[name="title"]')?.value || '').trim();
+        if (titulo.length < 3) { showError('Primero escribí el título del evento.'); return; }
+        clearError(); setLoading(true);
+        try {
+            const res = await fetch('/api/v1/admin/ai/event-banner/', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                body: JSON.stringify({ titulo, prompt: document.getElementById('ai-banner-prompt').value }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) { showError(data.error || 'No se pudo generar el banner.'); return; }
+            applyImage(data.image_base64, data.filename || 'banner-ia.png');
+            panel.classList.add('hidden');
+        } catch (e) {
+            showError('Error de red: ' + e.message);
+        } finally {
+            setLoading(false);
+        }
+    });
+})();
+</script>

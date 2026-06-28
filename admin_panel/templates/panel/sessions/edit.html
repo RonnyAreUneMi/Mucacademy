@@ -16,6 +16,8 @@
     <form id="session-form" class="space-y-6">
         <div id="error-box" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-700 dark:text-red-400 text-sm"></div>
 
+        {% include 'panel/includes/_event_series.html' %}
+
         <!-- ──────── 1. Detalles ──────── -->
         <section class="lg-card rounded-2xl p-6 md:p-8 space-y-5">
             <div class="flex items-center gap-2 mb-1">
@@ -54,6 +56,7 @@
                     </div>
                 </label>
                 <input id="banner-input" type="file" name="banner_image" accept="image/*" class="hidden">
+                {% include 'panel/includes/_ai_banner_button.html' %}
             </div>
         </section>
 
@@ -335,6 +338,7 @@ document.getElementById('session-form').addEventListener('submit', async (e) => 
     fd.delete('capacity');
     fd.set('capacity', document.getElementById('cap-ilimitada').checked ? '0' : (document.getElementById('cap-input').value || '0'));
     fd.set('ponentes_json', JSON.stringify(collectPonentes()));
+    if (window.applyEventSeriesToFD) window.applyEventSeriesToFD(fd);
     if (typeof window.getDescriptionHTML === 'function') {
         fd.set('description', window.getDescriptionHTML());
     }
@@ -366,4 +370,5 @@ document.getElementById('session-form').addEventListener('submit', async (e) => 
     }
 });
 </script>
+{% include 'panel/includes/_apple_pickers.html' %}
 {% endblock %}

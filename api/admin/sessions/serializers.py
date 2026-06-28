@@ -54,6 +54,8 @@ class SesionWriteSerializer(serializers.ModelSerializer):
     parseamos y reemplazamos completamente la lista en cada save.
     """
     ponentes_json = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    # parent_event como texto para tolerar '' (FormData "sin serie") sin romper el parseo.
+    parent_event = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = Event
@@ -63,7 +65,8 @@ class SesionWriteSerializer(serializers.ModelSerializer):
             'modality', 'virtual_platform', 'meeting_url',
             'location', 'date', 'start_time', 'end_time',
             'capacity', 'leaders_only', 'is_active', 'batch',
-            'ponentes_json',
+            'has_parts',
+            'ponentes_json', 'parent_event',
         ]
 
     def validate_ponentes_json(self, value: str):
@@ -105,7 +108,27 @@ class SesionWriteSerializer(serializers.ModelSerializer):
         elif modality == 'in_person':
             attrs['meeting_url'] = ''
             attrs['virtual_platform'] = ''
+
         return attrs
+
+    def _resolve_parent(self, validated_data):
+        """Convierte el parent_event (texto) a Event|None y normaliza has_parts.
+
+        Devuelve (parent_event|None, has_parts|None). has_parts None = no tocar.
+        """
+        if 'parent_event' not in validated_data:
+            return None, None  # PATCH parcial sin el campo → no tocar
+        raw = (validated_data.pop('parent_event', '') or '').strip()
+        has_parts = validated_data.get('has_parts')
+        if raw.isdigit():
+            parent = Event.objects.filter(pk=int(raw)).first()
+            if parent and self.instance and parent.pk == self.instance.pk:
+                raise serializers.ValidationError(
+                    {'parent_event': 'Un evento no puede ser continuación de sí mismo.'}
+                )
+            return parent, True  # continuación → siempre es parte de una serie
+        # Sin parent: respeta el has_parts que vino (primera parte vs normal)
+        return None, has_parts
 
     def _save_ponentes(self, event, ponentes_data):
         """Reemplaza la lista de ponentes de la sesión."""
@@ -114,8 +137,18 @@ class SesionWriteSerializer(serializers.ModelSerializer):
             Speaker(event=event, **p) for p in ponentes_data
         ])
 
+    def _apply_series(self, validated_data):
+        """Resuelve parent_event (texto→Event|None) y ajusta has_parts en validated_data."""
+        had_field = 'parent_event' in validated_data
+        parent, has_parts = self._resolve_parent(validated_data)
+        if had_field:
+            validated_data['parent_event'] = parent
+            if has_parts is not None:
+                validated_data['has_parts'] = has_parts
+
     def create(self, validated_data):
         ponentes_data = validated_data.pop('ponentes_json', None)
+        self._apply_series(validated_data)
         event = super().create(validated_data)
         if ponentes_data is not None:
             self._save_ponentes(event, ponentes_data)
@@ -123,8 +156,8 @@ class SesionWriteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         ponentes_data = validated_data.pop('ponentes_json', None)
+        self._apply_series(validated_data)
         event = super().update(instance, validated_data)
-        # Solo actualizamos ponentes si vinieron en el payload (PATCH parcial)
         if ponentes_data is not None:
             self._save_ponentes(event, ponentes_data)
         return event

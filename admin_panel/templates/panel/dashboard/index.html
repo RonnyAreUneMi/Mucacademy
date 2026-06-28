@@ -90,7 +90,7 @@
                 {% include 'panel/includes/_quick_pill.html' with url='panel:solicitudes_pendientes' icon='fa-user-clock' label='Solicit.' color='warning' badge=pendientes_count %}
                 {% include 'panel/includes/_quick_pill.html' with url='panel:ai_config' icon='fa-microchip' label='IA' color='danger' %}
                 {% else %}
-                {% include 'panel/includes/_quick_pill.html' with url='panel:lideres_list' icon='fa-user-tie' label='Líderes' color='warning' %}
+                {# Líderes: sección deshabilitada #}
                 {% include 'panel/includes/_quick_pill.html' with url='panel:firma_list' icon='fa-signature' label='Firmas' color='danger' %}
                 {% endif %}
             </div>

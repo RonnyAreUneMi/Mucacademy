@@ -1,0 +1,112 @@
+{% comment %}
+Versionamiento de eventos en partes (series).
+- Checkbox: marca el evento como "dividido en partes".
+- Al activarlo: elegir si es la PRIMERA parte o una CONTINUACIÓN.
+- Continuación → Select2 que lista solo las "primeras partes" existentes
+  (series_events, pasado por la vista).
+Los valores se envían en el submit como has_parts / parent_event (ver el JS
+del formulario). Requiere que jQuery+Select2 ya estén cargados (include de títulos).
+{% endcomment %}
+<section class="lg-card rounded-2xl p-6 md:p-8 space-y-4">
+    <div class="flex items-center gap-3">
+        <span class="w-9 h-9 rounded-xl bg-[#F58830]/15 flex items-center justify-center text-[#F58830]">
+            <i class="fa-solid fa-layer-group"></i>
+        </span>
+        <div>
+            <h2 class="text-lg font-bold text-gray-800 dark:text-white">Partes / Versionamiento</h2>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Para seminarios divididos en varias partes (parte 1, 2, 3…).</p>
+        </div>
+    </div>
+
+    <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" id="ev-has-parts" class="w-4 h-4 rounded text-[#F58830] focus:ring-[#F58830]"
+            {% if sesion.has_parts %}checked{% endif %}>
+        <span class="text-sm font-bold text-gray-700 dark:text-gray-200">Este seminario está dividido en partes</span>
+    </label>
+
+    <div id="ev-parts-options" class="{% if not sesion.has_parts %}hidden {% endif %}pl-7 space-y-4">
+        <div class="flex flex-col sm:flex-row gap-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="ev-part-mode" value="first" class="text-[#F58830] focus:ring-[#F58830]"
+                    {% if not sesion.parent_event_id %}checked{% endif %}>
+                <span class="text-sm text-gray-700 dark:text-gray-200">Es la <strong>primera parte</strong></span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="ev-part-mode" value="cont" class="text-[#F58830] focus:ring-[#F58830]"
+                    {% if sesion.parent_event_id %}checked{% endif %}>
+                <span class="text-sm text-gray-700 dark:text-gray-200">Es <strong>continuación</strong> de una serie</span>
+            </label>
+        </div>
+
+        <div id="ev-parent-wrap" class="{% if not sesion.parent_event_id %}hidden{% endif %}">
+            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                Primera parte de la serie
+            </label>
+            <select id="ev-parent-event" class="{{ css }} text-sm">
+                <option value="">— Seleccionar evento —</option>
+                {% for s in series_events %}
+                <option value="{{ s.id }}" data-base="{{ s.base }}" data-next="{{ s.next_part }}"
+                    {% if sesion.parent_event_id == s.id %}selected{% endif %}>{{ s.label }}</option>
+                {% endfor %}
+            </select>
+            <p class="text-[11px] text-gray-400 mt-1">
+                Solo aparecen eventos marcados como “dividido en partes”. Si no ves ninguno,
+                primero creá la primera parte.
+            </p>
+        </div>
+    </div>
+</section>
+
+<script>
+(function () {
+    const cb = document.getElementById('ev-has-parts');
+    const opts = document.getElementById('ev-parts-options');
+    const wrap = document.getElementById('ev-parent-wrap');
+    if (!cb) return;
+
+    const parentSel = document.getElementById('ev-parent-event');
+
+    function syncMode() {
+        const cont = document.querySelector('input[name="ev-part-mode"]:checked')?.value === 'cont';
+        wrap.classList.toggle('hidden', !cont);
+    }
+    cb.addEventListener('change', () => {
+        opts.classList.toggle('hidden', !cb.checked);
+        if (cb.checked) syncMode();
+    });
+    document.querySelectorAll('input[name="ev-part-mode"]').forEach(r => r.addEventListener('change', syncMode));
+
+    // Al elegir la serie, autocompletar el título: "mismo nombre (Parte X)".
+    function fillTitleFromParent() {
+        const opt = parentSel?.selectedOptions?.[0];
+        if (!opt || !opt.value) return;
+        const base = opt.dataset.base || '';
+        const next = opt.dataset.next || '2';
+        const titleInput = document.querySelector('input[name="title"]');
+        if (titleInput && base) {
+            titleInput.value = `${base} (Parte ${next})`;
+            titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+    parentSel?.addEventListener('change', fillTitleFromParent);
+
+    function initSel() {
+        if (window.jQuery && jQuery.fn.select2) {
+            jQuery('#ev-parent-event').select2({ width: '100%', placeholder: 'Seleccionar evento', allowClear: true })
+                .on('change', fillTitleFromParent);
+        }
+    }
+    if (document.readyState !== 'loading') initSel();
+    else document.addEventListener('DOMContentLoaded', initSel);
+
+    // Helper para el submit del formulario: añade has_parts / parent_event al FormData.
+    window.applyEventSeriesToFD = function (fd) {
+        const hasParts = cb.checked;
+        const mode = document.querySelector('input[name="ev-part-mode"]:checked')?.value;
+        const parentId = document.getElementById('ev-parent-event')?.value;
+        fd.set('has_parts', hasParts ? 'true' : 'false');
+        // Siempre enviamos parent_event: el pk si es continuación, o '' (sin serie).
+        fd.set('parent_event', (hasParts && mode === 'cont' && parentId) ? parentId : '');
+    };
+})();
+</script>

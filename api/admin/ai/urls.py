@@ -7,6 +7,7 @@ urlpatterns = [
     path('config/test/', views.AITestView.as_view(), name='ai_config_test'),
     # Features IA
     path('event-description/', views.EventDescriptionView.as_view(), name='ai_event_description'),
+    path('event-banner/', views.EventBannerView.as_view(), name='ai_event_banner'),
     # Features IA (placeholders Fase 8-12)
     path('copilot/body/', views.CopilotBodyView.as_view(), name='ai_copilot_body'),
     path('excel/map-columns/', views.ExcelMapColumnsView.as_view(), name='ai_excel_map'),

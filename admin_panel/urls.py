@@ -26,9 +26,9 @@ from .views import (
     design_global, design_global_preview, design_save_firma_pos,
     # design system (UI tokens)
     design_system_edit, design_system_reset,
-    # leaders
-    lideres_list, lideres_add_manual, lideres_upload_excel,
-    lideres_process_mapping,
+    # leaders — sección deshabilitada (imports comentados)
+    # lideres_list, lideres_add_manual, lideres_upload_excel,
+    # lideres_process_mapping,
     # academic titles (catalog)
     titulos_list, titulos_create, titulos_update, titulos_delete,
 )
@@ -117,14 +117,15 @@ urlpatterns = [
     # Mi Estado
     path('mi-estado/', mi_estado, name='mi_estado'),
 
-    # Líderes (upload Excel); remove → API toggle_leader
-    path('lideres/', lideres_list, name='lideres_list'),
-    path('lideres/add/', lideres_add_manual, name='lideres_add_manual'),
-    path('lideres/upload/', lideres_upload_excel, name='lideres_upload_excel'),
-    path('lideres/process-mapping/', lideres_process_mapping, name='lideres_process_mapping'),
-    path('lideres/<int:id>/remove/',
-         RedirectView.as_view(url='/api/v1/admin/participants/%(id)s/toggle_leader/', permanent=False),
-         name='lideres_remove'),
+    # Líderes — SECCIÓN DESHABILITADA (rutas comentadas; vistas/templates
+    # quedan en el repo por si se reactiva en el futuro).
+    # path('lideres/', lideres_list, name='lideres_list'),
+    # path('lideres/add/', lideres_add_manual, name='lideres_add_manual'),
+    # path('lideres/upload/', lideres_upload_excel, name='lideres_upload_excel'),
+    # path('lideres/process-mapping/', lideres_process_mapping, name='lideres_process_mapping'),
+    # path('lideres/<int:id>/remove/',
+    #      RedirectView.as_view(url='/api/v1/admin/participants/%(id)s/toggle_leader/', permanent=False),
+    #      name='lideres_remove'),
 
     # Títulos académicos (catálogo)
     path('titulos/', titulos_list, name='titulos_list'),

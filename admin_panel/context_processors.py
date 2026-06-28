@@ -79,11 +79,11 @@ def nav_menu(request):
         {
             'label': 'Gestión',
             'icon': 'fa-users-gear',
-            'match_keywords': ['session', 'lideres', 'participantes'],
+            'match_keywords': ['session', 'participantes'],
             'visible': True,
             'items': [
                 {'label': 'Eventos',       'icon': 'fa-calendar-days',   'url': _safe_url('panel:session_list'),        'color': 'success'},
-                {'label': 'Líderes',       'icon': 'fa-user-tie',        'url': _safe_url('panel:lideres_list'),        'color': 'accent'},
+                # Líderes: sección deshabilitada (oculta del menú).
                 {'label': 'Participantes', 'icon': 'fa-user-graduate',   'url': _safe_url('panel:participantes_list'),  'color': 'info'},
             ],
         },
