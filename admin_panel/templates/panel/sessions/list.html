@@ -497,25 +497,38 @@
     }
 
     function deleteSession(id) {
-        const doDelete = async () => {
-            const res = await fetch(`/api/v1/admin/sessions/${id}/`, {
+        const doDelete = async (force = false) => {
+            const url = `/api/v1/admin/sessions/${id}/` + (force ? '?force=1' : '');
+            const res = await fetch(url, {
                 method: 'DELETE',
                 credentials: 'same-origin',
                 headers: { 'X-CSRFToken': CSRF },
             });
             if (res.ok) {
                 location.reload();
-            } else {
-                const data = await res.json().catch(() => ({}));
-                const msg = data.error || 'Error al eliminar';
-                if (typeof showToast === 'function') showToast(msg, 'error');
-                else alert(msg);
+                return;
             }
+            const data = await res.json().catch(() => ({}));
+            // 409 con needs_confirm → el evento tiene participantes, pedimos confirmación extra
+            if (res.status === 409 && data.needs_confirm) {
+                const n = (data.enrollments || 0) + (data.attendances || 0);
+                const warn = `Este evento tiene ${n} participante(s). Si lo eliminás, también se borran sus inscripciones y asistencias. ¿Eliminar igual?`;
+                const forceDelete = () => doDelete(true);
+                if (typeof showConfirm === 'function') {
+                    showConfirm('Eliminar con participantes', warn, forceDelete);
+                } else if (confirm(warn)) {
+                    forceDelete();
+                }
+                return;
+            }
+            const msg = data.error || 'Error al eliminar';
+            if (typeof showToast === 'function') showToast(msg, 'error');
+            else alert(msg);
         };
         if (typeof showConfirm === 'function') {
-            showConfirm('Eliminar Sesión', '¿Estás seguro de que deseas eliminar esta sesión?', doDelete);
+            showConfirm('Eliminar Sesión', '¿Estás seguro de que deseas eliminar esta sesión?', () => doDelete(false));
         } else if (confirm('¿Eliminar sesión?')) {
-            doDelete();
+            doDelete(false);
         }
     }
 

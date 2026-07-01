@@ -89,12 +89,22 @@ class SesionViewSet(AuditedModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         sesion = self.get_object()
-        if sesion.enrollments.exists() or sesion.attendances.exists():
+        force = request.query_params.get('force') in ('1', 'true', 'True')
+        n_enroll = sesion.enrollments.count()
+        n_att = sesion.attendances.count()
+        # Sin `force`: si tiene participantes pedimos confirmación extra.
+        if (n_enroll or n_att) and not force:
             return Response(
-                {'error': 'No puedes eliminar una sesión que ya tiene participantes registrados o confirmados.'},
+                {
+                    'error': 'Este evento tiene participantes.',
+                    'needs_confirm': True,
+                    'enrollments': n_enroll,
+                    'attendances': n_att,
+                },
                 status=status.HTTP_409_CONFLICT,
             )
-        # Cancelar en Calendar antes de borrar localmente.
+        # Con `force` (o sin participantes): se borra en cascada (las
+        # inscripciones y asistencias se eliminan automáticamente por FK CASCADE).
         if sesion.google_calendar_event_id:
             meet_calendar.delete_meet_event(sesion.google_calendar_event_id)
         return super().destroy(request, *args, **kwargs)
