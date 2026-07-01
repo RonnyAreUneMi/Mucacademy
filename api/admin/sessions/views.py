@@ -234,15 +234,32 @@ class SesionViewSet(AuditedModelViewSet):
                 status=status.HTTP_409_CONFLICT,
             )
 
-        confirmaciones = Enrollment.objects.filter(
-            event=sesion, confirmed=True, participant__isnull=False
-        ).select_related('participant')
+        confirmaciones = list(
+            Enrollment.objects.filter(
+                event=sesion, confirmed=True, participant__isnull=False
+            ).select_related('participant')
+        )
 
-        if not confirmaciones.exists():
+        if not confirmaciones:
             return Response(
                 {'error': 'No hay participantes confirmados para generar certificados.'},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+        # Si el evento exige aprobar el quiz, filtramos a los que aprobaron.
+        excluidos = 0
+        if sesion.certificate_requires_quiz:
+            aprobados = [c for c in confirmaciones if sesion.quiz_passed_by(c.participant)]
+            excluidos = len(confirmaciones) - len(aprobados)
+            confirmaciones = aprobados
+            if not confirmaciones:
+                return Response(
+                    {'error': (
+                        f'Ningún participante aprobó el cuestionario '
+                        f'(mínimo {sesion.quiz_pass_threshold}%). No se generaron certificados.'
+                    )},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         facultad = request.data.get('faculty', request.data.get('facultad', 'FACI'))
 
@@ -312,4 +329,5 @@ class SesionViewSet(AuditedModelViewSet):
             'batch_name': lote.name,
             'certificates_created': len(certs),
             'emails_queued': len(certs),
+            'excluded_no_quiz': excluidos,
         })

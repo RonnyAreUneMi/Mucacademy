@@ -46,7 +46,7 @@ el HTML actual del editor — útil al construir el FormData del submit.
 </div>
 
 <!-- Modal asistente Betto -->
-<div id="ai-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+<div id="ai-modal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4">
     <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm" onclick="closeAIModal()"></div>
     <div class="relative bg-white dark:bg-[#162054] rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-100 dark:border-blue-900/30 max-h-[88vh] overflow-hidden flex flex-col">
         <!-- Header de Betto · sólido, sin transparencias que dejen pasar la página -->
@@ -260,6 +260,14 @@ body.betto-modal-open .sticky.bottom-0 {
 let ckEditorInstance = null;
 const TITLE_INPUT_SELECTOR = 'input[name="{{ title_name }}"]';
 
+// El modal usa position:fixed; si queda dentro de un ancestro con
+// transform/backdrop-blur, el fixed se "atrapa" y no se puede alcanzar.
+// Lo movemos a <body> para que siempre cubra el viewport completo.
+(function () {
+    const m = document.getElementById('ai-modal');
+    if (m && m.parentElement !== document.body) document.body.appendChild(m);
+})();
+
 ClassicEditor
     .create(document.querySelector('#description-editor'), {
         toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|', 'undo', 'redo'],
@@ -272,12 +280,29 @@ ClassicEditor
         },
         language: 'es',
     })
-    .then(editor => { ckEditorInstance = editor; })
+    .then(editor => {
+        ckEditorInstance = editor;
+        // Si llegó contenido para restaurar antes de inicializar, aplicarlo.
+        if (window.__pendingDescriptionHTML != null) {
+            editor.setData(window.__pendingDescriptionHTML);
+            window.__pendingDescriptionHTML = null;
+        }
+        // Autosave de borrador (si la página lo tiene activado).
+        editor.model.document.on('change:data', () => {
+            if (window.__eventDraftSave) window.__eventDraftSave();
+        });
+    })
     .catch(err => console.error('CKEditor init failed:', err));
 
 // Función global para que el form submit la use
 window.getDescriptionHTML = function () {
     return ckEditorInstance ? ckEditorInstance.getData() : '';
+};
+
+// Setter para restaurar la descripción (autosave/draft).
+window.setDescriptionHTML = function (html) {
+    if (ckEditorInstance) ckEditorInstance.setData(html || '');
+    else window.__pendingDescriptionHTML = html || '';
 };
 
 // ── Modal asistente Betto ──────────────────────────────────

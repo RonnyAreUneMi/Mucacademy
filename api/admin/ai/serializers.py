@@ -80,6 +80,12 @@ class VoiceExtractInputSerializer(serializers.Serializer):
     )
 
 
+class EventBannerInputSerializer(serializers.Serializer):
+    """Generación de banner con IA. Requiere el título; prompt es ajustable."""
+    titulo = serializers.CharField(min_length=3, max_length=200)
+    prompt = serializers.CharField(required=False, allow_blank=True, default='')
+
+
 class EventDescriptionInputSerializer(serializers.Serializer):
     """Asistente IA para descripción de evento. Requiere al menos el título."""
     titulo = serializers.CharField(min_length=3, max_length=200)

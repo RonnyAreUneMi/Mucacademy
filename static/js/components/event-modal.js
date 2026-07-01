@@ -93,12 +93,13 @@
             if (ponentes.length > 0) {
                 ponPlur.style.display = ponentes.length === 1 ? 'none' : '';
                 ponList.innerHTML = ponentes.map(p => {
-                    const meta = [p.titulo, p.afiliacion].filter(Boolean).join(' · ');
+                    const nombre = p.name || p.nombre || '';
+                    const meta = [p.title || p.titulo, p.affiliation || p.afiliacion].filter(Boolean).join(' · ');
                     return '' +
                         '<div class="ev-modal-ponente">' +
-                            '<div class="ev-modal-ponente-avatar">' + escapeHtml(initials(p.nombre)) + '</div>' +
+                            '<div class="ev-modal-ponente-avatar">' + escapeHtml(initials(nombre)) + '</div>' +
                             '<div style="flex:1;min-width:0;">' +
-                                '<p class="ev-modal-ponente-name">' + escapeHtml(p.nombre) + '</p>' +
+                                '<p class="ev-modal-ponente-name">' + escapeHtml(nombre) + '</p>' +
                                 (meta ? '<p class="ev-modal-ponente-meta">' + escapeHtml(meta) + '</p>' : '') +
                                 (p.bio ? '<p class="ev-modal-ponente-bio">' + escapeHtml(p.bio) + '</p>' : '') +
                             '</div>' +

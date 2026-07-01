@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import logging
+import random
 import re
 from dataclasses import dataclass, field
 
@@ -35,34 +36,71 @@ log = logging.getLogger(__name__)
 MAX_TRANSCRIPT_WORDS = 35_000
 
 
-SYSTEM_PROMPT = """Eres un asistente académico especializado en sintetizar \
+_BASE_INTRO = """Eres un asistente académico especializado en sintetizar \
 clases, seminarios y conferencias universitarias para estudiantes.
 
 Tu tarea: a partir de un transcript de Google Meet, generar un resumen \
 estructurado en español para que un estudiante que no asistió pueda ponerse \
-al día rápidamente.
+al día rápidamente."""
 
-REGLAS ESTRICTAS:
-1. Tu respuesta DEBE ser un JSON válido, sin texto adicional ni cercas \
-de código (sin ```json).
-2. El JSON debe tener exactamente esta forma:
+_QUIZ_RULES = """
+CUESTIONARIO — reglas obligatorias:
+- Genera 5 preguntas que evalúen comprensión REAL del contenido (ideas, \
+conceptos, relaciones), nunca detalles triviales como nombres propios o fechas.
+- Mezcla tipos: al menos 2 preguntas de VERDADERO/FALSO ("type": "boolean") y \
+el resto de opción múltiple ("type": "mcq").
+- En las de opción múltiple, las 4 opciones deben ser plausibles y del mismo \
+estilo/longitud (evita que la correcta se note por ser más larga o detallada).
+- VARÍA la posición de la respuesta correcta entre A, B, C y D a lo largo del \
+cuestionario. NO pongas la respuesta correcta siempre en la misma opción.
+- Cada pregunta lleva una "explanation" breve que justifique la respuesta \
+correcta (esto sirve como justificación pedagógica del quiz).
+
+Formato de cada pregunta:
+- Opción múltiple:
+  {"type": "mcq", "question": "…", "options": ["…","…","…","…"], \
+"correct_idx": 0, "explanation": "…"}   // options: exactamente 4, correct_idx 0-3
+- Verdadero/Falso:
+  {"type": "boolean", "question": "afirmación a evaluar", \
+"options": ["Verdadero", "Falso"], "correct_idx": 0, "explanation": "…"}   // correct_idx 0 o 1"""
+
+_JSON_SHAPE_WITH_QUIZ = """
+El JSON debe tener exactamente esta forma:
 {
   "resumen_md": "string en Markdown, 3-5 párrafos",
-  "puntos_clave": ["string", "string", ...],   // 5 a 8 items
-  "proximos_pasos": ["string", "string", ...], // 3 a 5 items
-  "cuestionario": [
-    {
-      "question": "string",
-      "options": ["A", "B", "C", "D"],   // exactamente 4 opciones
-      "correct_idx": 0,                   // 0-3
-      "explanation": "string corta"
-    },
-    ... (5 preguntas en total)
-  ]
-}
-3. Las preguntas del cuestionario deben evaluar comprensión real del \
-contenido, no detalles triviales como nombres propios.
-4. Usa lenguaje claro, accesible a estudiantes universitarios."""
+  "puntos_clave": ["string", ...],   // 5 a 8 items
+  "proximos_pasos": ["string", ...], // 3 a 5 items
+  "cuestionario": [ { pregunta }, ... ]   // 5 preguntas
+}"""
+
+_JSON_SHAPE_NO_QUIZ = """
+El JSON debe tener exactamente esta forma:
+{
+  "resumen_md": "string en Markdown, 3-5 párrafos",
+  "puntos_clave": ["string", ...],   // 5 a 8 items
+  "proximos_pasos": ["string", ...], // 3 a 5 items
+  "cuestionario": []                 // lista vacía (este evento no usa quiz)
+}"""
+
+_COMMON_RULES = """
+REGLAS ESTRICTAS:
+1. Tu respuesta DEBE ser un JSON válido, sin texto adicional ni cercas de \
+código (sin ```json).
+2. Usa lenguaje claro, accesible a estudiantes universitarios."""
+
+
+def build_system_prompt(include_quiz: bool = True) -> str:
+    """Arma el system prompt según si el evento usa cuestionario o no."""
+    if include_quiz:
+        return _BASE_INTRO + _COMMON_RULES + _JSON_SHAPE_WITH_QUIZ + _QUIZ_RULES
+    return (
+        _BASE_INTRO + _COMMON_RULES + _JSON_SHAPE_NO_QUIZ +
+        '\nEste evento NO requiere cuestionario: deja "cuestionario" como lista vacía.'
+    )
+
+
+# Compat: prompt por defecto (con quiz).
+SYSTEM_PROMPT = build_system_prompt(True)
 
 
 USER_TEMPLATE = """Sesión: {titulo}
@@ -141,10 +179,35 @@ def _validate_summary(data: dict) -> None:
         for f in ('question', 'options', 'correct_idx'):
             if f not in q:
                 raise ValueError(f'Pregunta #{i} no tiene {f}')
-        if not isinstance(q['options'], list) or len(q['options']) != 4:
-            raise ValueError(f'Pregunta #{i} debe tener exactamente 4 opciones')
-        if not isinstance(q['correct_idx'], int) or not 0 <= q['correct_idx'] <= 3:
+        # Acepta opción múltiple (4) o verdadero/falso (2).
+        if not isinstance(q['options'], list) or len(q['options']) not in (2, 4):
+            raise ValueError(f'Pregunta #{i} debe tener 2 (V/F) o 4 opciones')
+        if not isinstance(q['correct_idx'], int) or not 0 <= q['correct_idx'] < len(q['options']):
             raise ValueError(f'Pregunta #{i} tiene correct_idx fuera de rango')
+
+
+def _shuffle_quiz(cuestionario: list) -> list:
+    """Baraja las opciones de cada pregunta y recalcula correct_idx.
+
+    Elimina cualquier sesgo posicional del modelo (p.ej. respuesta siempre en B).
+    Las V/F (2 opciones) se dejan como 'Verdadero'/'Falso' en orden fijo pero
+    con su correct_idx correcto; solo se barajan las de opción múltiple.
+    """
+    for q in cuestionario:
+        opts = q.get('options') or []
+        ci = q.get('correct_idx', 0)
+        if len(opts) == 2:
+            # Normaliza V/F al orden estándar Verdadero/Falso.
+            q.setdefault('type', 'boolean')
+            continue
+        if len(opts) != 4 or not (0 <= ci < 4):
+            continue
+        pairs = list(enumerate(opts))          # (idx_original, texto)
+        random.shuffle(pairs)
+        q['options'] = [t for _, t in pairs]
+        q['correct_idx'] = next(new for new, (orig, _) in enumerate(pairs) if orig == ci)
+        q.setdefault('type', 'mcq')
+    return cuestionario
 
 
 def summarize_transcript(
@@ -153,6 +216,7 @@ def summarize_transcript(
     titulo: str = '',
     fecha: str = '',
     duracion_minutos: int = 0,
+    include_quiz: bool = True,
 ) -> SummaryResult:
     """Llama al modelo IA configurado y devuelve el resumen estructurado.
 
@@ -168,6 +232,7 @@ def summarize_transcript(
         )
 
     truncated = _truncate(transcript)
+    system_prompt = build_system_prompt(include_quiz)
     user_msg = USER_TEMPLATE.format(
         titulo=titulo or '(sin título)',
         fecha=fecha or '(no especificada)',
@@ -175,7 +240,7 @@ def summarize_transcript(
         transcript=truncated,
     )
 
-    resp = call_ai_full(rt, SYSTEM_PROMPT, user_msg)
+    resp = call_ai_full(rt, system_prompt, user_msg)
     total_in = resp.input_tokens
     total_out = resp.output_tokens
     log.info('IA respondió %d chars (modelo=%s, in=%d, out=%d)',
@@ -187,7 +252,7 @@ def summarize_transcript(
     except (ValueError, json.JSONDecodeError) as e:
         log.warning('Primer intento JSON inválido (%s). Reintentando…', e)
         # Reintento con prompt más enfático
-        retry_system = SYSTEM_PROMPT + (
+        retry_system = system_prompt + (
             '\n\nIMPORTANTE: Tu intento anterior no fue JSON válido. '
             'Esta vez devuelve EXCLUSIVAMENTE el objeto JSON, sin texto antes '
             'ni después, sin ```.'
@@ -198,11 +263,18 @@ def summarize_transcript(
         data = _parse_json_strict(resp.text)
         _validate_summary(data)
 
+    # Sin quiz → aseguramos lista vacía; con quiz → barajamos para evitar sesgo.
+    cuestionario = list(data.get('cuestionario') or [])
+    if include_quiz:
+        cuestionario = _shuffle_quiz(cuestionario)
+    else:
+        cuestionario = []
+
     return SummaryResult(
         resumen_md=data['resumen_md'],
         puntos_clave=list(data.get('puntos_clave', [])),
         proximos_pasos=list(data.get('proximos_pasos', [])),
-        cuestionario=list(data['cuestionario']),
+        cuestionario=cuestionario,
         duracion_minutos=duracion_minutos,
         ai_model=rt.model,
         ai_input_tokens=total_in,

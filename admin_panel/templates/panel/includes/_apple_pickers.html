@@ -1,0 +1,179 @@
+{% comment %}
+Pickers reutilizables estilo Apple (reemplazan los nativos).
+
+- FECHA: flatpickr con tema oscuro/naranja propio.
+- HORA: rueda iOS propia (scroll-snap + animación 3D), columnas hora/min/AM-PM.
+
+Incluí este partial UNA vez por página. Mejora automáticamente todos los
+<input type="date"> y <input type="time">, conservando name/valor ISO
+(Y-m-d / H:i) para que el submit no cambie. Para inputs dinámicos llamá a
+window.initApplePickers(root).
+{% endcomment %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
+
+<style>
+    /* ── Calendario (flatpickr) · tema CertifAI ───────────────── */
+    .flatpickr-calendar { background:#152448; border:1px solid rgba(255,255,255,.10); border-radius:16px; box-shadow:0 18px 50px rgba(0,0,0,.45); padding:6px; width:auto; }
+    .flatpickr-calendar.arrowTop::before,.flatpickr-calendar.arrowTop::after,.flatpickr-calendar.arrowBottom::before,.flatpickr-calendar.arrowBottom::after{display:none;}
+    .flatpickr-months .flatpickr-month{color:#fff;}
+    .flatpickr-current-month .flatpickr-monthDropdown-months,.flatpickr-current-month input.cur-year{color:#fff;font-weight:700;}
+    .flatpickr-monthDropdown-months{background:#152448;}
+    .flatpickr-months .flatpickr-prev-month svg,.flatpickr-months .flatpickr-next-month svg{fill:#cbd5e1;}
+    .flatpickr-months .flatpickr-prev-month:hover svg,.flatpickr-months .flatpickr-next-month:hover svg{fill:#F58830;}
+    span.flatpickr-weekday{color:#94a3b8;font-weight:700;}
+    .flatpickr-day{color:#e2e8f0;border-radius:10px;border:none;transition:background .15s,color .15s;}
+    .flatpickr-day:hover{background:rgba(255,255,255,.08);}
+    .flatpickr-day.today{border:1px solid #F58830;color:#F58830;}
+    .flatpickr-day.selected,.flatpickr-day.selected:hover{background:#F58830;border-color:#F58830;color:#fff;box-shadow:0 4px 12px rgba(245,136,48,.35);}
+    .flatpickr-day.flatpickr-disabled,.flatpickr-day.prevMonthDay,.flatpickr-day.nextMonthDay{color:#475569;}
+    .light .flatpickr-calendar{background:#fff;border-color:#e5e7eb;}
+    .light .flatpickr-months .flatpickr-month,.light .flatpickr-current-month input.cur-year{color:#0f172a;}
+    .light .flatpickr-day{color:#334155;}
+
+    /* ── Rueda de hora estilo Apple ───────────────────────────── */
+    .atw-pop{position:absolute;z-index:130;background:#152448;border:1px solid rgba(255,255,255,.12);border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:10px 14px;opacity:0;transform:translateY(-8px) scale(.96);transition:opacity .2s ease,transform .2s cubic-bezier(.2,.9,.3,1.2);pointer-events:none;}
+    .atw-pop.open{opacity:1;transform:none;pointer-events:auto;}
+    .atw-cols{position:relative;display:flex;align-items:stretch;gap:6px;height:225px;width:280px;}
+    .atw-band{position:absolute;left:0;right:0;top:50%;height:45px;transform:translateY(-50%);background:rgba(245,136,48,.14);border-top:1px solid rgba(245,136,48,.55);border-bottom:1px solid rgba(245,136,48,.55);border-radius:12px;pointer-events:none;z-index:0;}
+    .atw-col{position:relative;z-index:1;flex:1;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;-ms-overflow-style:none;perspective:760px;padding:90px 0;text-align:center;}
+    .atw-col::-webkit-scrollbar{display:none;}
+    .atw-col.ap{flex:.9;}
+    .atw-item{height:45px;line-height:45px;scroll-snap-align:center;color:#e2e8f0;font-weight:700;font-size:22px;transform-style:preserve-3d;will-change:transform,opacity;cursor:pointer;user-select:none;}
+    .atw-sep{align-self:center;color:#fff;font-weight:800;font-size:24px;}
+    .atw-col.ap .atw-item{font-size:18px;letter-spacing:.5px;}
+    .light .atw-pop{background:#fff;border-color:#e5e7eb;}
+    .light .atw-item{color:#334155;}
+    .light .atw-sep{color:#0f172a;}
+</style>
+
+<script>
+(function () {
+    const ITEM_H = 45;
+
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function range(a,b){ const r=[]; for(let i=a;i<=b;i++) r.push(i); return r; }
+
+    function buildWheelTime(orig) {
+        orig.dataset.fp = '1';
+        // Display (bonito) + original oculto (mantiene name + H:i)
+        const disp = document.createElement('input');
+        disp.type = 'text'; disp.readOnly = true; disp.className = orig.className;
+        disp.style.cursor = 'pointer'; disp.placeholder = '--:-- --';
+        if (orig.hasAttribute('required')) disp.setAttribute('required','');
+        orig.style.display = 'none';
+        orig.insertAdjacentElement('afterend', disp);
+
+        const HOURS = range(1,12), MINS = range(0,59).map(pad), AP = ['AM','PM'];
+
+        const pop = document.createElement('div'); pop.className = 'atw-pop';
+        const cols = document.createElement('div'); cols.className = 'atw-cols';
+        const band = document.createElement('div'); band.className = 'atw-band'; cols.appendChild(band);
+
+        function makeCol(kind, values){
+            const col = document.createElement('div'); col.className = 'atw-col ' + kind;
+            values.forEach((v,i)=>{
+                const it = document.createElement('div'); it.className='atw-item';
+                it.textContent = v; it.dataset.idx = i; col.appendChild(it);
+            });
+            return col;
+        }
+        const hCol = makeCol('h', HOURS);
+        const sep = document.createElement('div'); sep.className='atw-sep'; sep.textContent=':';
+        const mCol = makeCol('m', MINS);
+        const apCol = makeCol('ap', AP);
+        cols.append(hCol, sep, mCol, apCol);
+        pop.appendChild(cols);
+        document.body.appendChild(pop);
+
+        const getIdx = col => Math.max(0, Math.round(col.scrollTop / ITEM_H));
+        function setIdx(col, idx, smooth){
+            col.scrollTo({ top: idx*ITEM_H, behavior: smooth ? 'smooth' : 'auto' });
+        }
+        function paint(col){
+            const center = col.scrollTop + col.clientHeight/2;
+            col.querySelectorAll('.atw-item').forEach(it=>{
+                const itC = it.offsetTop + ITEM_H/2;
+                const d = (itC - center)/ITEM_H;
+                const ad = Math.min(Math.abs(d), 6);
+                it.style.transform = `rotateX(${d*-22}deg) translateZ(${-ad*8}px) scale(${Math.max(.6,1-ad*0.13)})`;
+                it.style.opacity = String(Math.max(.18, 1-ad*0.30));
+            });
+        }
+        function commit(){
+            const h12 = HOURS[Math.min(getIdx(hCol), HOURS.length-1)];
+            const mm  = MINS[Math.min(getIdx(mCol), MINS.length-1)];
+            const ap  = AP[Math.min(getIdx(apCol), AP.length-1)];
+            let H = (ap === 'AM') ? (h12 % 12) : (h12 % 12) + 12;
+            orig.value = `${pad(H)}:${mm}`;
+            disp.value = `${pad(h12)}:${mm} ${ap}`;
+            orig.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // Animación + snap por columna
+        [hCol, mCol, apCol].forEach(col=>{
+            let raf, t;
+            col.addEventListener('scroll', ()=>{
+                if (raf) cancelAnimationFrame(raf);
+                raf = requestAnimationFrame(()=>paint(col));
+                clearTimeout(t);
+                t = setTimeout(()=>{ const i=getIdx(col); setIdx(col, i, true); commit(); }, 110);
+            });
+            col.querySelectorAll('.atw-item').forEach(it=>{
+                it.addEventListener('click', ()=>{ setIdx(col, +it.dataset.idx, true); setTimeout(commit, 120); });
+            });
+        });
+
+        function syncFromValue(){
+            let H = 12, M = 0;
+            const m = (orig.value||'').match(/^(\d{1,2}):(\d{2})/);
+            if (m){ H = +m[1]; M = +m[2]; }
+            const ap = H < 12 ? 'AM' : 'PM';
+            const h12 = (H % 12) || 12;
+            setIdx(hCol, HOURS.indexOf(h12));
+            setIdx(mCol, M);
+            setIdx(apCol, AP.indexOf(ap));
+            if (orig.value) disp.value = `${pad(h12)}:${pad(M)} ${ap}`;
+        }
+
+        function open(){
+            const r = disp.getBoundingClientRect();
+            pop.style.top = (window.scrollY + r.bottom + 8) + 'px';
+            pop.style.left = (window.scrollX + r.left) + 'px';
+            pop.classList.add('open');
+            syncFromValue();
+            // Pintar tras hacer visible (necesita layout)
+            requestAnimationFrame(()=>{ [hCol,mCol,apCol].forEach(paint); });
+        }
+        function close(){ pop.classList.remove('open'); }
+
+        disp.addEventListener('click', ()=> pop.classList.contains('open') ? close() : open());
+        document.addEventListener('click', e=>{ if (!pop.contains(e.target) && e.target !== disp) close(); });
+        document.addEventListener('keydown', e=>{ if (e.key === 'Escape') close(); });
+
+        if (orig.value) syncFromValue();
+    }
+
+    function initPickers(root) {
+        const scope = root || document;
+        if (typeof flatpickr !== 'undefined') {
+            const es = (flatpickr.l10ns && flatpickr.l10ns.es) || undefined;
+            scope.querySelectorAll('input[type="date"]:not([data-fp])').forEach(el => {
+                el.dataset.fp = '1';
+                flatpickr(el, {
+                    locale: es, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
+                    altInputClass: el.className, disableMobile: true,
+                    onReady: (d,s,fp)=>{ if (el.hasAttribute('required')) fp.altInput.setAttribute('required',''); },
+                    onChange: ()=> el.dispatchEvent(new Event('change',{bubbles:true})),
+                });
+            });
+        }
+        scope.querySelectorAll('input[type="time"]:not([data-fp])').forEach(buildWheelTime);
+    }
+
+    if (document.readyState !== 'loading') initPickers();
+    else document.addEventListener('DOMContentLoaded', ()=>initPickers());
+    window.initApplePickers = initPickers;
+})();
+</script>

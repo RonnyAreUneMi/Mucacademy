@@ -21,6 +21,35 @@ def _active_titles():
     )
 
 
+import re
+
+
+def _series_base_name(title):
+    """Quita un sufijo '(Parte N)' / 'Parte N' del título para obtener la base."""
+    return re.sub(r'\s*[\(\-–]?\s*[Pp]arte\s+\d+\s*\)?\s*$', '', title or '').strip()
+
+
+def _series_events(exclude_id=None):
+    """Catálogo de 'primeras partes' (series) para elegir continuaciones."""
+    qs = (
+        Event.objects.filter(has_parts=True, parent_event__isnull=True)
+        .order_by('-date').prefetch_related('parts')
+    )
+    if exclude_id:
+        qs = qs.exclude(pk=exclude_id)
+    out = []
+    for e in qs:
+        base = _series_base_name(e.title) or (e.title or '(sin título)')
+        out.append({
+            'id': e.id,
+            'label': f'{e.title or "(sin título)"} · {e.date:%d/%m/%Y}',
+            'base': base,
+            # root es Parte 1; las continuaciones existentes suman → siguiente parte.
+            'next_part': e.parts.count() + 2,
+        })
+    return out
+
+
 @admin_required
 def session_list(request):
     """Lista con filtros (el template renderiza cards server-side).
@@ -60,6 +89,7 @@ def session_create(request):
     """
     return render(request, 'panel/sessions/create.html', {
         'titulos': _active_titles(),
+        'series_events': _series_events(),
     })
 
 
@@ -72,6 +102,7 @@ def session_edit(request, id):
         'sesion': sesion,
         'ponentes_json': ponentes,
         'titulos': _active_titles(),
+        'series_events': _series_events(exclude_id=sesion.id),
     })
 
 

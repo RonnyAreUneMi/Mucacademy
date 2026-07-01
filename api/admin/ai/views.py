@@ -4,13 +4,14 @@ from rest_framework.views import APIView
 
 from core.base.mixins import log_audit
 from core.models import AIConfig
-from core.services.ai import copilot, excel_mapper, insights, recommender, voice
+from core.services.ai import banner, copilot, excel_mapper, insights, recommender, voice
 from core.services.ai import client as ai_client
 
 from .serializers import (
     AIConfigSerializer,
     AITestInputSerializer,
     CopilotBodyInputSerializer,
+    EventBannerInputSerializer,
     EventDescriptionInputSerializer,
     ExcelMapInputSerializer,
     VoiceExtractInputSerializer,
@@ -63,6 +64,36 @@ class EventDescriptionView(BaseAIView):
         if not result.get('implemented'):
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
         return Response({'ok': True, 'html': result['html'], 'action': result.get('action')})
+
+
+class EventBannerView(BaseAIView):
+    """POST: genera un banner de evento con IA + branding fijo UNEMI.
+
+    Recibe: titulo (req), prompt (ajustable, opcional).
+    Devuelve: image_base64 (data URL PNG) listo para previsualizar y subir.
+    """
+    ai_action = 'EVENT_BANNER'
+
+    def post(self, request):
+        ser = EventBannerInputSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        titulo = ser.validated_data['titulo']
+        prompt = ser.validated_data.get('prompt', '')
+        try:
+            result = banner.generate_event_banner(titulo, prompt)
+        except NotImplementedError as exc:
+            return Response({'ok': False, 'error': str(exc)},
+                            status=status.HTTP_400_BAD_REQUEST)
+        except Exception as exc:  # noqa: BLE001 — mostramos el error real al admin
+            return Response({'ok': False, 'error': f'{type(exc).__name__}: {exc}'},
+                            status=status.HTTP_502_BAD_GATEWAY)
+        self._audit(f'titulo={titulo[:60]!r}')
+        return Response({
+            'ok': True,
+            'image_base64': result['image_base64'],
+            'prompt': result['prompt'],
+            'filename': result['filename'],
+        })
 
 
 class ExcelMapColumnsView(BaseAIView):

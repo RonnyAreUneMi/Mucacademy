@@ -231,8 +231,13 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
                 'inscrito': inscrito,
             })
         ser = ResumenSesionSerializer(resumen)
+        payload = dict(ser.data)
+        # Si el evento no usa quiz, no exponemos preguntas.
+        if not sesion.quiz_enabled:
+            payload['quiz'] = []
+        aprobado = sesion.quiz_passed_by(participante) if participante else False
         return Response({
-            **ser.data,
+            **payload,
             'intentos': intentos_data,
             'mejor_intento': mejor_intento,
             'intentos_disponibles': intentos_disponibles,
@@ -240,6 +245,12 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
             'recording': recording,
             'asistio': asistio,
             'inscrito': inscrito,
+            # Config de evaluación / certificado
+            'quiz_habilitado': sesion.quiz_enabled,
+            'requiere_quiz_certificado': sesion.certificate_requires_quiz,
+            'nota_minima': sesion.quiz_pass_threshold,
+            'aprobado': aprobado,
+            'certificado_desbloqueado': sesion.certificate_unlocked_for(participante) if participante else False,
         })
 
     @action(
@@ -304,6 +315,9 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
         if not (inscrito or asistio):
             return Response({'ok': False, 'error': 'Sin acceso al cuestionario.'}, status=status.HTTP_403_FORBIDDEN)
 
+        if not sesion.quiz_enabled:
+            return Response({'ok': False, 'error': 'Este evento no tiene cuestionario.'}, status=status.HTTP_400_BAD_REQUEST)
+
         resumen = SessionSummary.objects.filter(event=sesion).first()
         if not resumen or resumen.status != 'ready' or not resumen.quiz:
             return Response({'ok': False, 'error': 'Cuestionario no disponible.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -334,10 +348,16 @@ class PublicSesionViewSet(viewsets.ReadOnlyModelViewSet):
             total_time_seconds=tiempo_total,
             answers=respuestas,
         )
+        porcentaje = round(correctas / total * 100) if total else 0
+        aprobado = porcentaje >= sesion.quiz_pass_threshold
         return Response({
             'ok': True,
             'intento': IntentoCuestionarioSerializer(intento).data,
             'intentos_restantes': QuizAttempt.MAX_ATTEMPTS - (intentos_count + 1),
+            'porcentaje': porcentaje,
+            'nota_minima': sesion.quiz_pass_threshold,
+            'aprobado': aprobado,
+            'requiere_quiz_certificado': sesion.certificate_requires_quiz,
         }, status=status.HTTP_201_CREATED)
 
     @action(

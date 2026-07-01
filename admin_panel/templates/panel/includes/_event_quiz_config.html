@@ -1,0 +1,61 @@
+{% comment %}
+Config de evaluación/certificado del evento.
+- quiz_enabled: generar y mostrar el cuestionario.
+- certificate_requires_quiz: exigir aprobar para emitir el certificado.
+- quiz_pass_threshold: nota mínima (%).
+Los valores se envían en el submit vía window.applyEventQuizToFD(fd).
+{% endcomment %}
+<section class="space-y-4">
+    <div class="flex items-center gap-2 mb-1">
+        <span class="w-7 h-7 rounded-lg bg-[#F58830]/10 text-[#F58830] flex items-center justify-center text-sm font-black">5</span>
+        <h2 class="text-lg font-bold text-gray-800 dark:text-white">Evaluación y certificado</h2>
+    </div>
+
+    <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" id="ev-quiz-enabled" class="w-4 h-4 rounded text-[#F58830] focus:ring-[#F58830]"
+            {% if sesion.id is None or sesion.quiz_enabled %}checked{% endif %}>
+        <span class="text-sm font-bold text-gray-700 dark:text-gray-200">Generar y mostrar cuestionario (quiz) con IA</span>
+    </label>
+    <p class="text-[11px] text-gray-400 -mt-2 pl-7">Si lo apagás, no se genera ni se muestra el quiz de este evento.</p>
+
+    <div id="ev-quiz-cert-wrap" class="{% if sesion.id and not sesion.quiz_enabled %}hidden {% endif %}pl-7 space-y-3">
+        <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" id="ev-quiz-cert" class="w-4 h-4 rounded text-[#F58830] focus:ring-[#F58830]"
+                {% if sesion.certificate_requires_quiz %}checked{% endif %}>
+            <span class="text-sm font-bold text-gray-700 dark:text-gray-200">Requiere aprobar el quiz para entregar el certificado</span>
+        </label>
+
+        <div id="ev-quiz-threshold-wrap" class="{% if not sesion.certificate_requires_quiz %}hidden{% endif %} flex items-center gap-3">
+            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nota mínima</label>
+            <div class="relative w-28">
+                <input type="number" id="ev-quiz-threshold" min="1" max="100"
+                    value="{{ sesion.quiz_pass_threshold|default:70 }}"
+                    class="{{ css }} text-sm pr-8">
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">%</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+(function () {
+    const en = document.getElementById('ev-quiz-enabled');
+    const certWrap = document.getElementById('ev-quiz-cert-wrap');
+    const cert = document.getElementById('ev-quiz-cert');
+    const thWrap = document.getElementById('ev-quiz-threshold-wrap');
+    const th = document.getElementById('ev-quiz-threshold');
+    if (!en) return;
+
+    en.addEventListener('change', () => certWrap.classList.toggle('hidden', !en.checked));
+    cert.addEventListener('change', () => thWrap.classList.toggle('hidden', !cert.checked));
+
+    window.applyEventQuizToFD = function (fd) {
+        fd.set('quiz_enabled', en.checked ? 'true' : 'false');
+        fd.set('certificate_requires_quiz', (en.checked && cert.checked) ? 'true' : 'false');
+        let t = parseInt(th.value, 10);
+        if (isNaN(t) || t < 1) t = 70;
+        if (t > 100) t = 100;
+        fd.set('quiz_pass_threshold', String(t));
+    };
+})();
+</script>
