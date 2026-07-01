@@ -527,6 +527,10 @@ def evento_cuestionario_view(request, sesion_id: int):
         messages.error(request, 'Solo podés acceder al cuestionario si te inscribiste al evento.')
         return redirect('public:account_eventos')
 
+    if not sesion.quiz_enabled:
+        messages.info(request, 'Este evento no tiene cuestionario.')
+        return redirect('public:account_evento_resumen', sesion_id=sesion.id)
+
     resumen = SessionSummary.objects.filter(event=sesion).first()
     if not resumen or resumen.status != ProcessingStatus.READY or not resumen.quiz:
         return redirect('public:account_evento_resumen', sesion_id=sesion.id)

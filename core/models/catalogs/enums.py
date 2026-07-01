@@ -16,6 +16,8 @@ FACULTY_CHOICES = [
     ('FACE', 'FACE - Educación'),
     ('FACSECYD', 'FACSECYD - Ciencias Sociales'),
     ('POSGRADO', 'Posgrado / Otra'),
+    # Opción transversal: aplica a toda la comunidad, no a una facultad puntual.
+    ('COMUNIDAD', 'Comunidad Universitaria'),
 ]
 
 

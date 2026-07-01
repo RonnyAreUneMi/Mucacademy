@@ -66,6 +66,7 @@ class SesionWriteSerializer(serializers.ModelSerializer):
             'location', 'date', 'start_time', 'end_time',
             'capacity', 'leaders_only', 'is_active', 'batch',
             'has_parts',
+            'quiz_enabled', 'certificate_requires_quiz', 'quiz_pass_threshold',
             'ponentes_json', 'parent_event',
         ]
 

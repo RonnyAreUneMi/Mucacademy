@@ -117,6 +117,7 @@ def process_event_transcript(self, event_id: int) -> dict:
             titulo=event.title or '',
             fecha=str(event.date),
             duracion_minutos=duracion,
+            include_quiz=event.quiz_enabled,
         )
     except NotImplementedError as e:
         # IA sin configurar — no es un fallo "real", deja todo en FAILED

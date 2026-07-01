@@ -85,6 +85,20 @@ class Event(models.Model):
         help_text='If on, the Meet transcript is processed with AI after the event.',
     )
 
+    # Evaluación (quiz) y su relación con el certificado
+    quiz_enabled = models.BooleanField(
+        default=True, verbose_name='Generar y mostrar cuestionario',
+        help_text='Si está apagado, no se genera ni se muestra el quiz del evento.',
+    )
+    certificate_requires_quiz = models.BooleanField(
+        default=False, verbose_name='Requiere aprobar el quiz para el certificado',
+        help_text='Si está activo, solo se emite certificado a quien apruebe el cuestionario.',
+    )
+    quiz_pass_threshold = models.PositiveSmallIntegerField(
+        default=70, verbose_name='Nota mínima del quiz (%)',
+        help_text='Porcentaje mínimo para aprobar el cuestionario (0-100).',
+    )
+
     objects = EventManager()
 
     class Meta:
@@ -123,6 +137,24 @@ class Event(models.Model):
     def series_root(self):
         """Devuelve la primera parte de la serie (o sí mismo si lo es)."""
         return self.parent_event if self.parent_event_id else self
+
+    def quiz_passed_by(self, participant) -> bool:
+        """True si el participante aprobó el quiz (mejor intento ≥ umbral)."""
+        if participant is None:
+            return False
+        best = (
+            self.quiz_attempts.filter(participant=participant)
+            .order_by('-correct').first()
+        )
+        if not best or not best.total:
+            return False
+        return best.percentage >= self.quiz_pass_threshold
+
+    def certificate_unlocked_for(self, participant) -> bool:
+        """True si el participante puede recibir certificado según la config de quiz."""
+        if not self.certificate_requires_quiz:
+            return True
+        return self.quiz_passed_by(participant)
 
     @property
     def is_unlimited(self):
