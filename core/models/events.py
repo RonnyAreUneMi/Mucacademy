@@ -62,6 +62,23 @@ class Event(models.Model):
     )
     is_active = models.BooleanField(default=True)
 
+    # Programa académico: un evento puede ser un curso dentro de un programa
+    # (p.ej. "SQL" dentro de "Analítica de Datos"). Si es null, es un
+    # curso/seminario suelto.
+    program = models.ForeignKey(
+        'core.Program', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='courses', verbose_name='Programa',
+        help_text='Si pertenece a un programa, se agrupa bajo él.',
+    )
+    skills = models.JSONField(
+        default=list, blank=True, verbose_name='Habilidades / competencias',
+        help_text='Habilidades que desarrolla este curso (se listan en el certificado de programa).',
+    )
+    hours = models.PositiveIntegerField(
+        default=0, verbose_name='Horas del curso',
+        help_text='Horas académicas de este curso (usadas en el certificado).',
+    )
+
     # Versionamiento / seminarios en partes
     has_parts = models.BooleanField(
         default=False, verbose_name='Seminario dividido en partes',

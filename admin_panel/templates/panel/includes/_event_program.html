@@ -1,0 +1,119 @@
+{% comment %}
+Programa, horas y habilidades del seminario.
+- program: id del programa al que pertenece (o vacío = seminario suelto).
+  Si se llega desde un programa (preset_program_id), queda preseleccionado.
+- skills_json: habilidades del seminario (se listan en el certificado de programa).
+- hours: horas académicas.
+Se envía en el submit vía window.applyEventProgramToFD(fd).
+Contexto: `programs` (lista), opcional `sesion` (edición) y `preset_program_id`.
+{% endcomment %}
+<section class="space-y-5 mb-2">
+    <div class="flex items-center gap-2 mb-1">
+        <span class="w-7 h-7 rounded-lg bg-[#F58830]/10 text-[#F58830] flex items-center justify-center text-sm font-black"><i class="fa-solid fa-layer-group"></i></span>
+        <h2 class="text-lg font-bold text-gray-800 dark:text-white">Programa y competencias</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1"><i class="fa-solid fa-diagram-project mr-1 text-[#F58830]"></i> Programa</label>
+            <select id="ev-program-select" class="{{ css }} text-sm">
+                <option value="">— Ninguno (seminario suelto) —</option>
+                {% for pr in programs %}
+                <option value="{{ pr.id }}" {% if sesion.program_id == pr.id or preset_program_id == pr.id %}selected{% endif %}>{{ pr.name }}</option>
+                {% endfor %}
+            </select>
+            <p class="text-[11px] text-gray-400 mt-1">Si pertenece a un programa, se agrupa bajo él.</p>
+        </div>
+        <div>
+            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1"><i class="fa-solid fa-clock mr-1 text-[#F58830]"></i> Horas del seminario</label>
+            <input type="number" id="ev-hours" min="0" value="{{ sesion.hours|default:0 }}" class="{{ css }} text-sm">
+        </div>
+    </div>
+
+    <!-- Habilidades / competencias -->
+    <div>
+        <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block"><i class="fa-solid fa-award mr-1 text-[#F58830]"></i> Habilidades del seminario</label>
+            <button type="button" id="ev-skills-ai" onclick="evSuggestSkills()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 text-violet-600 dark:text-violet-400 text-[11px] font-bold transition-all">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Sugerir con IA
+            </button>
+        </div>
+        <p class="text-[11px] text-gray-400 mb-2">Se listan en el certificado de programa. Enter o coma para agregar.</p>
+        <div id="ev-skills-box" class="flex flex-wrap gap-2 p-2.5 rounded-xl bg-gray-50 dark:bg-[#0F163A]/50 border border-gray-200 dark:border-blue-900/30 min-h-[48px]">
+            <input type="text" id="ev-skills-input" placeholder="Escribe una habilidad…" class="flex-1 min-w-[140px] bg-transparent outline-none text-sm text-gray-800 dark:text-white">
+        </div>
+    </div>
+</section>
+
+<script>
+(function () {
+    const select = document.getElementById('ev-program-select');
+    const skillsBox = document.getElementById('ev-skills-box');
+    const skillsInput = document.getElementById('ev-skills-input');
+
+    function chip(text) {
+        const el = document.createElement('span');
+        el.className = 'ev-skill-chip inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F58830]/10 text-[#F58830] text-xs font-bold';
+        el.dataset.value = text;
+        el.innerHTML = `<span></span><button type="button" class="hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>`;
+        el.querySelector('span').textContent = text;
+        el.querySelector('button').addEventListener('click', () => el.remove());
+        skillsBox.insertBefore(el, skillsInput);
+    }
+    window.evAddSkill = function (text) {
+        text = (text || '').trim();
+        if (!text) return;
+        const existing = Array.from(skillsBox.querySelectorAll('.ev-skill-chip')).map(c => c.dataset.value.toLowerCase());
+        if (existing.includes(text.toLowerCase())) return;
+        chip(text);
+    };
+    skillsInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault(); window.evAddSkill(skillsInput.value); skillsInput.value = '';
+        } else if (e.key === 'Backspace' && !skillsInput.value) {
+            const chips = skillsBox.querySelectorAll('.ev-skill-chip');
+            if (chips.length) chips[chips.length - 1].remove();
+        }
+    });
+    skillsBox.addEventListener('click', () => skillsInput.focus());
+
+    try {
+        const initial = {{ sesion.skills|default:"[]"|safe }};
+        if (Array.isArray(initial)) initial.forEach(s => window.evAddSkill(s));
+    } catch (e) {}
+
+    window.evSuggestSkills = async function () {
+        const btn = document.getElementById('ev-skills-ai');
+        const original = btn.innerHTML;
+        btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando…';
+        try {
+            const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+            const title = document.querySelector('input[name="title"]')?.value || '';
+            const description = (window.getDescriptionHTML && window.getDescriptionHTML()) ||
+                                document.querySelector('[name="description"]')?.value || '';
+            const body = { title, description };
+            {% if sesion.id %}body.event_id = {{ sesion.id }};{% endif %}
+            const res = await fetch('/api/v1/admin/sessions/suggest-skills/', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) { alert(data.error || 'No se pudo generar.'); return; }
+            (data.skills || []).forEach(s => window.evAddSkill(s));
+        } catch (err) {
+            alert('Error de red: ' + err.message);
+        } finally {
+            btn.disabled = false; btn.innerHTML = original;
+        }
+    };
+
+    window.applyEventProgramToFD = function (fd) {
+        fd.delete('program_new');
+        fd.set('program', select.value || '');
+        const skills = Array.from(skillsBox.querySelectorAll('.ev-skill-chip')).map(c => c.dataset.value);
+        fd.set('skills_json', JSON.stringify(skills));
+        fd.set('hours', String(parseInt(document.getElementById('ev-hours').value, 10) || 0));
+    };
+})();
+</script>

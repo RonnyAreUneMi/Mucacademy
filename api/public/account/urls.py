@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from . import evaluations as eval_views
 
 urlpatterns = [
     # Público (sin auth)
@@ -20,4 +21,9 @@ urlpatterns = [
     path('events/<int:event_id>/register/',  views.InscribirEventoView.as_view(), name='mobile-event-register'),
     path('attendances/',                     views.AsistenciasView.as_view(),     name='mobile-attendances'),
     path('checkin/',                         views.CheckinByQRView.as_view(),     name='mobile-checkin-qr'),
+
+    # Evaluaciones (rendir)
+    path('evaluations/',                        eval_views.EvaluationsListView.as_view(),  name='mobile-evaluations'),
+    path('evaluations/<int:evaluation_id>/',    eval_views.EvaluationDetailView.as_view(), name='mobile-evaluation-detail'),
+    path('evaluations/<int:evaluation_id>/submit/', eval_views.EvaluationSubmitView.as_view(), name='mobile-evaluation-submit'),
 ]

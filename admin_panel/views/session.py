@@ -10,8 +10,13 @@ from django.contrib import messages
 from django.db.models import Count, F
 from django.shortcuts import get_object_or_404, redirect, render
 
-from core.models import AcademicTitle, Enrollment, CertificateBatch, Event
+from core.models import AcademicTitle, Enrollment, CertificateBatch, Event, Program
 from ._shared import admin_required
+
+
+def _active_programs():
+    """Programas activos para el selector del form de evento."""
+    return list(Program.objects.filter(is_active=True).order_by('name').values('id', 'name'))
 
 
 def _active_titles():
@@ -59,7 +64,7 @@ def session_list(request):
     fecha_filter = request.GET.get('fecha', '')
     estado_filter = request.GET.get('estado', '')
 
-    qs = Event.objects.select_related('batch').annotate(
+    qs = Event.objects.select_related('batch', 'program').annotate(
         enrolled_total=Count('enrollments'),
         attendees_total=Count('attendances'),
     )
@@ -87,9 +92,15 @@ def session_create(request):
 
     El submit hace POST a /api/v1/admin/sessions/ vía fetch (igual que edit).
     """
+    preset_program_id = request.GET.get('program')
+    try:
+        preset_program_id = int(preset_program_id) if preset_program_id else None
+    except (TypeError, ValueError):
+        preset_program_id = None
     return render(request, 'panel/sessions/create.html', {
         'titulos': _active_titles(),
-        'series_events': _series_events(),
+        'programs': _active_programs(),
+        'preset_program_id': preset_program_id,
     })
 
 
@@ -102,7 +113,7 @@ def session_edit(request, id):
         'sesion': sesion,
         'ponentes_json': ponentes,
         'titulos': _active_titles(),
-        'series_events': _series_events(exclude_id=sesion.id),
+        'programs': _active_programs(),
     })
 
 

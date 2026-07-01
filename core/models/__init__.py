@@ -8,8 +8,13 @@ from .users import User, AccessRequest
 from .signatures import Signature, GlobalDesign
 from .participants import Participant, ParticipantToken, PasswordResetToken
 from .certificates import CertificateBatch, Certificate
+from .programs import Program
 from .events import Event, Speaker, Attendance, Enrollment
 from .summaries import SessionSummary, ProcessingStatus, QuizAttempt
+from .evaluations import (
+    Evaluation, Question, EvaluationAttempt, EvaluationGrant,
+    QuestionKind, QuestionSource,
+)
 from .audit import AuditLog, AuditAction
 from .integrations import GoogleCredential, AIConfig, AIProvider, PROVIDER_MODELS
 from .design_system import UIDesignTokens
@@ -27,6 +32,7 @@ __all__ = [
     'PasswordResetToken',
     'CertificateBatch',
     'Certificate',
+    'Program',
     'Event',
     'Speaker',
     'Attendance',
@@ -34,6 +40,12 @@ __all__ = [
     'SessionSummary',
     'ProcessingStatus',
     'QuizAttempt',
+    'Evaluation',
+    'Question',
+    'EvaluationAttempt',
+    'EvaluationGrant',
+    'QuestionKind',
+    'QuestionSource',
     'AuditLog',
     'AuditAction',
     'GoogleCredential',

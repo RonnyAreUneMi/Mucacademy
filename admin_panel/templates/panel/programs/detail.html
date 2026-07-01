@@ -1,0 +1,572 @@
+{% extends 'panel/base.html' %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-5" data-program-id="{{ program.id }}">
+    <a href="{% url 'panel:program_list' %}" class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-[#F58830] transition-all">
+        <i class="fa-solid fa-arrow-left"></i> Volver a programas
+    </a>
+
+    <!-- ═══════════ Hoja única del programa ═══════════ -->
+    <div class="lg-card rounded-3xl overflow-hidden">
+        <!-- Banner hero -->
+        <!-- Banner (imagen completa; ya trae título y logo) -->
+        <div id="hdr-banner-wrap" class="hidden">
+            <img id="hdr-banner" alt="" class="w-full aspect-[2/1] object-cover block">
+        </div>
+
+        <!-- Header (datos + acciones) -->
+        <div class="p-6 md:p-8 border-b border-gray-100 dark:border-white/[0.06]">
+            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                <div class="flex items-start gap-4">
+                    <div id="hdr-icon" class="w-14 h-14 rounded-2xl bg-[#F58830]/10 text-[#F58830] flex items-center justify-center text-2xl flex-shrink-0">
+                        <i class="fa-solid fa-diagram-project"></i>
+                    </div>
+                    <div>
+                        <h1 id="hdr-name" class="text-2xl md:text-3xl font-black text-gray-800 dark:text-white tracking-tight">{{ program.name }}</h1>
+                        <p id="hdr-desc" class="text-gray-500 dark:text-gray-400 mt-1">{{ program.description|default:"Sin descripción" }}</p>
+                        <div class="flex flex-wrap items-center gap-4 mt-3 text-sm">
+                            <span class="hdr-stat text-gray-600 dark:text-gray-300"><i class="fa-solid fa-book text-[#F58830] mr-1"></i> <span id="hdr-courses">{{ program.course_count }}</span> seminario(s)</span>
+                            <span class="hdr-stat text-gray-600 dark:text-gray-300"><i class="fa-solid fa-clock text-[#F58830] mr-1"></i> <span id="hdr-hours">{{ program.total_hours }}</span> horas totales</span>
+                            <span id="hdr-faculty" class="hdr-stat text-gray-400 text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/5"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="toggleEdit()" id="edit-btn" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-blue-900/30 text-gray-600 dark:text-gray-300 font-bold hover:border-[#F58830] hover:text-[#F58830] transition-all">
+                        <i class="fa-solid fa-gear"></i> Editar
+                    </button>
+                    <button onclick="issueCerts()" id="issue-btn" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg transition-all">
+                        <i class="fa-solid fa-award"></i> Emitir certificados
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel de configuración (inline, oculto) -->
+            <div id="config-panel" class="hidden mt-6 p-5 md:p-6 rounded-2xl bg-gray-50/95 dark:bg-[#0F163A]/95 backdrop-blur-sm border border-gray-200 dark:border-blue-900/30 space-y-5">
+                {% with css="w-full p-2.5 rounded-xl bg-white dark:bg-[#0F163A] border border-gray-200 dark:border-blue-900/30 text-gray-800 dark:text-white text-sm focus:outline-none focus:border-[#F58830]" %}
+                <div>
+                    <h3 class="text-sm font-black text-gray-700 dark:text-gray-200 uppercase tracking-wider mb-3"><i class="fa-solid fa-diagram-project text-[#F58830] mr-1"></i> Programa</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 block mb-1">Nombre</label>
+                            <input id="cfg-name" type="text" class="{{ css }}">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 block mb-1">Facultad</label>
+                            <select id="cfg-faculty" class="{{ css }}">
+                                <option value="FACI">FACI - Ingeniería</option>
+                                <option value="FACS">FACS - Salud</option>
+                                <option value="FACE">FACE - Educación</option>
+                                <option value="FACSECYD">FACSECYD - Ciencias Sociales</option>
+                                <option value="POSGRADO">Posgrado / Otra</option>
+                                <option value="COMUNIDAD">Comunidad Universitaria</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-xs font-bold text-gray-500 block mb-1">Descripción</label>
+                            <textarea id="cfg-desc" rows="2" class="{{ css }} resize-none"></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            {% include 'panel/includes/_program_banner.html' with title_selector='#cfg-name' %}
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-1 border-t border-gray-200/70 dark:border-white/5">
+                    <h3 class="text-sm font-black text-gray-700 dark:text-gray-200 uppercase tracking-wider mb-3 mt-4"><i class="fa-solid fa-clipboard-question text-[#F58830] mr-1"></i> Evaluación</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 block mb-1">Nota mínima (%)</label>
+                            <input id="cfg-threshold" type="number" min="1" max="100" class="{{ css }}">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 block mb-1">Intentos</label>
+                            <input id="cfg-attempts" type="number" min="1" class="{{ css }}">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 block mb-1">Preguntas por intento (0 = todas)</label>
+                            <input id="cfg-perattempt" type="number" min="0" class="{{ css }}">
+                        </div>
+                    </div>
+                </div>
+                {% endwith %}
+                <div class="flex gap-2 pt-1">
+                    <button onclick="saveConfig()" id="cfg-save" class="bg-[#F58830] hover:bg-[#D97520] text-white font-bold px-5 py-2.5 rounded-xl transition-all"><i class="fa-solid fa-check mr-1"></i> Guardar</button>
+                    <button onclick="toggleEdit()" class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-blue-900/30 text-gray-500 font-bold">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="px-4 md:px-6 pt-3 flex gap-1 overflow-x-auto border-b border-gray-100 dark:border-white/[0.06]">
+            <button data-tab="seminarios" onclick="switchTab('seminarios')" class="prog-tab whitespace-nowrap px-4 py-3 text-sm font-bold border-b-2 transition-all"><i class="fa-solid fa-list-check mr-1"></i> Seminarios</button>
+            <button data-tab="participantes" onclick="switchTab('participantes')" class="prog-tab whitespace-nowrap px-4 py-3 text-sm font-bold border-b-2 transition-all"><i class="fa-solid fa-users mr-1"></i> Participantes</button>
+            <button data-tab="preguntas" onclick="switchTab('preguntas')" class="prog-tab whitespace-nowrap px-4 py-3 text-sm font-bold border-b-2 transition-all"><i class="fa-solid fa-clipboard-question mr-1"></i> Preguntas</button>
+            <button data-tab="calificaciones" onclick="switchTab('calificaciones')" class="prog-tab whitespace-nowrap px-4 py-3 text-sm font-bold border-b-2 transition-all"><i class="fa-solid fa-table-list mr-1"></i> Calificaciones</button>
+        </div>
+
+        <!-- Panels -->
+        <div class="p-6 md:p-8">
+            <!-- Seminarios -->
+            <div data-panel="seminarios">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-sm text-gray-400 font-medium">Seminarios que componen el programa</p>
+                    <a href="/panel/sessions/create/?program={{ program.id }}" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#F58830]/10 hover:bg-[#F58830]/20 text-[#F58830] text-xs font-bold transition-all">
+                        <i class="fa-solid fa-plus"></i> Agregar seminario
+                    </a>
+                </div>
+                <div id="courses-list" class="space-y-3"><div class="text-center py-8 text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i></div></div>
+            </div>
+
+            <!-- Participantes -->
+            <div data-panel="participantes" class="hidden">
+                <div id="progress-list" class="space-y-2"><div class="text-center py-8 text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i></div></div>
+            </div>
+
+            <!-- Preguntas -->
+            <div data-panel="preguntas" class="hidden">
+                <div id="preguntas-body"><div class="text-center py-8 text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i></div></div>
+            </div>
+
+            <!-- Calificaciones -->
+            <div data-panel="calificaciones" class="hidden">
+                <div id="gradebook-body"><div class="text-center py-8 text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Diálogo de confirmación (componente propio, no nativo) -->
+<div id="ds-confirm" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-[#162054] rounded-3xl shadow-2xl w-full max-w-md p-6 text-center">
+        <div id="dsc-icon" class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-2xl mb-4"></div>
+        <h3 data-title class="text-lg font-black text-gray-800 dark:text-white mb-1">Confirmar</h3>
+        <p data-msg class="text-sm text-gray-500 dark:text-gray-400 mb-6"></p>
+        <div class="flex gap-2">
+            <button data-cancel class="flex-1 px-5 py-2.5 rounded-xl border border-gray-200 dark:border-blue-900/30 text-gray-600 dark:text-gray-300 font-bold">Cancelar</button>
+            <button data-ok class="flex-1 px-5 py-2.5 rounded-xl text-white font-bold">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+{% include 'panel/includes/_number_wheel.html' %}
+
+<style>
+    .prog-tab { color: #94a3b8; border-color: transparent; }
+    .prog-tab:hover { color: #64748b; }
+    .prog-tab.active { color: #F58830; border-color: #F58830; }
+    .dark .prog-tab.active { color: #F58830; }
+</style>
+
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+const PID = document.querySelector('[data-program-id]').dataset.programId;
+const FACULTY_LABEL = {FACI:'Ingeniería',FACS:'Salud',FACE:'Educación',FACSECYD:'Ciencias Sociales',POSGRADO:'Posgrado',COMUNIDAD:'Comunidad'};
+let PROGRAM = null, EVAL = null;
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function toast(m,t){ (window.showToast||function(){})(m, t||'success'); }
+
+// ── Confirmación estilizada (Promise) ─────────────────────────
+function dsConfirm(message, opts={}) {
+    const { title='Confirmar', okText='Confirmar', danger=false } = opts;
+    return new Promise(resolve => {
+        const el = document.getElementById('ds-confirm');
+        el.querySelector('[data-title]').textContent = title;
+        el.querySelector('[data-msg]').textContent = message;
+        const icon = document.getElementById('dsc-icon');
+        icon.className = 'w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-2xl mb-4 ' + (danger ? 'bg-red-100 text-red-500 dark:bg-red-900/30' : 'bg-[#F58830]/10 text-[#F58830]');
+        icon.innerHTML = `<i class="fa-solid ${danger ? 'fa-triangle-exclamation' : 'fa-circle-question'}"></i>`;
+        const ok = el.querySelector('[data-ok]'), cancel = el.querySelector('[data-cancel]');
+        ok.textContent = okText;
+        ok.className = 'flex-1 px-5 py-2.5 rounded-xl text-white font-bold ' + (danger ? 'bg-red-500 hover:bg-red-600' : 'bg-[#F58830] hover:bg-[#D97520]');
+        el.classList.remove('hidden');
+        const done = v => { el.classList.add('hidden'); ok.onclick=null; cancel.onclick=null; resolve(v); };
+        ok.onclick = () => done(true);
+        cancel.onclick = () => done(false);
+    });
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+function switchTab(name) {
+    document.querySelectorAll('[data-panel]').forEach(p => p.classList.toggle('hidden', p.dataset.panel !== name));
+    document.querySelectorAll('.prog-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    try { localStorage.setItem('certifai_prog_tab', name); } catch(e) {}
+}
+
+// ── Editar / Config ───────────────────────────────────────────
+function toggleEdit() {
+    const panel = document.getElementById('config-panel');
+    const opening = panel.classList.contains('hidden');
+    if (opening && PROGRAM) {
+        document.getElementById('cfg-name').value = PROGRAM.name || '';
+        document.getElementById('cfg-desc').value = PROGRAM.description || '';
+        document.getElementById('cfg-faculty').value = PROGRAM.faculty || 'FACI';
+        document.getElementById('cfg-threshold').value = EVAL ? EVAL.pass_threshold : 70;
+        document.getElementById('cfg-attempts').value = EVAL ? EVAL.max_attempts : 2;
+        document.getElementById('cfg-perattempt').value = EVAL ? EVAL.questions_per_attempt : 0;
+        if (window.programBannerClear) window.programBannerClear();
+        if (window.programBannerSetPreview) window.programBannerSetPreview(PROGRAM.banner_url);
+    }
+    panel.classList.toggle('hidden');
+}
+
+async function saveConfig() {
+    const btn = document.getElementById('cfg-save');
+    btn.disabled = true;
+    try {
+        const fd = new FormData();
+        fd.set('name', document.getElementById('cfg-name').value.trim());
+        fd.set('description', document.getElementById('cfg-desc').value.trim());
+        fd.set('faculty', document.getElementById('cfg-faculty').value);
+        const banner = window.getProgramBannerFile && window.getProgramBannerFile();
+        if (banner) fd.set('banner_image', banner);
+        const pRes = await fetch(`/api/v1/admin/programs/${PID}/`, {
+            method: 'PATCH', credentials: 'same-origin',
+            headers: { 'X-CSRFToken': CSRF },
+            body: fd,
+        });
+        if (!pRes.ok) { toast('No se pudo guardar el programa.', 'error'); return; }
+
+        const evalPayload = {
+            pass_threshold: parseInt(document.getElementById('cfg-threshold').value, 10) || 70,
+            max_attempts: parseInt(document.getElementById('cfg-attempts').value, 10) || 2,
+            questions_per_attempt: parseInt(document.getElementById('cfg-perattempt').value, 10) || 0,
+        };
+        if (EVAL) {
+            await fetch(`/api/v1/admin/evaluations/${EVAL.id}/`, {
+                method: 'PATCH', credentials: 'same-origin',
+                headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+                body: JSON.stringify(evalPayload),
+            });
+        } else {
+            await fetch('/api/v1/admin/evaluations/', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ program: PID, title: 'Evaluación final del programa', ...evalPayload }),
+            });
+        }
+        toast('Cambios guardados.');
+        document.getElementById('config-panel').classList.add('hidden');
+        await loadDetail();
+        await loadEvaluation();
+    } finally { btn.disabled = false; }
+}
+
+// ── Cargar detalle ────────────────────────────────────────────
+async function loadDetail() {
+    const res = await fetch(`/api/v1/admin/programs/${PID}/`, { credentials: 'same-origin' });
+    PROGRAM = await res.json();
+    document.getElementById('hdr-name').textContent = PROGRAM.name;
+    document.getElementById('hdr-desc').textContent = PROGRAM.description || 'Sin descripción';
+    document.getElementById('hdr-courses').textContent = PROGRAM.course_count;
+    document.getElementById('hdr-hours').textContent = PROGRAM.total_hours;
+    document.getElementById('hdr-faculty').textContent = FACULTY_LABEL[PROGRAM.faculty] || PROGRAM.faculty;
+
+    const hasBanner = !!PROGRAM.banner_url;
+    const bannerWrap = document.getElementById('hdr-banner-wrap');
+    if (hasBanner) {
+        document.getElementById('hdr-banner').src = PROGRAM.banner_url;
+        bannerWrap.classList.remove('hidden');
+    } else {
+        bannerWrap.classList.add('hidden');
+    }
+    // El banner ya trae título y logo → ocultamos los duplicados; dejamos datos + acciones.
+    document.getElementById('hdr-icon').classList.toggle('hidden', hasBanner);
+    document.getElementById('hdr-name').classList.toggle('hidden', hasBanner);
+    document.getElementById('hdr-desc').classList.toggle('hidden', hasBanner);
+
+    const cl = document.getElementById('courses-list');
+    if (!PROGRAM.courses.length) {
+        cl.innerHTML = '<p class="text-center py-10 text-gray-400 text-sm italic">Aún no hay seminarios en este programa. Usá “Agregar seminario”.</p>';
+    } else {
+        cl.innerHTML = PROGRAM.courses.map(c => `
+            <div class="p-4 rounded-2xl bg-gray-50 dark:bg-[#0F163A]/50 border border-gray-200 dark:border-blue-900/30">
+                <div class="flex items-center justify-between gap-2">
+                    <a href="/panel/sessions/${c.id}/edit/" class="font-bold text-gray-800 dark:text-white hover:text-[#F58830]">${esc(c.title) || '(sin título)'}</a>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded-full ${c.has_batch ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}">${c.has_batch ? 'certificados emitidos' : 'sin certificados'}</span>
+                </div>
+                <div class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-clock mr-1"></i>${c.hours} h</div>
+                ${(c.skills && c.skills.length) ? `<div class="flex flex-wrap gap-1.5 mt-2">${c.skills.map(s => `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#F58830]/10 text-[#F58830]">${esc(s)}</span>`).join('')}</div>` : '<p class="text-[11px] text-gray-400 italic mt-2">Sin habilidades definidas</p>'}
+            </div>`).join('');
+    }
+}
+
+async function loadProgress() {
+    const res = await fetch(`/api/v1/admin/programs/${PID}/progress/`, { credentials: 'same-origin' });
+    const data = await res.json();
+    const pl = document.getElementById('progress-list');
+    if (!data.participants.length) {
+        pl.innerHTML = '<p class="text-center py-10 text-gray-400 text-sm italic">Todavía nadie tiene certificados en los seminarios de este programa.</p>';
+        return;
+    }
+    const total = data.total_courses;
+    pl.innerHTML = data.participants.map(r => {
+        const pct = total ? Math.round(r.courses_done / total * 100) : 0;
+        return `
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-[#0F163A]/50 border border-gray-200 dark:border-blue-900/30">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-sm text-gray-800 dark:text-white truncate">${esc(r.name)}</span>
+                    ${r.has_program_cert ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"><i class="fa-solid fa-award"></i> programa</span>' : ''}
+                </div>
+                <div class="mt-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-blue-900/40 overflow-hidden"><div class="h-full bg-[#F58830] rounded-full" style="width:${pct}%"></div></div>
+            </div>
+            <span class="text-xs font-bold text-gray-500 whitespace-nowrap">${r.courses_done}/${total}</span>
+        </div>`;
+    }).join('');
+}
+
+async function issueCerts() {
+    const ok = await dsConfirm('Se emitirá el certificado de programa a quienes completaron TODOS los seminarios y aprobaron la evaluación.', { title: 'Emitir certificados', okText: 'Emitir' });
+    if (!ok) return;
+    const btn = document.getElementById('issue-btn');
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Emitiendo…';
+    try {
+        const res = await fetch(`/api/v1/admin/programs/${PID}/issue-certificates/`, { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': CSRF } });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { toast(data.error || 'No se pudo emitir.', 'error'); return; }
+        toast(`Certificados de programa emitidos: ${data.issued}`);
+        loadProgress();
+    } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-award"></i> Emitir certificados';
+    }
+}
+
+// ── Preguntas (tab) ───────────────────────────────────────────
+async function loadEvaluation() {
+    const res = await fetch(`/api/v1/admin/evaluations/?program=${PID}`, { credentials: 'same-origin' });
+    const data = await res.json();
+    const items = data.results || data;
+    EVAL = items.length ? await (await fetch(`/api/v1/admin/evaluations/${items[0].id}/`, { credentials: 'same-origin' })).json() : null;
+    renderPreguntas();
+}
+
+function renderPreguntas() {
+    const body = document.getElementById('preguntas-body');
+    if (!EVAL) {
+        body.innerHTML = `<div class="text-center py-10">
+            <p class="text-gray-500 dark:text-gray-400 mb-4">Este programa aún no tiene evaluación configurada.</p>
+            <button onclick="createEvaluation()" class="bg-[#F58830] hover:bg-[#D97520] text-white font-bold px-5 py-2.5 rounded-xl"><i class="fa-solid fa-plus mr-1"></i> Crear evaluación</button>
+        </div>`;
+        return;
+    }
+    const q = EVAL.questions || [];
+    const draw = EVAL.questions_per_attempt || 0;
+    const takes = (draw > 0 && draw < q.length) ? draw : q.length;
+    body.innerHTML = `
+        <div class="mb-4 px-3 py-2.5 rounded-xl bg-[#F58830]/5 border border-[#F58830]/20 flex items-center gap-3">
+            <div id="draw-wheel" class="flex-shrink-0"></div>
+            <div class="flex-1 min-w-0">
+                <p class="text-[13px] font-bold text-gray-700 dark:text-gray-200"><i class="fa-solid fa-shuffle text-[#F58830] mr-1"></i> Preguntas al azar por intento</p>
+                <p id="draw-hint" class="text-[11px] text-gray-500 dark:text-gray-400"></p>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div class="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
+                <span><i class="fa-solid fa-ribbon text-[#F58830] mr-1"></i> Mínimo ${EVAL.pass_threshold}%</span>
+                <span><i class="fa-solid fa-repeat text-[#F58830] mr-1"></i> ${EVAL.max_attempts} intentos</span>
+                <span><i class="fa-solid fa-list-ol text-[#F58830] mr-1"></i> ${q.length} en el banco</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-violet-500/10">
+                    <input id="ai-count" type="number" min="1" max="30" value="10" class="w-12 bg-transparent text-violet-600 dark:text-violet-400 text-sm font-bold text-center outline-none">
+                    <button onclick="generateAI()" id="ai-btn" class="inline-flex items-center gap-1.5 text-violet-600 dark:text-violet-400 text-xs font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i> Generar con IA</button>
+                </div>
+                <button onclick="openQuestionForm()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#F58830]/10 hover:bg-[#F58830]/20 text-[#F58830] text-xs font-bold"><i class="fa-solid fa-plus"></i> Pregunta</button>
+            </div>
+        </div>
+        <div id="q-form-wrap" class="hidden mb-4"></div>
+        <div class="space-y-2">
+            ${q.length ? q.map(questionRow).join('') : '<p class="text-center py-8 text-gray-400 text-sm italic">Banco vacío. Genera preguntas con IA o agrégalas manualmente.</p>'}
+        </div>`;
+
+    // Montar la rueda numérica (Apple-style)
+    const mount = document.getElementById('draw-wheel');
+    if (mount && window.createNumberWheel) {
+        const wheelMax = q.length ? Math.min(30, q.length) : 30;
+        mount.innerHTML = '';
+        mount.appendChild(window.createNumberWheel({ min: 0, max: wheelMax, value: Math.min(draw, wheelMax), onChange: updateDrawValue }));
+    }
+    setDrawHint(draw);
+}
+
+function setDrawHint(v) {
+    const el = document.getElementById('draw-hint');
+    if (!el) return;
+    const count = (EVAL.questions || []).length;
+    el.innerHTML = (v === 0 || v >= count)
+        ? `Se usan las <strong>${count}</strong> preguntas del banco. Deslizá a un número menor para sortear.`
+        : `Cada estudiante rinde <strong>${v}</strong> distintas al azar de ${count}. (máx 30)`;
+}
+
+function questionRow(q) {
+    const src = q.source === 'ai' ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-violet-100 text-violet-600 dark:bg-violet-900/30">IA</span>' : '';
+    return `<div class="p-3 rounded-xl bg-gray-50 dark:bg-[#0F163A]/50 border border-gray-200 dark:border-blue-900/30">
+        <div class="flex items-start justify-between gap-2">
+            <p class="text-sm font-medium text-gray-800 dark:text-white flex-1">${esc(q.text)} ${src}</p>
+            <div class="flex gap-1 flex-shrink-0">
+                <button onclick='openQuestionForm(${JSON.stringify(q)})' class="text-gray-400 hover:text-[#F58830] text-xs px-1"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="deleteQuestion(${q.id})" class="text-gray-400 hover:text-red-500 text-xs px-1"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </div>
+        <div class="flex flex-wrap gap-1.5 mt-2">
+            ${(q.options||[]).map((o,i)=>`<span class="text-[11px] px-2 py-0.5 rounded ${i===q.correct_idx?'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-bold':'bg-gray-200/60 dark:bg-blue-900/30 text-gray-500'}">${esc(o)}</span>`).join('')}
+        </div>
+    </div>`;
+}
+
+async function createEvaluation() {
+    const res = await fetch('/api/v1/admin/evaluations/', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ program: PID, title: 'Evaluación final del programa' }),
+    });
+    if (res.ok) { toast('Evaluación creada.'); loadEvaluation(); } else toast('No se pudo crear.', 'error');
+}
+
+async function updateDrawValue(v) {
+    const val = Math.max(0, Math.min(30, parseInt(v, 10) || 0));
+    const res = await fetch(`/api/v1/admin/evaluations/${EVAL.id}/`, {
+        method: 'PATCH', credentials: 'same-origin',
+        headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questions_per_attempt: val }),
+    });
+    if (res.ok) {
+        EVAL.questions_per_attempt = val;
+        setDrawHint(val);
+    }
+}
+
+async function generateAI() {
+    const btn = document.getElementById('ai-btn');
+    const count = parseInt(document.getElementById('ai-count').value, 10) || 10;
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando…';
+    try {
+        const res = await fetch(`/api/v1/admin/evaluations/${EVAL.id}/generate-questions/`, {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ count }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { toast(data.error || 'No se pudo generar.', 'error'); return; }
+        toast(`${data.created} preguntas generadas.`);
+        await loadEvaluation();
+    } finally { btn.disabled = false; }
+}
+
+// ── Formulario de pregunta EN PANTALLA (inline, no popup) ──────
+let editingQ = null;
+function openQuestionForm(q) {
+    editingQ = (q && q.id) ? q : null;
+    const kind = editingQ ? editingQ.kind : 'mcq';
+    const opts = editingQ ? editingQ.options : ['', '', '', ''];
+    const ci = editingQ ? editingQ.correct_idx : 0;
+    const wrap = document.getElementById('q-form-wrap');
+    const inputCss = 'w-full p-2.5 rounded-lg bg-white dark:bg-[#0F163A] border border-gray-200 dark:border-blue-900/30 text-gray-800 dark:text-white text-sm focus:outline-none focus:border-[#F58830]';
+    wrap.innerHTML = `
+        <div class="p-4 rounded-2xl bg-[#F58830]/5 border border-[#F58830]/20 space-y-3">
+            <div class="flex items-center justify-between">
+                <h4 class="font-black text-gray-700 dark:text-gray-200">${editingQ ? 'Editar pregunta' : 'Nueva pregunta'}</h4>
+                <button onclick="closeQuestionForm()" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <textarea id="qf-text" rows="2" placeholder="Enunciado" class="${inputCss} resize-none">${editingQ ? esc(editingQ.text) : ''}</textarea>
+            <select id="qf-kind" onchange="qfKind()" class="${inputCss}">
+                <option value="mcq" ${kind==='mcq'?'selected':''}>Opción múltiple</option>
+                <option value="boolean" ${kind==='boolean'?'selected':''}>Verdadero / Falso</option>
+            </select>
+            <div id="qf-options" class="space-y-2"></div>
+            <input id="qf-expl" type="text" placeholder="Explicación (opcional)" value="${editingQ ? esc(editingQ.explanation||'') : ''}" class="${inputCss}">
+            <div class="flex gap-2">
+                <button onclick="saveQuestion()" class="bg-[#F58830] hover:bg-[#D97520] text-white font-bold px-4 py-2 rounded-lg text-sm"><i class="fa-solid fa-check mr-1"></i> Guardar</button>
+                <button onclick="closeQuestionForm()" class="px-4 py-2 rounded-lg border border-gray-200 dark:border-blue-900/30 text-gray-500 font-bold text-sm">Cancelar</button>
+            </div>
+        </div>`;
+    wrap.classList.remove('hidden');
+    renderQfOptions(kind, opts, ci);
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function closeQuestionForm() { const w = document.getElementById('q-form-wrap'); w.classList.add('hidden'); w.innerHTML=''; editingQ=null; }
+function qfKind() {
+    const kind = document.getElementById('qf-kind').value;
+    renderQfOptions(kind, kind==='boolean' ? ['Verdadero','Falso'] : ['','','',''], 0);
+}
+function renderQfOptions(kind, opts, ci) {
+    const box = document.getElementById('qf-options');
+    const ro = kind === 'boolean';
+    const base = 'flex-1 p-2 rounded-lg bg-white dark:bg-[#0F163A] border border-gray-200 dark:border-blue-900/30 text-sm';
+    box.innerHTML = opts.map((o,i)=>`
+        <div class="flex items-center gap-2">
+            <input type="radio" name="qf-correct" value="${i}" ${i===ci?'checked':''} class="text-[#F58830]">
+            <input type="text" class="qf-opt ${base}" value="${esc(o)}" placeholder="Opción ${i+1}" ${ro?'readonly':''}>
+        </div>`).join('');
+}
+async function saveQuestion() {
+    const text = document.getElementById('qf-text').value.trim();
+    const kind = document.getElementById('qf-kind').value;
+    const options = Array.from(document.querySelectorAll('#qf-options .qf-opt')).map(i=>i.value.trim()).filter(Boolean);
+    const correct_idx = parseInt(document.querySelector('#qf-options input[name="qf-correct"]:checked')?.value || '0', 10);
+    if (!text || options.length < 2) { toast('Enunciado y al menos 2 opciones.', 'error'); return; }
+    const payload = { evaluation: EVAL.id, text, kind, options, correct_idx, explanation: document.getElementById('qf-expl').value.trim() };
+    const url = editingQ ? `/api/v1/admin/evaluation-questions/${editingQ.id}/` : '/api/v1/admin/evaluation-questions/';
+    const res = await fetch(url, {
+        method: editingQ ? 'PATCH' : 'POST', credentials: 'same-origin',
+        headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    });
+    if (res.ok) { toast('Pregunta guardada.'); closeQuestionForm(); loadEvaluation(); }
+    else { const d = await res.json().catch(()=>({})); toast('Error: ' + JSON.stringify(d), 'error'); }
+}
+async function deleteQuestion(id) {
+    const ok = await dsConfirm('Esta pregunta se eliminará del banco.', { title: 'Borrar pregunta', okText: 'Borrar', danger: true });
+    if (!ok) return;
+    const res = await fetch(`/api/v1/admin/evaluation-questions/${id}/`, { method: 'DELETE', credentials: 'same-origin', headers: { 'X-CSRFToken': CSRF } });
+    if (res.ok || res.status === 204) { toast('Pregunta eliminada.'); loadEvaluation(); }
+}
+
+// ── Calificaciones (tab) ──────────────────────────────────────
+async function loadGradebook() {
+    const body = document.getElementById('gradebook-body');
+    if (!EVAL) { body.innerHTML = '<p class="text-center py-10 text-gray-400 italic">Primero creá la evaluación (pestaña Preguntas).</p>'; return; }
+    body.innerHTML = '<div class="text-center py-8 text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+    const res = await fetch(`/api/v1/admin/evaluations/${EVAL.id}/gradebook/`, { credentials: 'same-origin' });
+    const data = await res.json();
+    if (!data.rows.length) { body.innerHTML = '<p class="text-center py-10 text-gray-400 italic">Todavía nadie rindió la evaluación.</p>'; return; }
+    body.innerHTML = `<div class="overflow-x-auto"><table class="w-full text-sm">
+        <thead><tr class="text-left text-gray-400 text-xs uppercase border-b border-gray-100 dark:border-white/10">
+            <th class="pb-2">Estudiante</th><th class="pb-2 text-center">Nota</th><th class="pb-2 text-center">Intentos</th><th class="pb-2 text-center">Estado</th><th class="pb-2"></th>
+        </tr></thead><tbody>
+        ${data.rows.map(r => `
+            <tr class="border-b border-gray-50 dark:border-white/[0.04]">
+                <td class="py-3"><p class="font-bold text-gray-800 dark:text-white">${esc(r.name)}</p><p class="text-xs text-gray-400">${esc(r.email)}</p></td>
+                <td class="py-3 text-center font-black ${r.passed ? 'text-emerald-600' : 'text-red-500'}">${r.best_score}%</td>
+                <td class="py-3 text-center text-gray-500">${r.attempts_used}/${r.attempts_allowed}</td>
+                <td class="py-3 text-center">${r.passed ? '<span class="text-emerald-600"><i class="fa-solid fa-circle-check"></i> Aprobó</span>' : '<span class="text-red-500"><i class="fa-solid fa-circle-xmark"></i> Reprobó</span>'}</td>
+                <td class="py-3 text-right"><button onclick="grantAttempt(${r.participant_id}, '${esc(r.name).replace(/'/g,"\\'")}')" class="text-xs font-bold text-[#F58830] hover:underline whitespace-nowrap"><i class="fa-solid fa-plus"></i> intento</button></td>
+            </tr>`).join('')}
+        </tbody></table></div>
+        <p class="text-xs text-gray-400 mt-3">Nota mínima para aprobar: ${data.pass_threshold}%</p>`;
+}
+async function grantAttempt(pid, name) {
+    const ok = await dsConfirm(`Se dará un intento adicional a ${name}.`, { title: 'Intento adicional', okText: 'Dar intento' });
+    if (!ok) return;
+    const res = await fetch(`/api/v1/admin/evaluations/${EVAL.id}/grant-attempt/`, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' }, body: JSON.stringify({ participant_id: pid, extra: 1 }),
+    });
+    if (res.ok) { toast('Intento adicional otorgado.'); loadGradebook(); } else toast('No se pudo otorgar.', 'error');
+}
+
+// Recargar calificaciones al abrir su tab
+const _switch = switchTab;
+switchTab = function(name) { _switch(name); if (name === 'calificaciones') loadGradebook(); };
+
+// ── Init ──────────────────────────────────────────────────────
+(async function init() {
+    let tab = 'seminarios';
+    try { tab = localStorage.getItem('certifai_prog_tab') || 'seminarios'; } catch(e) {}
+    switchTab(tab);
+    await loadDetail();
+    await loadProgress();
+    await loadEvaluation();
+    if (tab === 'calificaciones') loadGradebook();
+})();
+</script>
+{% endblock %}

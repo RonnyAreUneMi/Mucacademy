@@ -46,3 +46,4 @@ from .session import (  # noqa: F401
     session_generate_batch,
     session_qr_display,
 )
+from .program import program_list, program_create, program_detail  # noqa: F401

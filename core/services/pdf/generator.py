@@ -55,6 +55,11 @@ def generate_certificate_pdf(certificado):
     plantilla = certificado.batch.template
     pri, sec, ter, txt = _build_colors(certificado.batch)
 
+    # Los certificados de programa usan siempre el diseño 'program'
+    # (lista de cursos + competencias), sin importar la plantilla elegida.
+    if certificado.batch.kind == 'program':
+        plantilla = 'program'
+
     # Strategy dispatch
     draw_fn = get_design(plantilla)
     draw_fn(c, certificado, width, height, pri, sec, ter, txt)

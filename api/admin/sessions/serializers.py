@@ -2,7 +2,7 @@ import json
 
 from rest_framework import serializers
 
-from core.models import Event, Enrollment, Attendance, Speaker
+from core.models import Event, Enrollment, Attendance, Speaker, Program
 
 
 class PonenteSerializer(serializers.ModelSerializer):
@@ -19,6 +19,7 @@ class SesionListSerializer(serializers.ModelSerializer):
     esta_llena = serializers.BooleanField(source='is_full', read_only=True)
     imagen_banner_url = serializers.SerializerMethodField()
     lote_nombre = serializers.CharField(source='batch.name', read_only=True, allow_null=True)
+    program_name = serializers.CharField(source='program.name', read_only=True, allow_null=True)
     speakers = PonenteSerializer(many=True, read_only=True)
 
     class Meta:
@@ -29,7 +30,9 @@ class SesionListSerializer(serializers.ModelSerializer):
             'location', 'date', 'day_of_week', 'start_time', 'end_time',
             'capacity', 'leaders_only', 'is_active', 'qr_code',
             'confirmados_count', 'cupos_disponibles', 'esta_llena',
-            'es_virtual', 'batch', 'lote_nombre', 'speakers', 'created_at',
+            'es_virtual', 'batch', 'lote_nombre',
+            'program', 'program_name', 'skills', 'hours',
+            'speakers', 'created_at',
         ]
         read_only_fields = ('qr_code', 'created_at')
 
@@ -56,6 +59,11 @@ class SesionWriteSerializer(serializers.ModelSerializer):
     ponentes_json = serializers.CharField(write_only=True, required=False, allow_blank=True)
     # parent_event como texto para tolerar '' (FormData "sin serie") sin romper el parseo.
     parent_event = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    # Programa: id de un programa existente ('' = curso suelto) o crear uno nuevo.
+    program = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    program_new = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    # Habilidades como JSON serializado (FormData no soporta listas).
+    skills_json = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = Event
@@ -65,9 +73,10 @@ class SesionWriteSerializer(serializers.ModelSerializer):
             'modality', 'virtual_platform', 'meeting_url',
             'location', 'date', 'start_time', 'end_time',
             'capacity', 'leaders_only', 'is_active', 'batch',
-            'has_parts',
+            'has_parts', 'hours',
             'quiz_enabled', 'certificate_requires_quiz', 'quiz_pass_threshold',
             'ponentes_json', 'parent_event',
+            'program', 'program_new', 'skills_json',
         ]
 
     def validate_ponentes_json(self, value: str):
@@ -95,6 +104,36 @@ class SesionWriteSerializer(serializers.ModelSerializer):
                 'sort_order': i,
             })
         return cleaned
+
+    def validate_skills_json(self, value: str):
+        """Parsea las habilidades (JSON) a una lista de strings limpios."""
+        if not value:
+            return []
+        try:
+            data = json.loads(value)
+        except json.JSONDecodeError:
+            raise serializers.ValidationError('Formato JSON inválido en habilidades.')
+        if not isinstance(data, list):
+            raise serializers.ValidationError('Habilidades debe ser una lista.')
+        return [s.strip() for s in data if isinstance(s, str) and s.strip()]
+
+    def _resolve_program(self, validated_data):
+        """Resuelve program (id) / program_new (nombre) → Program|None en validated_data.
+
+        Ausencia total de ambos campos = no tocar (PATCH parcial).
+        """
+        has_id = 'program' in validated_data
+        has_new = 'program_new' in validated_data
+        raw_id = (validated_data.pop('program', '') or '').strip()
+        raw_new = (validated_data.pop('program_new', '') or '').strip()
+        if not has_id and not has_new:
+            return  # no tocar
+        if raw_new:
+            validated_data['program'] = Program.objects.create(name=raw_new)
+        elif raw_id.isdigit():
+            validated_data['program'] = Program.objects.filter(pk=int(raw_id)).first()
+        else:
+            validated_data['program'] = None  # curso suelto
 
     def validate(self, attrs):
         """Sesiones virtuales = siempre Google Meet (auto-generado por Calendar API).
@@ -147,9 +186,16 @@ class SesionWriteSerializer(serializers.ModelSerializer):
             if has_parts is not None:
                 validated_data['has_parts'] = has_parts
 
+    def _apply_skills(self, validated_data):
+        """skills_json (texto) → skills (lista) en validated_data."""
+        if 'skills_json' in validated_data:
+            validated_data['skills'] = validated_data.pop('skills_json')
+
     def create(self, validated_data):
         ponentes_data = validated_data.pop('ponentes_json', None)
         self._apply_series(validated_data)
+        self._apply_skills(validated_data)
+        self._resolve_program(validated_data)
         event = super().create(validated_data)
         if ponentes_data is not None:
             self._save_ponentes(event, ponentes_data)
@@ -158,6 +204,8 @@ class SesionWriteSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         ponentes_data = validated_data.pop('ponentes_json', None)
         self._apply_series(validated_data)
+        self._apply_skills(validated_data)
+        self._resolve_program(validated_data)
         event = super().update(instance, validated_data)
         if ponentes_data is not None:
             self._save_ponentes(event, ponentes_data)

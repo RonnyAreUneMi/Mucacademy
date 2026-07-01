@@ -38,6 +38,13 @@ class CertificateTemplate(models.TextChoices):
     GEOMETRIC = 'geometric', 'Geometric'
 
 
+class CertificateKind(models.TextChoices):
+    """A batch/certificate is issued either for a single course or for a
+    whole program (an umbrella that groups several courses)."""
+    COURSE = 'course', 'Course certificate'
+    PROGRAM = 'program', 'Program certificate'
+
+
 class EventModality(models.TextChoices):
     IN_PERSON = 'in_person', 'In person'
     VIRTUAL = 'virtual', 'Virtual'

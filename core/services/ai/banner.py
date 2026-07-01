@@ -135,12 +135,22 @@ def compose_banner(bg_bytes: bytes, title: str) -> bytes:
 
     pad = 56
 
-    # Logo UNEMI (arriba a la izquierda).
+    # Logo UNEMI (arriba a la izquierda). El logo es navy oscuro, así que se
+    # coloca sobre un "chip" blanco redondeado para que sea legible en el fondo
+    # oscuro (si no, se pierde por contraste navy-sobre-navy).
     try:
         logo = Image.open(LOGO_PATH).convert('RGBA')
-        logo.thumbnail((240, 96), Image.LANCZOS)
-        canvas.alpha_composite(logo, (pad, 40))
-        logo_bottom = 40 + logo.height
+        logo.thumbnail((230, 92), Image.LANCZOS)
+        cx, cy, cpad = pad, 40, 16
+        chip = Image.new('RGBA', (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
+        ImageDraw.Draw(chip).rounded_rectangle(
+            [cx - cpad, cy - cpad, cx + logo.width + cpad, cy + logo.height + cpad],
+            radius=18, fill=(255, 255, 255, 240),
+        )
+        canvas = Image.alpha_composite(canvas, chip)
+        canvas.alpha_composite(logo, (cx, cy))
+        draw = ImageDraw.Draw(canvas)  # recrear el draw tras el composite
+        logo_bottom = cy + logo.height + cpad
     except FileNotFoundError:
         logo_bottom = 60
 

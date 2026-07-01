@@ -1,0 +1,62 @@
+{% comment %}
+Rueda numérica estilo Apple (scroll-snap + 3D). Incluir UNA vez por página.
+Uso: const el = window.createNumberWheel({min:0, max:30, value:10, onChange:v=>...});
+     contenedor.appendChild(el);   // el.wheelValue tiene el valor actual
+Deslizá (o rueda del mouse) para cambiar; los números anterior/siguiente
+aparecen arriba/abajo con perspectiva.
+{% endcomment %}
+<style>
+    .nwheel{position:relative;width:46px;height:78px;overflow:hidden;flex-shrink:0;}
+    .nwheel-band{position:absolute;left:0;right:0;top:50%;height:26px;transform:translateY(-50%);background:rgba(245,136,48,.16);border-top:1px solid rgba(245,136,48,.55);border-bottom:1px solid rgba(245,136,48,.55);border-radius:8px;pointer-events:none;z-index:0;}
+    .nwheel-col{position:relative;z-index:1;height:78px;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;-ms-overflow-style:none;perspective:480px;padding:26px 0;text-align:center;}
+    .nwheel-col::-webkit-scrollbar{display:none;}
+    .nwheel-item{height:26px;line-height:26px;scroll-snap-align:center;font-weight:800;font-size:15px;color:#e2e8f0;cursor:pointer;user-select:none;transform-style:preserve-3d;will-change:transform,opacity;}
+    .light .nwheel-item{color:#334155;}
+</style>
+<script>
+(function () {
+    const H = 26;
+    function createNumberWheel(opts) {
+        const { min = 0, max = 30, value = 0, onChange } = opts || {};
+        const vals = []; for (let i = min; i <= max; i++) vals.push(i);
+        const wrap = document.createElement('div'); wrap.className = 'nwheel';
+        const band = document.createElement('div'); band.className = 'nwheel-band';
+        const col = document.createElement('div'); col.className = 'nwheel-col';
+        vals.forEach((v, i) => { const it = document.createElement('div'); it.className = 'nwheel-item'; it.textContent = v; it.dataset.idx = i; col.appendChild(it); });
+        wrap.append(band, col);
+
+        const clampIdx = i => Math.max(0, Math.min(vals.length - 1, i));
+        const getIdx = () => clampIdx(Math.round(col.scrollTop / H));
+        const setIdx = (i, smooth) => col.scrollTo({ top: clampIdx(i) * H, behavior: smooth ? 'smooth' : 'auto' });
+
+        function paint() {
+            const center = col.scrollTop + col.clientHeight / 2;
+            col.querySelectorAll('.nwheel-item').forEach(it => {
+                const c = it.offsetTop + H / 2;
+                const d = (c - center) / H;
+                const ad = Math.min(Math.abs(d), 3);
+                it.style.transform = `rotateX(${d * -24}deg) translateZ(${-ad * 6}px) scale(${Math.max(.55, 1 - ad * 0.2)})`;
+                it.style.opacity = String(Math.max(.2, 1 - ad * 0.4));
+            });
+        }
+
+        let raf, t;
+        col.addEventListener('scroll', () => {
+            if (raf) cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(paint);
+            clearTimeout(t);
+            t = setTimeout(() => {
+                const i = getIdx(); setIdx(i, true);
+                const v = vals[i];
+                if (v !== wrap.wheelValue) { wrap.wheelValue = v; if (onChange) onChange(v); }
+            }, 130);
+        });
+        col.querySelectorAll('.nwheel-item').forEach(it => it.addEventListener('click', () => setIdx(+it.dataset.idx, true)));
+
+        wrap.wheelValue = value;
+        requestAnimationFrame(() => { setIdx(vals.indexOf(value)); paint(); });
+        return wrap;
+    }
+    window.createNumberWheel = createNumberWheel;
+})();
+</script>

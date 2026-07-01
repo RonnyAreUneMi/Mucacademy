@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
-  FlatList, Linking,
+  FlatList, Linking, Pressable,
   RefreshControl, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -22,6 +23,7 @@ type Certificate = {
   hours: number;
   verification_hash: string;
   lote_nombre: string | null;
+  is_program?: boolean;
   download_url: string;
   verify_url: string;
 };
@@ -64,6 +66,16 @@ export default function CertificadosScreen() {
         eyebrow="MIS CERTIFICADOS"
         title={`${count} certificado${count === 1 ? '' : 's'}`}
         gradientTitle
+        rightSlot={
+          <Pressable
+            onPress={() => router.push('/evaluation' as any)}
+            style={({ pressed }) => [styles.evalBtn, pressed && { opacity: 0.7 }]}
+            hitSlop={8}
+          >
+            <Ionicons name="clipboard-outline" size={16} color={colors.brand} />
+            <Text style={styles.evalBtnText}>Evaluaciones</Text>
+          </Pressable>
+        }
       />
       <View style={[
         styles.searchWrap,
@@ -112,6 +124,10 @@ export default function CertificadosScreen() {
 function CertificadoCard({ cert }: { cert: Certificate }) {
   const t = themed(useTheme());
   const dateBlock = parseDateBlock(cert.course_date);
+  const isProgram = !!cert.is_program;
+  const gradientColors = isProgram
+    ? (['#7C3AED', '#6D28D9', '#4C1D95'] as [string, string, string])
+    : ([brandScale[400], brandScale[600], brandScale[700]] as [string, string, string]);
 
   function download() {
     Linking.openURL(`${api.baseUrl}${cert.download_url}`);
@@ -121,18 +137,18 @@ function CertificadoCard({ cert }: { cert: Certificate }) {
       {/* Preview tipo mini-diploma con gradiente brand */}
       <View style={styles.preview}>
         <LinearGradient
-          colors={[brandScale[400], brandScale[600], brandScale[700]] as [string, string, string]}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFillObject}
         />
         {/* Decoración: ribbon grande translúcido al fondo */}
         <View style={styles.previewDecor}>
-          <Ionicons name="ribbon" size={86} color="rgba(255,255,255,0.15)" />
+          <Ionicons name={isProgram ? 'school' : 'ribbon'} size={86} color="rgba(255,255,255,0.15)" />
         </View>
-        {/* Watermark CERT */}
+        {/* Watermark CERT / PROGRAMA */}
         <View style={styles.previewBadge}>
-          <Ionicons name="shield-checkmark" size={11} color="#FFFFFF" />
-          <Text style={styles.previewBadgeText}>CERTIFICADO</Text>
+          <Ionicons name={isProgram ? 'git-network' : 'shield-checkmark'} size={11} color="#FFFFFF" />
+          <Text style={styles.previewBadgeText}>{isProgram ? 'PROGRAMA' : 'CERTIFICADO'}</Text>
         </View>
         {/* Sello horas */}
         <View style={styles.previewSeal}>
@@ -199,6 +215,12 @@ function parseDateBlock(iso: string | null): { day: number; month: string; year:
 
 const styles = StyleSheet.create({
   safe:    { flex: 1 },
+  evalBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: spacing.md, paddingVertical: 8,
+    borderRadius: radius.full, backgroundColor: 'rgba(245,136,48,0.12)',
+  },
+  evalBtnText: { color: colors.brand, fontSize: typography.xs, fontWeight: typography.black },
   searchWrap: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: spacing.xl, marginBottom: spacing.sm,

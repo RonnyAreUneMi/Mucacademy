@@ -109,6 +109,37 @@ class SesionViewSet(AuditedModelViewSet):
             meet_calendar.delete_meet_event(sesion.google_calendar_event_id)
         return super().destroy(request, *args, **kwargs)
 
+    @action(detail=False, methods=['post'], url_path='suggest-skills')
+    def suggest_skills(self, request):
+        """POST {title, description, event_id?} → lista de competencias sugeridas por IA.
+
+        Funciona para eventos nuevos (sin id, usa title/description) o existentes
+        (con event_id, aprovecha además el resumen del evento).
+        """
+        from core.services.ai.skills import suggest_skills_for_event
+
+        event_id = request.data.get('event_id')
+        if event_id:
+            event = Event.objects.filter(pk=event_id).first()
+            if event is None:
+                return Response({'error': 'Evento no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            # Objeto ligero para eventos aún no guardados
+            event = Event(
+                title=request.data.get('title', ''),
+                description=request.data.get('description', ''),
+            )
+        try:
+            skills = suggest_skills_for_event(event)
+        except NotImplementedError:
+            return Response(
+                {'error': 'IA no configurada. Actívala en /panel/ai/config/.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:  # errores del proveedor de IA
+            return Response({'error': f'No se pudo generar: {e}'}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response({'skills': skills})
+
     @action(detail=True, methods=['post'])
     def toggle(self, request, pk=None):
         sesion = self.get_object()
@@ -306,6 +337,8 @@ class SesionViewSet(AuditedModelViewSet):
                     email=p.email,
                     phone=p.phone,
                     course=lote.name.upper(),
+                    course_date=sesion.date,
+                    hours=sesion.hours or 0,
                 ))
             Certificate.objects.bulk_create(certs)
 
@@ -322,6 +355,12 @@ class SesionViewSet(AuditedModelViewSet):
         # una task de Celery que itera y envía. En desarrollo sin Redis, EAGER
         # mode hace que corra inmediatamente sincrónica (mismo comportamiento).
         send_certificate_issued_bulk.delay(batch_id=lote.id)
+
+        # Si el curso pertenece a un programa, revisamos (async) qué
+        # participantes completaron TODOS los cursos → cert de programa.
+        if sesion.program_id:
+            from core.tasks.program_tasks import issue_program_certificates_for_event
+            issue_program_certificates_for_event.delay(event_id=sesion.id)
 
         return Response({
             'ok': True,

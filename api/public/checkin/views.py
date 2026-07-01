@@ -130,6 +130,16 @@ class CheckinRegisterView(APIView):
                 'nombre': f'{participante.first_name} {participante.last_name}',
             })
 
+        # Si el seminario pertenece a un programa, tras esta asistencia el
+        # participante podría haber completado todos los seminarios → intentar
+        # emitir el certificado de programa (requiere además aprobar la eval).
+        if sesion.program_id:
+            try:
+                from core.services import programs as program_service
+                program_service.check_and_issue(sesion.program, participante)
+            except Exception:
+                pass  # nunca bloquear el check-in por esto
+
         return Response({
             'ok': True, 'already': False,
             'message': '¡Gracias por estar aquí! Tu asistencia fue registrada exitosamente.',

@@ -22,6 +22,8 @@ from .views import (
     # session
     session_list, session_create, session_edit,
     session_qr_display, session_generate_batch,
+    # program
+    program_list, program_create, program_detail,
     # design
     design_global, design_global_preview, design_save_firma_pos,
     # design system (UI tokens)
@@ -97,6 +99,11 @@ urlpatterns = [
     # Sessions — list es shell, create/edit son forms. Demás ops → API.
     path('sessions/', session_list, name='session_list'),
     path('sessions/create/', session_create, name='session_create'),
+
+    # Programas — list/detail shells; CRUD por /api/v1/admin/programs/
+    path('programas/', program_list, name='program_list'),
+    path('programas/nuevo/', program_create, name='program_create'),
+    path('programas/<int:id>/', program_detail, name='program_detail'),
     path('sessions/<int:id>/edit/', session_edit, name='session_edit'),
     path('sessions/<int:id>/qr/', session_qr_display, name='session_qr_display'),
     path('sessions/<int:id>/generate-batch/', session_generate_batch, name='session_generate_batch'),

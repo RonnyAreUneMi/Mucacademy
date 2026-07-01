@@ -6,19 +6,19 @@
 {% with css="w-full p-3 rounded-xl bg-gray-50 dark:bg-[#0F163A]/50 border border-gray-200 dark:border-blue-900/30 text-gray-800 dark:text-white font-medium focus:outline-none focus:border-[#F58830] transition-all duration-300" %}
 <div class="max-w-[1600px] mx-auto space-y-6">
     <div>
-        <a href="{% url 'panel:session_list' %}" class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-[#F58830] transition-all mb-3">
-            <i class="fa-solid fa-arrow-left"></i> Volver a eventos
+        <a href="{% if sesion.program_id %}/panel/programas/{{ sesion.program_id }}/{% else %}{% url 'panel:session_list' %}{% endif %}" class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-[#F58830] transition-all mb-3">
+            <i class="fa-solid fa-arrow-left"></i> {% if sesion.program_id %}Volver al programa{% else %}Volver a eventos{% endif %}
         </a>
         <h1 class="text-3xl font-black text-gray-800 dark:text-white tracking-tight">
-            <i class="fa-solid fa-pen text-[#F58830] mr-2"></i> Editar Evento
+            <i class="fa-solid fa-pen text-[#F58830] mr-2"></i> Configurar Seminario
         </h1>
-        <p class="text-gray-500 dark:text-gray-400 mt-1">Modificá los datos de la sesión #{{ sesion.id }}.</p>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Modifica los datos del seminario #{{ sesion.id }}.</p>
     </div>
 
     <form id="session-form" class="space-y-6">
         <div id="error-box" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-700 dark:text-red-400 text-sm"></div>
 
-        {% include 'panel/includes/_event_series.html' %}
+        {% include 'panel/includes/_event_program.html' %}
 
         <div class="lg-card rounded-3xl p-6 md:p-10 space-y-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
@@ -216,7 +216,7 @@
             <button type="submit" id="submit-btn" class="flex-1 bg-[#F58830] hover:bg-[#D97520] text-white font-bold py-3.5 rounded-xl shadow-xl shadow-[#F58830]/30 transition-all">
                 <i class="fa-solid fa-check mr-1"></i> Guardar Cambios
             </button>
-            <a href="{% url 'panel:session_list' %}" class="px-6 py-3.5 rounded-xl border border-red-400/60 dark:border-red-500/40 text-red-600 dark:text-red-400 font-bold bg-white/60 dark:bg-red-950/20 backdrop-blur-sm hover:bg-red-50 hover:border-red-500 dark:hover:bg-red-900/30 shadow-lg transition-all text-center">
+            <a href="{% if sesion.program_id %}/panel/programas/{{ sesion.program_id }}/{% else %}{% url 'panel:session_list' %}{% endif %}" class="px-6 py-3.5 rounded-xl border border-red-400/60 dark:border-red-500/40 text-red-600 dark:text-red-400 font-bold bg-white/60 dark:bg-red-950/20 backdrop-blur-sm hover:bg-red-50 hover:border-red-500 dark:hover:bg-red-900/30 shadow-lg transition-all text-center">
                 <i class="fa-solid fa-xmark mr-1"></i> Cancelar
             </a>
         </div>
@@ -355,8 +355,8 @@ document.getElementById('session-form').addEventListener('submit', async (e) => 
     fd.delete('capacity');
     fd.set('capacity', document.getElementById('cap-ilimitada').checked ? '0' : (document.getElementById('cap-input').value || '0'));
     fd.set('ponentes_json', JSON.stringify(collectPonentes()));
-    if (window.applyEventSeriesToFD) window.applyEventSeriesToFD(fd);
     if (window.applyEventQuizToFD) window.applyEventQuizToFD(fd);
+    if (window.applyEventProgramToFD) window.applyEventProgramToFD(fd);
     if (typeof window.getDescriptionHTML === 'function') {
         fd.set('description', window.getDescriptionHTML());
     }
@@ -379,7 +379,7 @@ document.getElementById('session-form').addEventListener('submit', async (e) => 
             btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Guardar Cambios';
             return;
         }
-        window.location.href = "{% url 'panel:session_list' %}";
+        window.location.href = {% if sesion.program_id %}"/panel/programas/{{ sesion.program_id }}/"{% else %}"{% url 'panel:session_list' %}"{% endif %};
     } catch (err) {
         errBox.textContent = 'Error de red: ' + err.message;
         errBox.classList.remove('hidden');

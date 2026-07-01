@@ -1,0 +1,105 @@
+{% extends 'panel/base.html' %}
+
+{% block content %}
+{% with css="w-full p-3 rounded-xl bg-gray-50 dark:bg-[#0F163A]/50 border border-gray-200 dark:border-blue-900/30 text-gray-800 dark:text-white font-medium focus:outline-none focus:border-[#F58830] transition-all" %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <div>
+        <a href="{% url 'panel:program_list' %}" class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-[#F58830] transition-all mb-3">
+            <i class="fa-solid fa-arrow-left"></i> Volver a programas
+        </a>
+        <h1 class="text-3xl font-black text-gray-800 dark:text-white tracking-tight">
+            <i class="fa-solid fa-diagram-project text-[#F58830] mr-2"></i> Crear Programa
+        </h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Un programa agrupa varios seminarios, con una evaluación y un certificado de programa.</p>
+    </div>
+
+    <form id="program-form" class="lg-card rounded-3xl p-6 md:p-10 space-y-6">
+        <div id="error-box" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-700 dark:text-red-400 text-sm"></div>
+
+        <div>
+            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Nombre del programa</label>
+            <input type="text" id="p-name" placeholder="Ej: Analítica de Datos" required class="{{ css }}">
+        </div>
+        <div>
+            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Descripción (opcional)</label>
+            <textarea id="p-desc" rows="3" placeholder="¿De qué trata el programa?" class="{{ css }} resize-none"></textarea>
+        </div>
+        <div>
+            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Facultad</label>
+            <select id="p-faculty" class="{{ css }}">
+                <option value="FACI">FACI - Ingeniería</option>
+                <option value="FACS">FACS - Salud</option>
+                <option value="FACE">FACE - Educación</option>
+                <option value="FACSECYD">FACSECYD - Ciencias Sociales</option>
+                <option value="POSGRADO">Posgrado / Otra</option>
+                <option value="COMUNIDAD">Comunidad Universitaria</option>
+            </select>
+        </div>
+
+        {% include 'panel/includes/_program_banner.html' with title_selector='#p-name' %}
+
+        <div class="p-4 rounded-xl bg-[#F58830]/5 border border-[#F58830]/20 text-sm text-gray-600 dark:text-gray-300">
+            <i class="fa-solid fa-circle-info text-[#F58830] mr-1"></i>
+            Después de crear el programa vas a poder <strong>agregar sus seminarios</strong> y configurar la <strong>evaluación</strong>.
+        </div>
+
+        <div class="flex gap-3 pt-1">
+            <button type="submit" id="submit-btn" class="flex-1 bg-[#F58830] hover:bg-[#D97520] text-white font-bold py-3.5 rounded-xl shadow-lg transition-all">
+                <i class="fa-solid fa-check mr-1"></i> Crear Programa
+            </button>
+            <a href="{% url 'panel:program_list' %}" class="px-6 py-3.5 rounded-xl border border-gray-200 dark:border-blue-900/30 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-[#0F163A]/50 transition-all text-center">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Overlay de carga tras crear -->
+<div id="loading-overlay" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-white/80 dark:bg-[#0B1020]/85 backdrop-blur-sm">
+    <div class="text-center">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-[#F58830]/10 flex items-center justify-center text-3xl text-[#F58830] mb-4">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+        </div>
+        <p class="font-bold text-gray-700 dark:text-gray-200">Creando tu programa…</p>
+        <p class="text-sm text-gray-400 mt-1">Te llevamos a su pantalla en un momento.</p>
+    </div>
+</div>
+{% endwith %}
+
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+document.getElementById('program-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('error-box');
+    const name = document.getElementById('p-name').value.trim();
+    if (!name) { err.textContent = 'El nombre es obligatorio.'; err.classList.remove('hidden'); return; }
+    err.classList.add('hidden');
+    document.getElementById('loading-overlay').classList.remove('hidden');
+    try {
+        const fd = new FormData();
+        fd.set('name', name);
+        fd.set('description', document.getElementById('p-desc').value.trim());
+        fd.set('faculty', document.getElementById('p-faculty').value);
+        const banner = window.getProgramBannerFile && window.getProgramBannerFile();
+        if (banner) fd.set('banner_image', banner);
+        const res = await fetch('/api/v1/admin/programs/', {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'X-CSRFToken': CSRF },
+            body: fd,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            document.getElementById('loading-overlay').classList.add('hidden');
+            err.textContent = typeof data === 'object' ? JSON.stringify(data) : 'No se pudo crear.';
+            err.classList.remove('hidden');
+            return;
+        }
+        window.location.href = `/panel/programas/${data.id}/`;
+    } catch (e) {
+        document.getElementById('loading-overlay').classList.add('hidden');
+        err.textContent = 'Error de red: ' + e.message;
+        err.classList.remove('hidden');
+    }
+});
+</script>
+{% endblock %}

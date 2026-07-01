@@ -4,15 +4,16 @@ import pytest
 
 @pytest.mark.django_db
 class TestPDFStrategy:
-    def test_registry_has_three_designs(self):
+    def test_registry_has_expected_designs(self):
         from core.services.pdf.designs import DESIGN_REGISTRY
-        assert set(DESIGN_REGISTRY.keys()) == {'classic', 'modern', 'geometric'}
+        assert set(DESIGN_REGISTRY.keys()) == {'classic', 'modern', 'geometric', 'program'}
 
     def test_get_design_resolves_each(self):
         from core.services.pdf.designs import get_design
         assert get_design('classic').__name__ == 'draw_classic_wow'
         assert get_design('modern').__name__ == 'draw_modern_wow'
         assert get_design('geometric').__name__ == 'draw_geometric_wow'
+        assert get_design('program').__name__ == 'draw_program_wow'
 
     def test_get_design_falls_back_to_classic(self):
         from core.services.pdf.designs import get_design

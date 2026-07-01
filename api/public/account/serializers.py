@@ -40,12 +40,14 @@ class CertificadoSerializer(serializers.ModelSerializer):
     download_url = serializers.SerializerMethodField()
     verify_url   = serializers.SerializerMethodField()
     lote_nombre  = serializers.CharField(source='batch.name', read_only=True)
+    is_program   = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Certificate
         fields = [
             'id', 'course', 'course_date', 'hours',
             'verification_hash', 'lote_nombre',
+            'is_program',
             'download_url', 'verify_url',
             'created_at',
         ]

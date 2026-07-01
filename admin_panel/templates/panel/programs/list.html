@@ -1,0 +1,146 @@
+{% extends 'panel/base.html' %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-gray-800 dark:text-white tracking-tight">
+                <i class="fa-solid fa-diagram-project text-[#F58830] mr-2"></i>
+                Programas
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Agrupá varios cursos bajo un mismo programa y su certificado.</p>
+        </div>
+        <a href="{% url 'panel:program_create' %}" class="bg-[#F58830] hover:bg-[#D97520] text-white font-bold px-6 py-3 rounded-xl shadow-lg transition-all hover:-translate-y-1 flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Nuevo Programa
+        </a>
+    </div>
+
+    {% include 'panel/includes/_events_tabs.html' with active='programas' %}
+
+    <!-- Grid -->
+    <div id="prog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="col-span-full text-center py-16 text-gray-400">
+            <i class="fa-solid fa-spinner fa-spin text-2xl"></i>
+        </div>
+    </div>
+    <div id="prog-empty" class="hidden text-center py-16">
+        <div class="w-16 h-16 mx-auto rounded-full bg-[#F58830]/10 flex items-center justify-center mb-4">
+            <i class="fa-solid fa-diagram-project text-[#F58830] text-2xl"></i>
+        </div>
+        <p class="text-gray-500 dark:text-gray-400 font-medium">Aún no hay programas.</p>
+        <a href="{% url 'panel:program_create' %}" class="mt-4 inline-block text-[#F58830] font-bold hover:underline">Crear el primero</a>
+    </div>
+</div>
+
+<!-- Modal crear -->
+<div id="create-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-[#162054] rounded-3xl shadow-2xl w-full max-w-lg p-6 md:p-8 space-y-5">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-black text-gray-800 dark:text-white"><i class="fa-solid fa-plus text-[#F58830] mr-2"></i>Nuevo Programa</h2>
+            <button onclick="closeCreate()" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <div id="create-err" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 text-red-700 dark:text-red-400 text-sm"></div>
+        {% with css="w-full p-3 rounded-xl bg-gray-50 dark:bg-[#0F163A]/50 border border-gray-200 dark:border-blue-900/30 text-gray-800 dark:text-white font-medium focus:outline-none focus:border-[#F58830]" %}
+        <div>
+            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Nombre del programa</label>
+            <input id="np-name" type="text" placeholder="Ej: Analítica de Datos" class="{{ css }}">
+        </div>
+        <div>
+            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Descripción (opcional)</label>
+            <textarea id="np-desc" rows="3" class="{{ css }} resize-none"></textarea>
+        </div>
+        <div>
+            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Facultad</label>
+            <select id="np-faculty" class="{{ css }}">
+                <option value="FACI">FACI - Ingeniería</option>
+                <option value="FACS">FACS - Salud</option>
+                <option value="FACE">FACE - Educación</option>
+                <option value="FACSECYD">FACSECYD - Ciencias Sociales</option>
+                <option value="POSGRADO">Posgrado / Otra</option>
+                <option value="COMUNIDAD">Comunidad Universitaria</option>
+            </select>
+        </div>
+        {% endwith %}
+        <div class="flex gap-3 pt-2">
+            <button onclick="submitCreate()" id="np-submit" class="flex-1 bg-[#F58830] hover:bg-[#D97520] text-white font-bold py-3 rounded-xl transition-all">Crear</button>
+            <button onclick="closeCreate()" class="px-6 py-3 rounded-xl border border-gray-300 dark:border-blue-900/40 text-gray-600 dark:text-gray-300 font-bold">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+const FACULTY_LABEL = {FACI:'Ingeniería',FACS:'Salud',FACE:'Educación',FACSECYD:'Ciencias Sociales',POSGRADO:'Posgrado',COMUNIDAD:'Comunidad'};
+
+async function loadPrograms() {
+    const grid = document.getElementById('prog-grid');
+    const empty = document.getElementById('prog-empty');
+    try {
+        const res = await fetch('/api/v1/admin/programs/', { credentials: 'same-origin' });
+        const data = await res.json();
+        const items = data.results || data;
+        if (!items.length) { grid.classList.add('hidden'); empty.classList.remove('hidden'); return; }
+        grid.classList.remove('hidden'); empty.classList.add('hidden');
+        grid.innerHTML = items.map(cardHTML).join('');
+    } catch (e) {
+        grid.innerHTML = '<div class="col-span-full text-center py-16 text-red-500">Error al cargar programas.</div>';
+    }
+}
+
+function cardHTML(p) {
+    const banner = p.banner_url
+        ? `<div class="relative h-28 -mx-6 -mt-6 mb-3 overflow-hidden rounded-t-3xl"><img src="${p.banner_url}" alt="" class="w-full h-full object-cover"><span class="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-1 rounded-full ${p.is_active ? 'bg-emerald-500/90 text-white' : 'bg-gray-500/90 text-white'}">${p.is_active ? 'ACTIVO' : 'INACTIVO'}</span></div>`
+        : '';
+    const iconRow = p.banner_url ? '' : `
+        <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="w-11 h-11 rounded-xl bg-[#F58830]/10 text-[#F58830] flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-diagram-project"></i></div>
+            <span class="text-[10px] font-bold px-2 py-1 rounded-full ${p.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-500'}">${p.is_active ? 'ACTIVO' : 'INACTIVO'}</span>
+        </div>`;
+    return `
+    <a href="/panel/programas/${p.id}/" class="lg-card rounded-3xl p-6 group hover:-translate-y-1 transition-all flex flex-col overflow-hidden">
+        ${banner}${iconRow}
+        <h3 class="text-lg font-black text-gray-800 dark:text-white leading-tight group-hover:text-[#F58830] transition-colors">${esc(p.name)}</h3>
+        <p class="text-xs text-gray-400 mt-0.5">${FACULTY_LABEL[p.faculty] || p.faculty}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 line-clamp-2 flex-1">${esc(p.description || 'Sin descripción')}</p>
+        <div class="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-blue-900/30 text-sm">
+            <span class="text-gray-600 dark:text-gray-300"><i class="fa-solid fa-book text-[#F58830] mr-1"></i> ${p.course_count} curso(s)</span>
+            <span class="text-gray-600 dark:text-gray-300"><i class="fa-solid fa-clock text-[#F58830] mr-1"></i> ${p.total_hours} h</span>
+        </div>
+    </a>`;
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function openCreate() { document.getElementById('create-modal').classList.remove('hidden'); }
+function closeCreate() { document.getElementById('create-modal').classList.add('hidden'); document.getElementById('create-err').classList.add('hidden'); }
+
+async function submitCreate() {
+    const btn = document.getElementById('np-submit');
+    const err = document.getElementById('create-err');
+    const name = document.getElementById('np-name').value.trim();
+    if (!name) { err.textContent = 'El nombre es obligatorio.'; err.classList.remove('hidden'); return; }
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    try {
+        const res = await fetch('/api/v1/admin/programs/', {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name,
+                description: document.getElementById('np-desc').value.trim(),
+                faculty: document.getElementById('np-faculty').value,
+            }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { err.textContent = JSON.stringify(data); err.classList.remove('hidden'); return; }
+        window.location.href = `/panel/programas/${data.id}/`;
+    } catch (e) {
+        err.textContent = 'Error de red: ' + e.message; err.classList.remove('hidden');
+    } finally {
+        btn.disabled = false; btn.innerHTML = 'Crear';
+    }
+}
+
+loadPrograms();
+</script>
+{% endblock %}

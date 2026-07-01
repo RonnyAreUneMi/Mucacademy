@@ -1,0 +1,17 @@
+{% comment %}
+Tabs de navegación entre Seminarios y Programas.
+Uso: {% include 'panel/includes/_events_tabs.html' with active='seminarios' %}
+     active = 'seminarios' | 'programas'
+{% endcomment %}
+<div class="flex w-full p-1 rounded-2xl bg-gray-100 dark:bg-[#0F163A]/60 border border-gray-200 dark:border-blue-900/30">
+    <a href="{% url 'panel:session_list' %}"
+       class="flex-1 px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2
+       {% if active == 'seminarios' %}bg-white dark:bg-[#162054] text-[#F58830] shadow-sm{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200{% endif %}">
+        <i class="fa-solid fa-book"></i> Seminarios
+    </a>
+    <a href="{% url 'panel:program_list' %}"
+       class="flex-1 px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2
+       {% if active == 'programas' %}bg-white dark:bg-[#162054] text-[#F58830] shadow-sm{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200{% endif %}">
+        <i class="fa-solid fa-diagram-project"></i> Programas
+    </a>
+</div>

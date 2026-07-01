@@ -6,7 +6,7 @@ from django.db import models
 from core.base.models import TimestampedModel
 from core.managers import CertificateManager, BatchManager
 
-from .catalogs.enums import FACULTY_CHOICES, CertificateTemplate
+from .catalogs.enums import FACULTY_CHOICES, CertificateTemplate, CertificateKind
 
 
 class CertificateBatch(TimestampedModel):
@@ -21,6 +21,17 @@ class CertificateBatch(TimestampedModel):
     excel_file = models.FileField(upload_to='batches_excel/', null=True, blank=True)
     administrator = models.ForeignKey('core.User', on_delete=models.SET_NULL, null=True)
     is_active = models.BooleanField(default=True)
+
+    kind = models.CharField(
+        max_length=10, choices=CertificateKind.choices,
+        default=CertificateKind.COURSE, db_index=True,
+        help_text='Course = one event; Program = groups several courses.',
+    )
+    program = models.ForeignKey(
+        'core.Program', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='batches', verbose_name='Programa',
+        help_text='Set only for program-certificate batches.',
+    )
 
     faculty = models.CharField(
         max_length=20, choices=FACULTY_CHOICES, default='FACI', db_index=True,
@@ -148,6 +159,12 @@ class Certificate(TimestampedModel):
     course_date = models.DateField(null=True, blank=True)
     hours = models.IntegerField(default=0)
 
+    # For program certificates: frozen list of the courses (with their skills
+    # and hours) that made up the program at issue time. Shape:
+    #   [{"name": "SQL", "hours": 20, "skills": ["...", "..."]}, ...]
+    # Null/empty for ordinary course certificates.
+    program_data = models.JSONField(null=True, blank=True)
+
     # Security and access
     verification_hash = models.CharField(
         max_length=100, unique=True, default=uuid.uuid4, db_index=True,
@@ -182,6 +199,11 @@ class Certificate(TimestampedModel):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+
+    @property
+    def is_program(self) -> bool:
+        """True if this is a program-level certificate (groups several courses)."""
+        return self.batch.kind == CertificateKind.PROGRAM
 
     @property
     def was_downloaded(self):

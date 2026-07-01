@@ -217,6 +217,23 @@ def send_certificate_issued(*, certificado, sesion, participante: Participant, r
     )
 
 
+def send_program_certificate_issued(*, certificado, program, participante: Participant, request=None) -> bool:
+    """Notifica la emisión del certificado de PROGRAMA (agrupa varios cursos).
+
+    Reutiliza la plantilla de certificado emitido, pasando un objeto ligero
+    como `sesion` cuyo título es el nombre del programa.
+    """
+    shim = type('ProgramShim', (), {
+        'title': f'Programa {program.name}',
+        'day_of_week': program.name,
+        'date': None,
+    })()
+    return send_certificate_issued(
+        certificado=certificado, sesion=shim,
+        participante=participante, request=request,
+    )
+
+
 def send_event_inscription(participante: Participant, sesion, request=None) -> bool:
     """Envía confirmación cuando un user se inscribe a un evento."""
     from django.utils import timezone

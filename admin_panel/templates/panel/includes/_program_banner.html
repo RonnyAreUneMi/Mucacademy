@@ -1,0 +1,121 @@
+{% comment %}
+Banner del programa (subida + generación con IA).
+Parámetro: title_selector → selector del input con el nombre del programa
+(por defecto '#p-name'). Reusa el endpoint /api/v1/admin/ai/event-banner/.
+Expone: window.getProgramBannerFile(), window.programBannerSetPreview(url),
+window.programBannerClear().
+{% endcomment %}
+<div>
+    <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2"><i class="fa-solid fa-image mr-1 text-[#F58830]"></i> Banner del programa</label>
+    <label for="pb-input" id="pb-zone" class="block cursor-pointer rounded-2xl border-2 border-dashed border-gray-300 dark:border-blue-900/40 hover:border-[#F58830] hover:bg-[#F58830]/5 transition-all overflow-hidden">
+        <div id="pb-empty" class="px-6 py-8 text-center">
+            <div class="w-12 h-12 mx-auto rounded-full bg-[#F58830]/10 flex items-center justify-center mb-2"><i class="fa-solid fa-cloud-arrow-up text-[#F58830] text-xl"></i></div>
+            <p class="text-sm font-bold text-gray-700 dark:text-gray-200">Click o arrastra una imagen</p>
+            <p class="text-xs text-gray-400 mt-1">PNG, JPG · recomendado 1200×600</p>
+        </div>
+        <div id="pb-preview" class="hidden relative">
+            <img id="pb-img" alt="" class="w-full h-40 object-cover">
+            <div class="absolute top-2 right-2 flex gap-2">
+                <button type="button" onclick="pbChange(event)" class="w-8 h-8 rounded-full bg-white/95 hover:bg-white text-gray-700 shadow flex items-center justify-center" title="Cambiar"><i class="fa-solid fa-arrows-rotate text-xs"></i></button>
+                <button type="button" onclick="pbRemove(event)" class="w-8 h-8 rounded-full bg-white/95 hover:bg-red-50 text-red-600 shadow flex items-center justify-center" title="Quitar"><i class="fa-solid fa-trash text-xs"></i></button>
+            </div>
+            <div class="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/55 text-white text-[11px]" id="pb-filename"></div>
+        </div>
+    </label>
+    <input id="pb-input" type="file" accept="image/*" class="hidden">
+
+    <div class="mt-3">
+        <button type="button" id="pb-ai-toggle" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#F58830]/15 to-[#162054]/15 hover:from-[#F58830]/25 hover:to-[#162054]/25 border border-[#F58830]/40 text-[#F58830] dark:text-orange-300 font-bold text-sm transition-all">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Generar banner con IA (branding UNEMI)
+        </button>
+        <div id="pb-ai-panel" class="hidden mt-3 p-4 rounded-xl bg-gray-50 dark:bg-[#0F163A]/60 border border-gray-200 dark:border-blue-900/40 space-y-3">
+            <textarea id="pb-ai-prompt" rows="2" placeholder="Ajusta el prompt (opcional): ej. datos, gráficos, tonos cálidos…" class="w-full p-2.5 rounded-lg bg-white dark:bg-[#0F163A] border border-gray-200 dark:border-blue-900/30 text-gray-800 dark:text-white text-sm resize-none focus:outline-none focus:border-[#F58830]"></textarea>
+            <p class="text-[11px] text-gray-400">Se usa el <strong>nombre del programa</strong> + tu prompt. El branding UNEMI se añade siempre.</p>
+            <button type="button" id="pb-ai-gen" class="w-full py-2.5 rounded-xl bg-[#F58830] hover:bg-orange-600 disabled:opacity-50 text-white font-bold text-sm transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-bolt"></i> <span>Generar</span></button>
+            <p id="pb-ai-err" class="hidden text-xs text-red-500 font-medium"></p>
+            <p id="pb-ai-hint" class="hidden text-[11px] text-gray-400">La IA tarda ~10-20s en crear la imagen, esperá un momento.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const TITLE_SEL = '{{ title_selector|default:"#p-name" }}';
+    let currentFile = null;   // fuente de verdad (no dependemos de input.files)
+    const input = document.getElementById('pb-input');
+    const img = document.getElementById('pb-img');
+    const empty = document.getElementById('pb-empty');
+    const preview = document.getElementById('pb-preview');
+    const fname = document.getElementById('pb-filename');
+    const zone = document.getElementById('pb-zone');
+    const csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+
+    function showPreview(src, name) {
+        if (img) img.src = src;
+        empty?.classList.add('hidden');
+        preview?.classList.remove('hidden');
+        if (fname) fname.textContent = name || '';
+    }
+    window.pbChange = (e) => { e.preventDefault(); input.click(); };
+    window.pbRemove = (e) => { e.preventDefault(); input.value=''; currentFile = null; preview?.classList.add('hidden'); empty?.classList.remove('hidden'); window.__pbRemoved = true; };
+
+    input.addEventListener('change', (e) => {
+        const f = e.target.files[0]; if (!f) return;
+        currentFile = f;
+        window.__pbRemoved = false;
+        const r = new FileReader();
+        r.onload = ev => showPreview(ev.target.result, f.name);
+        r.readAsDataURL(f);
+    });
+    ['dragenter','dragover'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('border-[#F58830]'); }));
+    ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('border-[#F58830]'); }));
+    zone.addEventListener('drop', e => { if (e.dataTransfer.files[0]) { input.files = e.dataTransfer.files; input.dispatchEvent(new Event('change')); } });
+
+    // Exponer para el submit (usamos la variable, no input.files)
+    window.getProgramBannerFile = () => currentFile;
+    window.programBannerSetPreview = (url) => { if (url) showPreview(url, 'Banner actual'); };
+    window.programBannerClear = () => { input.value=''; currentFile = null; preview?.classList.add('hidden'); empty?.classList.remove('hidden'); };
+
+    // IA
+    const toggle = document.getElementById('pb-ai-toggle');
+    const panel = document.getElementById('pb-ai-panel');
+    const gen = document.getElementById('pb-ai-gen');
+    const err = document.getElementById('pb-ai-err');
+    const hint = document.getElementById('pb-ai-hint');
+    toggle.addEventListener('click', () => panel.classList.toggle('hidden'));
+    function loading(on) {
+        gen.disabled = on;
+        gen.innerHTML = on ? '<i class="fa-solid fa-spinner fa-spin"></i> <span>Generando…</span>' : '<i class="fa-solid fa-bolt"></i> <span>Generar</span>';
+        hint.classList.toggle('hidden', !on);
+    }
+    function applyImage(dataUrl, filename) {
+        const [meta, b64] = dataUrl.split(',');
+        const mime = (meta.match(/data:(.*?);/) || [])[1] || 'image/png';
+        const bin = atob(b64); const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const file = new File([bytes], filename, { type: mime });
+        currentFile = file;
+        try { const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; } catch (e) {}
+        window.__pbRemoved = false;
+        showPreview(dataUrl, 'Generado con IA · ' + filename);
+    }
+    gen.addEventListener('click', async () => {
+        const titulo = (document.querySelector(TITLE_SEL)?.value || '').trim();
+        if (titulo.length < 3) { err.textContent = 'Primero escribe el nombre del programa.'; err.classList.remove('hidden'); return; }
+        err.classList.add('hidden'); loading(true);
+        try {
+            const res = await fetch('/api/v1/admin/ai/event-banner/', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                body: JSON.stringify({ titulo, prompt: document.getElementById('pb-ai-prompt').value }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) { err.textContent = data.error || 'No se pudo generar.'; err.classList.remove('hidden'); return; }
+            applyImage(data.image_base64, data.filename || 'banner-ia.png');
+            panel.classList.add('hidden');
+        } catch (e) {
+            err.textContent = 'Error de red: ' + e.message; err.classList.remove('hidden');
+        } finally { loading(false); }
+    });
+})();
+</script>
