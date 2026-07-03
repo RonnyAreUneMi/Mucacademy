@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q, Exists, OuterRef
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from rest_framework import permissions
@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 
 from core.models import (
     Certificate, CertificateBatch, AuditLog,
-    Event, Participant, Enrollment, AccessRequest,
+    Event, Participant, Enrollment, AccessRequest, Attendance,
 )
 
 
@@ -85,6 +85,61 @@ class AdminDashboardView(APIView):
             for s in upcoming_sessions_qs
         ]
 
+        # ══════════ Métricas de DECISIÓN (necesita tu atención) ══════════
+        # No-shows: inscritos confirmados a eventos ya pasados que NO asistieron.
+        att_exists = Attendance.objects.filter(
+            event=OuterRef('event'), participant=OuterRef('participant'),
+        )
+        no_show_qs = (
+            Enrollment.objects
+            .filter(confirmed=True, event__date__lt=today, participant__isnull=False)
+            .annotate(asistio=Exists(att_exists))
+            .filter(asistio=False)
+        )
+        no_shows = no_show_qs.count()
+
+        # Tasa de asistencia global (eventos pasados).
+        conf_past = Enrollment.objects.filter(confirmed=True, event__date__lt=today).count()
+        att_past = Attendance.objects.filter(event__date__lt=today).count()
+        attendance_rate = round(att_past / conf_past * 100) if conf_past else 0
+
+        # Eventos ya pasados CON asistentes pero SIN lote de certificados → generar.
+        events_need_certs_qs = (
+            Event.objects
+            .filter(date__lt=today, batch__isnull=True)
+            .annotate(asistentes=Count('attendances'))
+            .filter(asistentes__gt=0)
+            .order_by('-date')
+        )
+        events_need_certs = [
+            {'id': e.id, 'titulo': e.title or e.day_of_week,
+             'fecha': e.date.strftime('%d/%m/%Y'), 'asistentes': e.asistentes}
+            for e in events_need_certs_qs[:6]
+        ]
+        events_need_certs_count = events_need_certs_qs.count()
+
+        # Certificados emitidos que nadie descargó todavía.
+        certs_not_downloaded = Certificate.objects.filter(download_count=0).count()
+
+        # Top eventos por no-shows (inscritos vs asistieron), para actuar.
+        no_show_by_event = []
+        for e in Event.objects.filter(date__lt=today).order_by('-date')[:40]:
+            inscritos = Enrollment.objects.filter(event=e, confirmed=True).count()
+            asistieron = Attendance.objects.filter(event=e).count()
+            faltaron = inscritos - asistieron
+            if faltaron > 0:
+                no_show_by_event.append({
+                    'id': e.id,
+                    'titulo': e.title or e.day_of_week,
+                    'fecha': e.date.strftime('%d/%m/%Y'),
+                    'inscritos': inscritos,
+                    'asistieron': asistieron,
+                    'faltaron': faltaron,
+                    'tasa': round(asistieron / inscritos * 100) if inscritos else 0,
+                })
+        no_show_by_event.sort(key=lambda x: x['faltaron'], reverse=True)
+        no_show_by_event = no_show_by_event[:5]
+
         # ── Series diarias últimos 14 días para sparklines/charts ──
         last_14_days = today - timedelta(days=14)
 
@@ -123,6 +178,15 @@ class AdminDashboardView(APIView):
                 'eventos_activos': total_eventos,
                 'inscripciones': total_inscripciones,
                 'solicitudes_pendientes': solicitudes_pendientes,
+            },
+            'decisiones': {
+                'no_shows': no_shows,
+                'attendance_rate': attendance_rate,
+                'events_need_certs': events_need_certs_count,
+                'certs_not_downloaded': certs_not_downloaded,
+                'solicitudes_pendientes': solicitudes_pendientes,
+                'events_need_certs_list': events_need_certs,
+                'no_show_by_event': no_show_by_event,
             },
             'upcoming_sessions': upcoming_sessions,
             'recent_lotes': recent_lotes,

@@ -312,17 +312,7 @@ class SesionViewSet(AuditedModelViewSet):
             for i, firma in enumerate(firmas_default, start=1):
                 setattr(lote, f'signature_inst_{i}', firma)
 
-            default_logos = [
-                ('header_logo_1', 'muc.png'),
-                ('header_logo_2', 'logo-unemi-removebg-preview.png'),
-                ('header_logo_3', 'feue.png'),
-            ]
-            for field_name, filename in default_logos:
-                img_path = os.path.join(django_settings.BASE_DIR, 'static', 'img', filename)
-                if os.path.exists(img_path):
-                    with open(img_path, 'rb') as f:
-                        getattr(lote, field_name).save(filename, File(f), save=False)
-
+            # Sin logos hardcodeados: los logos salen del Diseño Global / config del lote.
             lote.save()
 
             certs = []

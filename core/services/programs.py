@@ -7,24 +7,14 @@ idempotent: a participant gets at most one program certificate per program.
 from __future__ import annotations
 
 import logging
-import os
 import uuid
 
-from django.conf import settings as django_settings
-from django.core.files import File
 from django.db import transaction
 
 from core.models import Attendance, Certificate, CertificateBatch, Program, Signature
 from core.models.catalogs.enums import CertificateKind
 
 log = logging.getLogger(__name__)
-
-# Same default header logos used by course batches.
-DEFAULT_LOGOS = [
-    ('header_logo_1', 'muc.png'),
-    ('header_logo_2', 'logo-unemi-removebg-preview.png'),
-    ('header_logo_3', 'feue.png'),
-]
 
 DEFAULT_PROGRAM_BODY = (
     "Por haber culminado satisfactoriamente el programa '{programa}', "
@@ -34,16 +24,11 @@ DEFAULT_PROGRAM_BODY = (
 
 
 def _attach_batch_defaults(batch: CertificateBatch) -> None:
-    """Populate a fresh batch with the default signatures and header logos."""
+    """Populate a fresh batch with the default signatures (sin logos hardcodeados)."""
     firmas = list(Signature.objects.filter(is_active=True).order_by('sort_order')[:3])
     for i, firma in enumerate(firmas, start=1):
         setattr(batch, f'signature_inst_{i}', firma)
-
-    for field_name, filename in DEFAULT_LOGOS:
-        img_path = os.path.join(django_settings.BASE_DIR, 'static', 'img', filename)
-        if os.path.exists(img_path):
-            with open(img_path, 'rb') as f:
-                getattr(batch, field_name).save(filename, File(f), save=False)
+    # Los logos salen del Diseño Global / config del lote, no hardcodeados.
     batch.save()
 
 

@@ -1,125 +1,132 @@
 {% extends "panel/base.html" %}
 
 {% block title %}Usuarios - Admin{% endblock %}
-{% block page_title %}Usuarios Administradores{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <span class="p-2 bg-unemi-blue/10 rounded-lg">
-                    <i class="fas fa-users-cog text-unemi-blue"></i>
-                </span>
+            <h1 class="text-3xl font-black text-gray-800 dark:text-white tracking-tight flex items-center gap-3">
+                <span class="w-11 h-11 rounded-2xl bg-[#F58830]/10 text-[#F58830] flex items-center justify-center text-lg"><i class="fa-solid fa-users-gear"></i></span>
                 Usuarios Administradores
             </h1>
-            <p class="text-sm text-gray-500 mt-1">Gestiona los accesos administrativos y recupera claves</p>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Gestiona roles, accesos y recupera claves. <span class="text-gray-400">Los superadmins gestionan el panel; los profesores no acceden.</span></p>
         </div>
-        <div class="px-4 py-2 bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10">
-            <span class="text-xs text-gray-500 uppercase font-bold tracking-wider mr-2">Total</span>
-            <span id="stat-total" class="text-lg font-bold text-unemi-blue">—</span>
+        <div class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#F58830]/10 border border-[#F58830]/20">
+            <span class="text-2xl font-black text-[#F58830] tabular-nums leading-none" id="stat-total">—</span>
+            <span class="text-[10px] font-black text-[#F58830]/70 uppercase tracking-wider leading-tight">Usuarios</span>
         </div>
     </div>
 
     <!-- Buscador -->
-    <div class="mb-6">
-        <div class="relative group">
-            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <i class="fa-solid fa-magnifying-glass text-gray-400 group-focus-within:text-unemi-orange transition-colors"></i>
-            </div>
-            <input id="search-input" type="text" placeholder="Buscar por nombre o correo..."
-                class="w-full pl-11 pr-4 py-3 bg-white dark:bg-[#1a2b4d] border border-gray-200 dark:border-white/10 rounded-2xl text-sm text-gray-800 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-unemi-orange focus:border-transparent transition-all shadow-sm">
-        </div>
+    <div class="relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+        <input id="search-input" type="text" placeholder="Buscar por nombre o correo…"
+            class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white dark:bg-[#162054] border border-gray-200 dark:border-blue-900/30 text-sm text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#F58830] focus:ring-2 focus:ring-[#F58830]/20 transition-all shadow-sm">
     </div>
 
-    <div class="bg-white dark:bg-[#1a2b4d] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-50 dark:bg-black/20 border-b border-gray-200 dark:border-white/10">
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">Nombre</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-center">Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="users-tbody" class="divide-y divide-gray-100 dark:divide-white/5">
-                    <tr><td colspan="2" class="px-6 py-12 text-center text-gray-500">
-                        <i class="fa-solid fa-spinner fa-spin mr-2"></i> Cargando…
-                    </td></tr>
-                </tbody>
-            </table>
-        </div>
+    <!-- Lista -->
+    <div id="users-list" class="space-y-3">
+        <div class="lg-card rounded-2xl p-10 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i></div>
     </div>
 </div>
 
 <script>
 const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
+function esc(s){ if(s==null) return ''; const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
 
-function esc(s) {
-    if (s == null) return '';
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+const ROLE_BADGE = {
+    superadmin: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
+    admin:      'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
+    professor:  'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+};
+const ROLE_LABEL = { superadmin: 'Super admin', admin: 'Administrador', professor: 'Profesor' };
 
-function renderRow(u) {
+const AVATAR_GRAD = [
+    ['#F58830','#D97520'], ['#6366F1','#4338CA'], ['#10B981','#059669'],
+    ['#EC4899','#BE185D'], ['#0EA5E9','#0369A1'], ['#F59E0B','#B45309'],
+];
+
+function renderRow(u, i) {
     const fullName = (`${u.first_name || ''} ${u.last_name || ''}`).trim() || u.username;
     const initials = ((u.first_name?.[0] || '') + (u.last_name?.[0] || '')).toUpperCase() || (u.username?.[0] || '?').toUpperCase();
-    const rolBadge = u.role === 'superadmin'
-        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
+    const badge = ROLE_BADGE[u.role] || ROLE_BADGE.professor;
+    const [c1, c2] = AVATAR_GRAD[i % AVATAR_GRAD.length];
+    const isSelf = u.id === CURRENT_USER_ID;
+    const roleSelect = `
+        <select onchange="setRole(${u.id}, this.value)" ${isSelf ? 'disabled' : ''}
+            class="text-xs font-bold rounded-xl px-2.5 py-2 bg-gray-50 dark:bg-[#0F163A]/60 border border-gray-200 dark:border-blue-900/30 text-gray-700 dark:text-gray-200 focus:outline-none focus:border-[#F58830] ${isSelf ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}"
+            title="${isSelf ? 'No puedes cambiar tu propio rol' : 'Cambiar rol'}">
+            <option value="superadmin" ${u.role==='superadmin'?'selected':''}>Superadmin</option>
+            <option value="professor" ${u.role==='professor'?'selected':''}>Profesor</option>
+            ${u.role==='admin' ? '<option value=\"admin\" selected>Administrador</option>' : ''}
+        </select>`;
     return `
-    <tr class="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
-        <td class="px-6 py-4">
-            <div class="flex items-center gap-4">
-                <div class="h-10 w-10 rounded-full bg-unemi-blue/10 dark:bg-unemi-blue/20 flex items-center justify-center text-unemi-blue font-bold text-sm flex-shrink-0">
-                    ${esc(initials)}
+    <div class="lg-card rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 hover:-translate-y-0.5 transition-all">
+        <div class="flex items-center gap-4 flex-1 min-w-0">
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black flex-shrink-0 shadow-md" style="background:linear-gradient(135deg,${c1},${c2})">${esc(initials)}</div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <p class="text-sm font-black text-gray-800 dark:text-white truncate">${esc(fullName)}</p>
+                    <span class="text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider ${badge}">${ROLE_LABEL[u.role] || u.role}</span>
                 </div>
-                <div>
-                    <p class="text-sm font-bold text-gray-900 dark:text-white">${esc(fullName)}</p>
-                    <p class="text-xs text-gray-500 mb-1">${esc(u.email)}</p>
-                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${rolBadge}">${esc(u.rol_display || u.role)}</span>
-                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5"><i class="fa-solid fa-envelope text-[10px] mr-1"></i>${esc(u.email)}</p>
             </div>
-        </td>
-        <td class="px-6 py-4 text-center">
-            <button onclick="confirmReset(${u.id}, '${esc(fullName).replace(/'/g, '&apos;')}')" class="p-2.5 bg-unemi-orange/10 hover:bg-unemi-orange/20 text-unemi-orange rounded-xl transition-all" title="Resetear Clave">
-                <i class="fa-solid fa-key"></i>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+            ${roleSelect}
+            <button onclick="confirmReset(${u.id}, '${esc(fullName).replace(/'/g, '&apos;')}')"
+                class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#F58830]/10 hover:bg-[#F58830]/20 text-[#F58830] font-bold text-sm transition-all" title="Recuperar clave">
+                <i class="fa-solid fa-key"></i><span class="hidden lg:inline">Recuperar clave</span>
             </button>
-        </td>
-    </tr>`;
+        </div>
+    </div>`;
+}
+
+async function setRole(userId, role) {
+    try {
+        const res = await fetch(`/api/v1/admin/users/${userId}/set-role/`, {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ role }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { if (typeof showToast === 'function') showToast(data.error || 'No se pudo cambiar el rol', 'error'); }
+        else if (typeof showToast === 'function') showToast('Rol actualizado a ' + (data.rol_display || role), 'success');
+    } catch (e) {
+        if (typeof showToast === 'function') showToast('Error de red', 'error');
+    } finally {
+        loadUsers(document.getElementById('search-input').value.trim());  // refresca (resetea select si falló)
+    }
 }
 
 async function loadUsers(query = '') {
-    const tbody = document.getElementById('users-tbody');
+    const box = document.getElementById('users-list');
     try {
         const url = '/api/v1/admin/users/' + (query ? `?search=${encodeURIComponent(query)}` : '');
         const res = await fetch(url, { credentials: 'same-origin' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
-        const users = (data.results || data).filter(u => u.role === 'admin' || u.role === 'superadmin');
+        const users = (data.results || data).filter(u => ['superadmin', 'admin', 'professor'].includes(u.role));
         document.getElementById('stat-total').textContent = users.length;
-
-        if (users.length === 0) {
-            tbody.innerHTML = `
-                <tr><td colspan="2" class="px-6 py-12 text-center">
-                    <div class="w-16 h-16 bg-gray-50 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-users-slash text-2xl text-gray-300"></i>
-                    </div>
-                    <p class="text-gray-500 font-medium">No se encontraron usuarios</p>
-                </td></tr>`;
+        if (!users.length) {
+            box.innerHTML = `<div class="lg-card rounded-2xl p-12 text-center">
+                <div class="w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-users-slash text-2xl text-gray-300"></i></div>
+                <p class="text-gray-500 font-medium">No se encontraron usuarios.</p></div>`;
             return;
         }
-        tbody.innerHTML = users.map(renderRow).join('');
+        box.innerHTML = users.map(renderRow).join('');
     } catch (err) {
-        console.error(err);
-        tbody.innerHTML = `<tr><td colspan="2" class="px-6 py-12 text-center text-red-500">Error al cargar usuarios</td></tr>`;
+        box.innerHTML = `<div class="lg-card rounded-2xl p-10 text-center text-red-500">Error al cargar usuarios.</div>`;
     }
 }
 
 async function resetPassword(userId, newPassword = 'mucunemi25') {
     const res = await fetch(`/api/v1/admin/users/${userId}/reset-password/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
-        credentials: 'same-origin',
-        body: JSON.stringify({ new_password: newPassword }),
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+        credentials: 'same-origin', body: JSON.stringify({ new_password: newPassword }),
     });
     return res.ok;
 }
@@ -132,22 +139,19 @@ function confirmReset(userId, name) {
             type: 'info',
             callback: async () => {
                 const ok = await resetPassword(userId);
-                if (ok && typeof showToast === 'function') showToast('Clave reseteada a mucunemi25', 'success');
-                else if (typeof showToast === 'function') showToast('Error al resetear', 'error');
+                if (typeof showToast === 'function') showToast(ok ? 'Clave reseteada a mucunemi25' : 'Error al resetear', ok ? 'success' : 'error');
             },
         });
     } else if (confirm(`¿Resetear clave de ${name}?`)) {
-        resetPassword(userId).then(ok => alert(ok ? 'Clave reseteada' : 'Error'));
+        resetPassword(userId).then(ok => (typeof showToast === 'function') && showToast(ok ? 'Clave reseteada' : 'Error', ok ? 'success' : 'error'));
     }
 }
 
-// Debounced search
 let searchTimer;
 document.getElementById('search-input').addEventListener('input', e => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => loadUsers(e.target.value.trim()), 300);
 });
-
 loadUsers();
 </script>
 {% endblock %}

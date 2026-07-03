@@ -6,7 +6,7 @@ from .._helpers import (
     register_fonts, get_current_date_text, get_script_font, draw_text_block,
 )
 from .._signatures import draw_signatures_universal
-from .._logos import draw_smart_logos
+from .._logos import draw_smart_logos, draw_certifai_brand
 
 
 def draw_classic_wow(c, certificado, width, height, pri, sec, ter, txt):
@@ -81,7 +81,8 @@ def draw_classic_wow(c, certificado, width, height, pri, sec, ter, txt):
     # === HEADER LOGOS (helper unificado con defaults muc/unemi/feue) ===
     logo_h = 2.8*cm
     logo_area_y = height - 16*mm - logo_h
-    draw_smart_logos(c, lote, margin_inner, logo_area_y, inner_w, logo_h, align='center')
+    draw_smart_logos(c, lote, margin_inner, logo_area_y, inner_w, logo_h, align='left')
+    draw_certifai_brand(c, margin_inner, logo_area_y, inner_w, logo_h)
 
     # === MAIN CONTENT ===
     main_y_start = height - 75*mm

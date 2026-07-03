@@ -18,7 +18,7 @@ class User(AbstractUser):
     a superadmin approves it to activate the user.
     """
     role = models.CharField(
-        max_length=20, choices=AdminRole.choices, default=AdminRole.ADMIN,
+        max_length=20, choices=AdminRole.choices, default=AdminRole.PROFESSOR,
         db_index=True,
     )
     faculty = models.CharField(

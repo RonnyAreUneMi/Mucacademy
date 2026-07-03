@@ -304,22 +304,16 @@
                             </label>
                         </div>
                         
-                        <!-- Right -->
-                         <div class="border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-center bg-white dark:bg-gray-800 shadow-sm relative group/item">
-                             <span class="text-[10px] uppercase font-bold text-gray-400 block mb-2">Derecha</span>
-                             <div class="h-14 flex items-center justify-center mb-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
-                                {% if lote.header_logo_3 %}
-                                    <img src="{{lote.header_logo_3.url}}" class="h-full object-contain">
-                                {% else %}
-                                    <img src="/static/img/feue.png" class="h-full object-contain" title="Logo por defecto">
-                                {% endif %}
+                        <!-- Right · bloqueado (CertifAI) -->
+                         <div class="border-2 border-dashed border-[#F58830]/40 rounded-xl p-3 text-center bg-[#F58830]/5 relative">
+                             <span class="text-[10px] uppercase font-bold text-[#F58830] block mb-2">Derecha · Bloqueado</span>
+                             <div class="h-14 flex items-center justify-center gap-1.5 mb-3 bg-white dark:bg-gray-700/50 rounded-lg p-2">
+                                <span class="font-black text-[#162054] dark:text-white text-sm">Certif<span class="text-[#F58830]">AI</span></span>
+                                <img src="/static/tiger_chase_loader.png" class="h-8 object-contain">
                             </div>
-                            <label class="cursor-pointer block w-full">
-                                <span class="flex items-center justify-center gap-2 w-full py-2 px-3 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-300 rounded-lg transition-colors text-xs font-bold">
-                                    <i class="fa-solid fa-pen"></i> Cambiar
-                                </span>
-                                <input type="file" name="logo_header_3" class="hidden">
-                            </label>
+                            <span class="flex items-center justify-center gap-2 w-full py-2 px-3 bg-gray-100 dark:bg-white/5 text-gray-400 rounded-lg text-xs font-bold cursor-not-allowed">
+                                <i class="fa-solid fa-lock"></i> Reservado a CertifAI
+                            </span>
                         </div>
                     </div>
                 </div>

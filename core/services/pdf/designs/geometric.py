@@ -1,16 +1,13 @@
 """Diseño 'Geométrico': esquinas chevron con capas, marca de agua y QR en 2da página."""
-import os
-
 from reportlab.lib.units import cm
 from reportlab.lib.colors import HexColor, white
-from django.conf import settings
 
 from .._helpers import (
     register_fonts, get_current_date_text, get_script_font,
     format_body_text, draw_text_block,
 )
 from .._signatures import draw_signatures_universal
-from .._logos import draw_smart_logos
+from .._logos import draw_smart_logos, draw_unemi_watermark, draw_certifai_brand
 
 
 def draw_geometric_wow(c, certificado, width, height, pri, sec, ter, txt):
@@ -20,18 +17,7 @@ def draw_geometric_wow(c, certificado, width, height, pri, sec, ter, txt):
     SCRIPT_FONT = get_script_font()
 
     # --- 1. WATERMARK (logo UNEMI tenue al fondo) ---
-    c.saveState()
-    c.setFillAlpha(0.08)
-    c.setStrokeAlpha(0.08)
-    logo_watermark_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'logo-unemi-removebg-preview.png')
-    if os.path.exists(logo_watermark_path):
-        w_img = width * 1.18
-        h_img = w_img * 0.28
-        x_img = (width - w_img) / 2
-        y_img = -1.5*cm
-        c.drawImage(logo_watermark_path, x_img, y_img, width=w_img, height=h_img,
-                    mask='auto', preserveAspectRatio=True, anchor='c')
-    c.restoreState()
+    draw_unemi_watermark(c, width, height)
 
     # --- 2. ESQUINAS GEOMÉTRICAS (chevrons con capas) ---
     def draw_corner_professional(origin_x, origin_y, rotation, main_col, acc_col):
@@ -73,10 +59,12 @@ def draw_geometric_wow(c, certificado, width, height, pri, sec, ter, txt):
     draw_corner_professional(0, 0, 0, pri, sec)
     draw_corner_professional(width, height, 180, sec, pri)
 
-    # --- 3. LOGOS (helper unificado, respeta lote.logo_header_*) ---
+    # --- 3. LOGOS (admin a la izquierda) + marca CertifAI fija a la derecha ---
     logo_h = 3.5*cm
     logo_y = height - 4.8*cm
-    draw_smart_logos(c, lote, 3.0*cm, logo_y, width - 6.0*cm, logo_h, align='center')
+    draw_smart_logos(c, lote, 3.0*cm, logo_y, width - 6.0*cm, logo_h, align='left')
+    # Marca CertifAI: banda más baja e inset para librar el chevron del ángulo.
+    draw_certifai_brand(c, 3.0*cm, height - 4.7*cm, width - 7.0*cm, 1.5*cm)
 
     # --- 4. CONTENIDO ---
     center_x = width / 2

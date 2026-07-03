@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from core.models import User
+from core.models.catalogs.enums import AdminRole
 from api.common.viewsets import AuditedModelViewSet
 
 from .serializers import UsuarioListSerializer, UsuarioWriteSerializer, PasswordResetSerializer
@@ -42,3 +43,27 @@ class UsuarioViewSet(AuditedModelViewSet):
         user.save(update_fields=['password'])
         self.log_audit('RESET_PASSWORD', f'Password reseteado para {user.username}')
         return Response({'success': True, 'message': 'Contraseña actualizada'})
+
+    @action(detail=True, methods=['post'], url_path='set-role')
+    def set_role(self, request, pk=None):
+        """Cambia el rol de un usuario. Superadmin = admin total; profesor = sin acceso al panel."""
+        user = self.get_object()
+        role = (request.data.get('role') or '').strip()
+        valid = {r for r, _ in AdminRole.choices}
+        if role not in valid:
+            return Response({'error': 'Rol inválido.'}, status=400)
+        if user.id == request.user.id:
+            return Response({'error': 'No puedes cambiar tu propio rol.'}, status=400)
+        # No dejar el sistema sin superadmins.
+        if user.role == 'superadmin' and role != 'superadmin':
+            remaining = User.objects.filter(role='superadmin').exclude(id=user.id).count()
+            if remaining == 0:
+                return Response({'error': 'Debe quedar al menos un superadministrador.'}, status=400)
+
+        user.role = role
+        # Alinear flags de Django: profesor NO es staff (sin acceso al panel/API admin).
+        user.is_superuser = (role == 'superadmin')
+        user.is_staff = (role != 'professor')
+        user.save(update_fields=['role', 'is_superuser', 'is_staff'])
+        self.log_audit('UPDATE', f'Rol de {user.username} → {role}')
+        return Response({'ok': True, 'role': role, 'rol_display': user.get_role_display()})

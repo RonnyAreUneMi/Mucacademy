@@ -7,7 +7,7 @@ from .._helpers import (
     register_fonts, get_current_date_text, get_script_font, draw_text_block,
 )
 from .._signatures import draw_signatures_universal
-from .._logos import draw_smart_logos
+from .._logos import draw_smart_logos, draw_certifai_brand
 
 
 def draw_modern_wow(c, certificado, width, height, pri, sec, ter, txt):
@@ -87,8 +87,9 @@ def draw_modern_wow(c, certificado, width, height, pri, sec, ter, txt):
     content_width = width - margin_left - 1.5*cm
     center_x = margin_left + (content_width / 2)
 
-    # Logos (helper unificado)
-    draw_smart_logos(c, lote, margin_left, height - 3*cm, content_width, 2.2*cm, align='center')
+    # Logos (admin a la izquierda) + marca CertifAI fija a la derecha
+    draw_smart_logos(c, lote, margin_left, height - 3*cm, content_width, 2.2*cm, align='left')
+    draw_certifai_brand(c, margin_left, height - 3*cm, content_width, 2.2*cm)
 
     y_cursor = height - 5*cm
 

@@ -1,0 +1,81 @@
+{% comment %}
+Dropzone reutilizable (drag & drop) con estado vacío + cargado.
+Args:
+    input_id (req)  id del <input type=file> (el resto del form lo lee por ese id)
+    accept          ej. 'image/png,image/jpeg'  (default */*)
+    hint            texto de ayuda (ej. 'PNG sin fondo · máx 2MB')
+    image_preview   True → miniatura de imagen en el estado cargado
+Uso:
+    {% include 'panel/includes/_file_dropzone.html' with input_id='mi-file' accept='image/png' hint='PNG · máx 2MB' image_preview=True %}
+{% endcomment %}
+<div data-dz="{{ input_id }}">
+    <input type="file" id="{{ input_id }}" accept="{{ accept|default:'*/*' }}" class="hidden">
+
+    <!-- Estado vacío -->
+    <label for="{{ input_id }}" data-dz-empty
+        class="block cursor-pointer rounded-2xl border-2 border-dashed border-gray-300 dark:border-blue-900/40 hover:border-[#F58830] hover:bg-[#F58830]/5 transition-all">
+        <div class="px-6 py-8 text-center">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-3">
+                <i class="fa-solid fa-arrow-up-from-bracket text-gray-400 text-xl"></i>
+            </div>
+            <p class="text-sm font-bold text-gray-700 dark:text-gray-200">Arrastra el archivo aquí</p>
+            <p class="text-xs text-gray-400 mt-1">o haz click para seleccionar{% if hint %} · {{ hint }}{% endif %}</p>
+        </div>
+    </label>
+
+    <!-- Estado cargado -->
+    <div data-dz-loaded class="hidden p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/40">
+        <div class="flex items-center gap-3">
+            <div data-dz-thumb class="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center overflow-hidden flex-shrink-0 text-emerald-600">
+                <i class="fa-solid fa-file"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p data-dz-name class="text-sm font-bold text-gray-800 dark:text-white truncate"></p>
+                <p data-dz-meta class="text-xs text-gray-500"></p>
+            </div>
+            <label for="{{ input_id }}" class="w-9 h-9 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-blue-900/30 text-gray-500 hover:text-[#F58830] flex items-center justify-center cursor-pointer" title="Cambiar"><i class="fa-solid fa-arrows-rotate text-sm"></i></label>
+            <button type="button" data-dz-remove class="w-9 h-9 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-blue-900/30 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center" title="Quitar"><i class="fa-solid fa-trash text-sm"></i></button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const root = document.querySelector('[data-dz="{{ input_id }}"]');
+    if (!root) return;
+    const input = document.getElementById('{{ input_id }}');
+    const empty = root.querySelector('[data-dz-empty]');
+    const loaded = root.querySelector('[data-dz-loaded]');
+    const nameEl = root.querySelector('[data-dz-name]');
+    const metaEl = root.querySelector('[data-dz-meta]');
+    const thumb = root.querySelector('[data-dz-thumb]');
+    const removeBtn = root.querySelector('[data-dz-remove]');
+    const IMG_PREVIEW = {{ image_preview|yesno:'true,false' }};
+
+    function human(b) {
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b / 1024).toFixed(0) + ' KB';
+        return (b / 1048576).toFixed(1) + ' MB';
+    }
+    function show(file) {
+        nameEl.textContent = file.name;
+        metaEl.textContent = human(file.size) + ' · ' + (file.name.split('.').pop() || '').toUpperCase() + ' · Cargado';
+        if (IMG_PREVIEW && file.type.startsWith('image/')) {
+            const r = new FileReader();
+            r.onload = e => { thumb.innerHTML = '<img src="' + e.target.result + '" class="w-full h-full object-contain">'; };
+            r.readAsDataURL(file);
+        } else {
+            thumb.innerHTML = '<i class="fa-solid fa-file"></i>';
+        }
+        empty.classList.add('hidden');
+        loaded.classList.remove('hidden');
+    }
+
+    input.addEventListener('change', () => { if (input.files[0]) show(input.files[0]); });
+    removeBtn.addEventListener('click', () => { input.value = ''; loaded.classList.add('hidden'); empty.classList.remove('hidden'); });
+
+    ['dragenter', 'dragover'].forEach(ev => empty.addEventListener(ev, e => { e.preventDefault(); empty.classList.add('border-[#F58830]', 'bg-[#F58830]/5'); }));
+    ['dragleave', 'drop'].forEach(ev => empty.addEventListener(ev, e => { e.preventDefault(); empty.classList.remove('border-[#F58830]', 'bg-[#F58830]/5'); }));
+    empty.addEventListener('drop', e => { if (e.dataTransfer.files[0]) { input.files = e.dataTransfer.files; show(input.files[0]); } });
+})();
+</script>

@@ -8,7 +8,7 @@ from reportlab.pdfgen import canvas
 
 from ._diseno import _apply_diseno_global
 from ._helpers import hex2rgb
-from ._qr import _draw_geometric_verification_page
+from ._qr import _draw_verification_page
 from .designs import get_design
 
 # Default colors (fallback si el lote no los define)
@@ -55,25 +55,25 @@ def generate_certificate_pdf(certificado):
     plantilla = certificado.batch.template
     pri, sec, ter, txt = _build_colors(certificado.batch)
 
-    # Los certificados de programa usan siempre el diseño 'program'
-    # (lista de cursos + competencias), sin importar la plantilla elegida.
+    # Strategy dispatch. Los certificados de programa listan cursos+competencias
+    # pero RESPETAN el diseño elegido (classic/modern/geometric) en su borde.
     if certificado.batch.kind == 'program':
-        plantilla = 'program'
-
-    # Strategy dispatch
-    draw_fn = get_design(plantilla)
-    draw_fn(c, certificado, width, height, pri, sec, ter, txt)
-
-    # Geometric tiene segunda página con QR
-    if plantilla == 'geometric':
-        c.showPage()
-        _draw_geometric_verification_page(c, certificado, width, height, pri, sec)
+        from .designs.program import draw_program_wow
+        draw_program_wow(c, certificado, width, height, pri, sec, ter, txt, template=plantilla)
     else:
-        # Footer de validación (plantilla classic/modern)
-        c.setFont('Helvetica', 6)
-        c.setFillColor(HexColor('#999999'))
-        validation_text = f'ID: {certificado.verification_hash} - Documento generado electrónicamente'
-        c.drawCentredString(width / 2, 0.8 * cm, validation_text)
+        draw_fn = get_design(plantilla)
+        draw_fn(c, certificado, width, height, pri, sec, ter, txt)
+
+    # Footer de validación en la página principal (todas las plantillas).
+    c.setFont('Helvetica', 6)
+    c.setFillColor(HexColor('#999999'))
+    validation_text = f'ID: {certificado.verification_hash} - Documento generado electrónicamente'
+    c.drawCentredString(width / 2, 0.8 * cm, validation_text)
+
+    # Segunda página con QR de verificación para TODAS las plantillas,
+    # manteniendo el borde/estilo del diseño elegido.
+    c.showPage()
+    _draw_verification_page(c, certificado, width, height, pri, sec, plantilla)
 
     c.save()
     buffer.seek(0)

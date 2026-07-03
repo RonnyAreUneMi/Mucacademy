@@ -187,7 +187,7 @@ def aprobar_solicitud(request, id):
                 last_name=solicitud.last_name,
                 phone=solicitud.phone,
                 faculty=solicitud.faculty,
-                role='admin',
+                role='professor',   # los nuevos son profesores; un superadmin los promueve si hace falta
                 is_active=True,
                 is_staff=False,
                 is_superuser=False,

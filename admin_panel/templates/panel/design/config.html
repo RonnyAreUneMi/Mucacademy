@@ -186,14 +186,14 @@
                     <label class="block text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-blue-300 flex items-center gap-2 border-b border-gray-100 dark:border-blue-900/30 pb-2">
                         <i class="fa-solid fa-images text-purple-500"></i> Logos Cabecera
                     </label>
+                    <p class="text-[11px] text-gray-400 -mt-2">Logos 1 y 2 son configurables (van a la izquierda). El <strong>Logo 3 (derecha)</strong> está reservado a la marca CertifAI y no se puede cambiar.</p>
                     <div class="grid grid-cols-3 gap-3">
-                        {% for n in "123"|make_list %}
+                        {% for n in "12"|make_list %}
                         <div class="border border-gray-100 dark:border-gray-700 rounded-xl p-3 text-center bg-white dark:bg-gray-800">
                             <span class="text-[10px] uppercase font-bold text-gray-400 block mb-2">Logo {{ n }}</span>
                             <div class="h-14 flex items-center justify-center mb-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
                                 {% if n == '1' and diseno.header_logo_1 %}<img src="{{diseno.header_logo_1.url}}" class="h-full object-contain">
                                 {% elif n == '2' and diseno.header_logo_2 %}<img src="{{diseno.header_logo_2.url}}" class="h-full object-contain">
-                                {% elif n == '3' and diseno.header_logo_3 %}<img src="{{diseno.header_logo_3.url}}" class="h-full object-contain">
                                 {% else %}<i class="fa-solid fa-image text-gray-300 text-2xl"></i>{% endif %}
                             </div>
                             <label class="cursor-pointer block">
@@ -204,6 +204,17 @@
                             </label>
                         </div>
                         {% endfor %}
+                        <!-- Logo 3 · bloqueado (CertifAI) -->
+                        <div class="border-2 border-dashed border-[#F58830]/40 rounded-xl p-3 text-center bg-[#F58830]/5">
+                            <span class="text-[10px] uppercase font-bold text-[#F58830] block mb-2">Logo 3 · Derecha</span>
+                            <div class="h-14 flex items-center justify-center gap-1.5 mb-3 bg-white dark:bg-gray-700/50 rounded-lg p-2">
+                                <span class="font-black text-[#162054] dark:text-white text-sm">Certif<span class="text-[#F58830]">AI</span></span>
+                                <img src="/static/tiger_chase_loader.png" class="h-8 object-contain">
+                            </div>
+                            <span class="block py-2 px-3 bg-gray-100 dark:bg-white/5 text-gray-400 rounded-lg text-xs font-bold cursor-not-allowed">
+                                <i class="fa-solid fa-lock mr-1"></i> Reservado
+                            </span>
+                        </div>
                     </div>
                 </div>
 

@@ -232,6 +232,17 @@
 </head>
 <body class="min-h-screen relative">
 
+{% if request.session.impersonating_by %}
+<!-- Banner de impersonación (un admin viendo como este usuario) -->
+<div style="position:sticky;top:0;z-index:60" class="flex items-center justify-center gap-3 px-4 py-2 bg-[#F58830] text-white text-sm font-bold shadow-lg">
+    <i class="fa-solid fa-user-secret"></i>
+    <span>Estás viendo como <strong>{{ request.participant.full_name|default:'este usuario' }}</strong> (modo impersonación).</span>
+    <a href="/panel/impersonar/salir/" class="ml-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-black/20 hover:bg-black/30 transition-colors">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Salir
+    </a>
+</div>
+{% endif %}
+
 <!-- Liquid glass orbs background -->
 <div class="lg-bg" aria-hidden="true"><span></span></div>
 

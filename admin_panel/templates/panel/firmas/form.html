@@ -35,7 +35,7 @@
                     <img src="data:image/png;base64,{{ firma.image }}" alt="Firma Actual" class="h-16 object-contain bg-gray-50 dark:bg-gray-800 rounded p-2">
                 </div>
                 {% endif %}
-                <input type="file" id="imagen-file" accept="image/png, image/jpeg" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                {% include 'panel/includes/_file_dropzone.html' with input_id='imagen-file' accept='image/png,image/jpeg' hint='PNG sin fondo recomendado' image_preview=True %}
                 <p class="mt-2 text-xs text-gray-500">Sube una nueva firma para reemplazar la actual. Se recomienda formato PNG sin fondo.</p>
             </div>
 

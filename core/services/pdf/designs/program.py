@@ -1,7 +1,8 @@
 """Diseño 'Programa': certificado que agrupa varios cursos y sus competencias.
 
-A diferencia del certificado de curso, lista cada curso del programa junto a
-las habilidades desarrolladas y el total de horas académicas.
+Lista cada curso del programa con sus habilidades y las horas totales, y
+respeta el diseño elegido (Clásico / Moderno / Geométrico): el borde y la
+disposición cambian según la plantilla.
 """
 from reportlab.lib.units import cm, mm
 from reportlab.lib.colors import HexColor
@@ -9,11 +10,12 @@ from reportlab.lib.utils import simpleSplit
 
 from .._helpers import register_fonts, get_current_date_text, get_script_font
 from .._signatures import draw_signatures_universal
-from .._logos import draw_smart_logos
+from .._logos import draw_smart_logos, draw_unemi_watermark, draw_certifai_brand
+from .._qr import _border_classic, _border_modern, _border_geometric
 
 
-def draw_program_wow(c, certificado, width, height, pri, sec, ter, txt):
-    """Certificado de programa: marco clásico + tabla de cursos y competencias."""
+def draw_program_wow(c, certificado, width, height, pri, sec, ter, txt, template='classic'):
+    """Certificado de programa con el borde/estilo de la plantilla elegida."""
     register_fonts()
     lote = certificado.batch
 
@@ -23,25 +25,32 @@ def draw_program_wow(c, certificado, width, height, pri, sec, ter, txt):
     SANS = "Helvetica"
     SCRIPT_FONT = get_script_font()
 
-    # === Marco doble ===
-    margin_frame = 10*mm
-    c.saveState()
-    c.setStrokeColor(pri, alpha=0.55)
-    c.setLineWidth(3)
-    c.roundRect(margin_frame, margin_frame, width - 2*margin_frame, height - 2*margin_frame, 3*mm, fill=0, stroke=1)
-    margin_inner = 16*mm
-    inner_w = width - 2 * margin_inner
-    c.setStrokeColor(sec, alpha=0.7)
-    c.setLineWidth(1.5)
-    c.roundRect(margin_inner, margin_inner, inner_w, height - 2*margin_inner, 2.5*mm, fill=0, stroke=1)
-    c.restoreState()
+    # === Borde según el diseño + márgenes de contenido ===
+    margin_right = 16*mm
+    if template == 'modern':
+        _border_modern(c, width, height, pri, sec)
+        content_left = 5.0*cm          # deja espacio a la barra lateral
+        sig_margins = dict(margin_left=6.5, margin_right=1.5)
+    elif template == 'geometric':
+        draw_unemi_watermark(c, width, height)   # fondo UNEMI (igual que el geométrico)
+        _border_geometric(c, width, height, pri, sec)
+        content_left = 16*mm
+        sig_margins = {}
+    else:  # classic
+        _border_classic(c, width, height, pri, sec)
+        content_left = 16*mm
+        sig_margins = {}
 
-    # === Logos header ===
+    content_right = width - margin_right
+    inner_w = content_right - content_left
+    center_x = (content_left + content_right) / 2
+
+    # === Logos header (admin a la izquierda) + marca CertifAI fija a la derecha ===
     logo_h = 2.5*cm
     logo_area_y = height - 15*mm - logo_h
-    draw_smart_logos(c, lote, margin_inner, logo_area_y, inner_w, logo_h, align='center')
+    draw_smart_logos(c, lote, content_left, logo_area_y, inner_w, logo_h, align='left')
+    draw_certifai_brand(c, content_left, logo_area_y, inner_w, logo_h)
 
-    center_x = width / 2
     main_y = height - 62*mm
 
     c.setFont(TITLE_FONT, 34)
@@ -70,13 +79,13 @@ def draw_program_wow(c, certificado, width, height, pri, sec, ter, txt):
     c.setFont(BODY_FONT, 12.5)
     c.setFillColor(HexColor("#000000"))
     y = name_y - 12*mm
-    for line in simpleSplit(intro, BODY_FONT, 12.5, inner_w - 30*mm):
+    for line in simpleSplit(intro, BODY_FONT, 12.5, inner_w - 20*mm):
         c.drawCentredString(center_x, y, line)
         y -= 6*mm
 
     # === Tabla de cursos + habilidades ===
     courses = certificado.program_data or []
-    left_x = margin_inner + 14*mm
+    left_x = content_left + 14*mm
     text_w = inner_w - 28*mm
     y -= 4*mm
 
@@ -91,7 +100,6 @@ def draw_program_wow(c, certificado, width, height, pri, sec, ter, txt):
         chours = course.get('hours', 0) or 0
         skills = course.get('skills', []) or []
 
-        # Bullet dorado + nombre del curso en negrita
         c.setFillColor(sec)
         c.circle(left_x - 3*mm, y + 1.2*mm, 1.1*mm, fill=1, stroke=0)
         c.setFont(SANS_BOLD, header_size)
@@ -100,7 +108,6 @@ def draw_program_wow(c, certificado, width, height, pri, sec, ter, txt):
         c.drawString(left_x, y, head)
         y -= line_h
 
-        # Habilidades (regular, envueltas)
         if skills:
             skills_text = "Habilidades: " + " · ".join(str(s) for s in skills)
             c.setFont(SANS, skill_size)
@@ -113,7 +120,7 @@ def draw_program_wow(c, certificado, width, height, pri, sec, ter, txt):
     # Fecha
     c.setFont("Times-Italic", 12)
     c.setFillColor(HexColor('#777777'))
-    c.drawRightString(width - 2.5*cm, 2.0*cm, get_current_date_text(certificado.course_date))
+    c.drawRightString(content_right, 2.0*cm, get_current_date_text(certificado.course_date))
 
-    # Firmas
-    draw_signatures_universal(c, lote, width, line_color=sec, sig_y=3.6*cm)
+    # Firmas (respetan la barra lateral en 'modern')
+    draw_signatures_universal(c, lote, width, line_color=sec, sig_y=3.6*cm, **sig_margins)

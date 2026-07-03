@@ -98,6 +98,47 @@
         </div>
     </div>
 
+    <!-- ═══════════ NECESITA TU ATENCIÓN (decisiones) ═══════════ -->
+    <div>
+        <p class="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-slate-400 mb-3 flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Necesita tu atención</p>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="lg-card rounded-2xl p-4 flex items-center gap-3 border-l-4 border-rose-500">
+                <div class="w-11 h-11 rounded-xl bg-rose-500/15 text-rose-500 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-user-xmark"></i></div>
+                <div class="min-w-0"><p class="text-2xl font-black text-gray-900 dark:text-white leading-none" id="dec-no-shows">—</p><p class="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">inscritos no asistieron</p></div>
+            </div>
+            <a href="{% url 'panel:session_list' %}" class="lg-card rounded-2xl p-4 flex items-center gap-3 border-l-4 border-amber-500 hover:-translate-y-0.5 transition-all">
+                <div class="w-11 h-11 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-certificate"></i></div>
+                <div class="min-w-0"><p class="text-2xl font-black text-gray-900 dark:text-white leading-none" id="dec-need-certs">—</p><p class="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">eventos sin certificados</p></div>
+            </a>
+            <div class="lg-card rounded-2xl p-4 flex items-center gap-3 border-l-4 border-blue-500">
+                <div class="w-11 h-11 rounded-xl bg-blue-500/15 text-blue-500 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-download"></i></div>
+                <div class="min-w-0"><p class="text-2xl font-black text-gray-900 dark:text-white leading-none" id="dec-not-downloaded">—</p><p class="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">certificados sin descargar</p></div>
+            </div>
+            <a href="{% url 'panel:solicitudes_pendientes' %}" class="lg-card rounded-2xl p-4 flex items-center gap-3 border-l-4 border-violet-500 hover:-translate-y-0.5 transition-all">
+                <div class="w-11 h-11 rounded-xl bg-violet-500/15 text-violet-500 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-user-clock"></i></div>
+                <div class="min-w-0"><p class="text-2xl font-black text-gray-900 dark:text-white leading-none" id="dec-solicitudes">—</p><p class="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">solicitudes pendientes</p></div>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-4">
+            <div class="lg:col-span-8 lg-card rounded-2xl overflow-hidden">
+                <div class="p-5 border-b border-gray-100 dark:border-blue-900/30">
+                    <h3 class="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-lg bg-rose-500/15 text-rose-500 flex items-center justify-center"><i class="fa-solid fa-user-xmark text-xs"></i></span>
+                        Inscritos que no asistieron
+                    </h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Asistieron vs faltaron por evento — dónde perdés participación</p>
+                </div>
+                <div class="p-4"><div id="chartAttendance" class="w-full h-[280px]"></div></div>
+            </div>
+            <div class="lg:col-span-4 lg-card rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+                <p class="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-slate-400 mb-1">Tasa de asistencia</p>
+                <div id="attendance-gauge" class="w-full"></div>
+                <p class="text-xs text-gray-400 -mt-2">Asistentes / inscritos (eventos pasados)</p>
+            </div>
+        </div>
+    </div>
+
     <!-- ═══════════ STATS CON SPARKLINES ═══════════ -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {% include 'panel/includes/_stat_spark.html' with id='stat-certificados' spark_id='spark-cert' icon='fa-certificate' label='Certificados emitidos' color='blue' %}
@@ -204,7 +245,7 @@ function timeAgo(iso) {
     const now = new Date();
     const h = now.getHours();
     const greet = h < 6 ? 'Buenas noches' : h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
-    document.getElementById('greeting').textContent = greet + ' 👋';
+    document.getElementById('greeting').textContent = greet;
     const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
     document.getElementById('today-label').textContent =
@@ -254,6 +295,61 @@ function timeAgo(iso) {
     // Ponentes únicos en próximos eventos
     const heroPonentes = document.getElementById('hero-ponentes');
     if (heroPonentes) heroPonentes.textContent = upcoming.length;
+
+    // ── Decisiones / necesita tu atención
+    const D = data.decisiones || {};
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = fmt(v); };
+    setText('dec-no-shows', D.no_shows);
+    setText('dec-need-certs', D.events_need_certs);
+    setText('dec-not-downloaded', D.certs_not_downloaded);
+    setText('dec-solicitudes', D.solicitudes_pendientes);
+
+    // Gráfico: asistieron vs faltaron por evento (barras apiladas horizontales)
+    const attChartEl = document.querySelector('#chartAttendance');
+    const ns = D.no_show_by_event || [];
+    if (!ns.length) {
+        attChartEl.innerHTML = `<div class="text-center py-12"><i class="fa-solid fa-circle-check text-emerald-400 text-3xl mb-2"></i><p class="text-sm text-gray-500 dark:text-gray-400">¡Sin ausencias! Todos los inscritos asistieron.</p></div>`;
+    } else {
+        try {
+            const cats = ns.map(e => e.titulo.length > 26 ? e.titulo.slice(0, 26) + '…' : e.titulo);
+            new ApexCharts(attChartEl, {
+                chart: { type: 'bar', height: 280, stacked: true, toolbar: { show: false }, fontFamily: 'Outfit, Inter, sans-serif', background: 'transparent', animations: { speed: 600 } },
+                series: [
+                    { name: 'Asistieron', data: ns.map(e => e.asistieron) },
+                    { name: 'Faltaron', data: ns.map(e => e.faltaron) },
+                ],
+                colors: ['#10B981', '#EF4444'],
+                plotOptions: { bar: { horizontal: true, borderRadius: 4, borderRadiusApplication: 'end', barHeight: '58%' } },
+                dataLabels: { enabled: true, style: { colors: ['#fff'], fontSize: '10px', fontWeight: 700 } },
+                xaxis: { categories: cats, labels: { style: { colors: textColor, fontSize: '10px' } }, axisBorder: { show: false }, axisTicks: { show: false } },
+                yaxis: { labels: { style: { colors: textColor, fontSize: '11px', fontWeight: 600 }, maxWidth: 170 } },
+                legend: { position: 'top', horizontalAlign: 'left', labels: { colors: textColor }, fontSize: '11px', markers: { width: 10, height: 10, radius: 10 } },
+                grid: { borderColor: gridColor, strokeDashArray: 4, padding: { left: 4, right: 8 } },
+                tooltip: { theme: themeMode, y: { formatter: v => v + ' participante(s)' } },
+                theme: { mode: themeMode },
+            }).render();
+        } catch (e) { console.warn('Attendance chart failed:', e); }
+    }
+
+    // Gauge de tasa de asistencia
+    try {
+        const rate = D.attendance_rate || 0;
+        const gaugeColor = rate >= 75 ? '#10B981' : rate >= 50 ? '#F59E0B' : '#EF4444';
+        new ApexCharts(document.querySelector('#attendance-gauge'), {
+            chart: { type: 'radialBar', height: 220, sparkline: { enabled: true } },
+            series: [rate],
+            colors: [gaugeColor],
+            plotOptions: { radialBar: {
+                hollow: { size: '62%' },
+                track: { background: isDark ? '#1e293b' : '#f1f5f9' },
+                dataLabels: {
+                    name: { show: false },
+                    value: { offsetY: 6, fontSize: '30px', fontWeight: 800, color: isDark ? '#fff' : '#0f172a', formatter: v => `${parseInt(v)}%` },
+                },
+            } },
+            stroke: { lineCap: 'round' },
+        }).render();
+    } catch (e) { console.warn('Gauge failed:', e); }
 
     // ── Sparklines con datos REALES (series diarias últimos 14 días)
     const sparkBase = (color, dataArr) => ({

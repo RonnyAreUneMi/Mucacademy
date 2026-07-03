@@ -22,8 +22,9 @@ FACULTY_CHOICES = [
 
 
 class AdminRole(models.TextChoices):
-    SUPERADMIN = 'superadmin', 'Super administrator'
-    ADMIN = 'admin', 'Administrator'
+    SUPERADMIN = 'superadmin', 'Super administrador'
+    ADMIN = 'admin', 'Administrador'
+    PROFESSOR = 'professor', 'Profesor'
 
 
 class AccessRequestStatus(models.TextChoices):
