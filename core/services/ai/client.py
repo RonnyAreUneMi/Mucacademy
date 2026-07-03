@@ -8,8 +8,11 @@ Los SDKs se importan de forma lazy para no fallar si no están instalados.
 """
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -32,22 +35,16 @@ class AIResponse:
     model: str = ''
 
 
-def _runtime_from_db() -> AIRuntime | None:
+def _global_params():
+    """Parámetros globales de generación (AIConfig singleton) + master switch."""
     try:
         from core.models import AIConfig
         cfg = AIConfig.objects.filter(pk=1).first()
-        if cfg is None or not cfg.is_ready():
-            return None
-        return AIRuntime(
-            provider=cfg.provider,
-            model=cfg.model,
-            api_key=cfg.api_key,
-            temperature=cfg.temperature,
-            max_tokens=cfg.max_tokens,
-            system_prefix=cfg.system_prompt_override or '',
-        )
     except Exception:
-        return None
+        cfg = None
+    if cfg is None:
+        return True, 0.7, 1024, ''   # sin config → permitir (usa env)
+    return bool(cfg.enabled), cfg.temperature, cfg.max_tokens, cfg.system_prompt_override or ''
 
 
 def _runtime_from_env() -> AIRuntime | None:
@@ -64,12 +61,69 @@ def _runtime_from_env() -> AIRuntime | None:
     )
 
 
+def get_runtime_chain() -> list[AIRuntime]:
+    """Cadena ordenada de runtimes para fallback automático.
+
+    Master switch (AIConfig.enabled) gobierna todo. Devuelve los proveedores
+    habilitados con api_key + modelo, ordenados por prioridad. Si no hay
+    ninguno configurado, cae al env (ANTHROPIC_API_KEY) para CLI/tests.
+    """
+    enabled_master, temperature, max_tokens, prefix = _global_params()
+    if not enabled_master:
+        return []
+
+    chain: list[AIRuntime] = []
+    try:
+        from core.models import AIProviderCredential
+        creds = list(AIProviderCredential.objects.filter(enabled=True).order_by('priority', 'provider'))
+        for c in creds:
+            if c.api_key and c.model:
+                chain.append(AIRuntime(
+                    provider=c.provider, model=c.model, api_key=c.api_key,
+                    temperature=temperature, max_tokens=max_tokens, system_prefix=prefix,
+                ))
+    except Exception:
+        pass
+
+    # Backward-compat: si no hay credenciales nuevas, intentamos el AIConfig legacy.
+    if not chain:
+        try:
+            from core.models import AIConfig
+            cfg = AIConfig.objects.filter(pk=1).first()
+            if cfg is not None and cfg.api_key and cfg.model:
+                chain.append(AIRuntime(
+                    provider=cfg.provider, model=cfg.model, api_key=cfg.api_key,
+                    temperature=temperature, max_tokens=max_tokens, system_prefix=prefix,
+                ))
+        except Exception:
+            pass
+
+    if not chain:
+        env_rt = _runtime_from_env()
+        if env_rt is not None:
+            chain.append(env_rt)
+    return chain
+
+
 def get_runtime() -> AIRuntime | None:
-    return _runtime_from_db() or _runtime_from_env()
+    """Runtime primario (primero de la cadena). Compat con código existente."""
+    chain = get_runtime_chain()
+    return chain[0] if chain else None
+
+
+def get_runtime_for(provider: str) -> AIRuntime | None:
+    """Runtime de un proveedor específico en la cadena (o None).
+
+    Útil para features atadas a un proveedor (ej. generación de imágenes = OpenAI).
+    """
+    for rt in get_runtime_chain():
+        if rt.provider == provider:
+            return rt
+    return None
 
 
 def is_configured() -> bool:
-    return get_runtime() is not None
+    return bool(get_runtime_chain())
 
 
 # ── Dispatchers por proveedor ─────────────────────────────────
@@ -175,18 +229,36 @@ def _call_openai_full(rt: AIRuntime, system: str, user: str, base_url: str | Non
     )
 
 
-def call_ai(system: str, user: str) -> str:
-    """Punto único de entrada — usa el proveedor configurado en DB.
+def generate(system: str, user: str) -> AIResponse:
+    """Punto único con FALLBACK automático entre proveedores.
 
-    Lanza NotImplementedError si no hay config o está deshabilitada.
-    Lanza RuntimeError si el SDK del proveedor no está instalado.
+    Recorre la cadena (ordenada por prioridad); si un proveedor falla
+    (sin crédito, error, timeout, SDK ausente), reintenta con el siguiente.
+
+    Lanza NotImplementedError si no hay ningún proveedor configurado.
+    Relanza el último error si todos fallan.
     """
-    rt = get_runtime()
-    if rt is None:
+    chain = get_runtime_chain()
+    if not chain:
         raise NotImplementedError(
-            'IA no configurada. Andá a /panel/ai/config/ y elegí un proveedor + API key.'
+            'IA no configurada. Andá a /panel/ai/config/ y activá un proveedor + API key.'
         )
-    return call_ai_with_runtime(rt, system, user)
+    last_exc: Exception | None = None
+    for i, rt in enumerate(chain):
+        try:
+            return call_ai_full(rt, system, user)
+        except Exception as exc:  # noqa: BLE001 — probamos el siguiente proveedor
+            log.warning('Proveedor %s falló (%s). %s',
+                        rt.provider, exc,
+                        'Probando siguiente…' if i + 1 < len(chain) else 'Sin más fallbacks.')
+            last_exc = exc
+            continue
+    raise last_exc if last_exc else RuntimeError('Todos los proveedores de IA fallaron.')
+
+
+def call_ai(system: str, user: str) -> str:
+    """Punto único de entrada (texto) — usa la cadena con fallback automático."""
+    return generate(system, user).text
 
 
 # ── Compat con código existente ───────────────────────────────

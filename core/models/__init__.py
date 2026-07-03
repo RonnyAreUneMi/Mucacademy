@@ -16,7 +16,10 @@ from .evaluations import (
     QuestionKind, QuestionSource,
 )
 from .audit import AuditLog, AuditAction
-from .integrations import GoogleCredential, AIConfig, AIProvider, PROVIDER_MODELS
+from .integrations import (
+    GoogleCredential, AIConfig, AIProvider, PROVIDER_MODELS,
+    AIProviderCredential, AIPrompt,
+)
 from .design_system import UIDesignTokens
 
 __all__ = [
@@ -52,5 +55,7 @@ __all__ = [
     'AIConfig',
     'AIProvider',
     'PROVIDER_MODELS',
+    'AIProviderCredential',
+    'AIPrompt',
     'UIDesignTokens',
 ]

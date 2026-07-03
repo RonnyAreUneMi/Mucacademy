@@ -76,7 +76,8 @@ def improve_event_description(
     user_message = '\n\n'.join(parts) + '\n\nDevolvé solo el HTML.'
 
     try:
-        html = call_ai(system=SYSTEM_PROMPT, user=user_message)
+        from .prompts import get_prompt
+        html = call_ai(system=get_prompt('event_description'), user=user_message)
     except NotImplementedError as exc:
         return {'implemented': False, 'message': str(exc)}
     except Exception as exc:  # noqa: BLE001 — devolvemos el error al admin
@@ -176,7 +177,8 @@ def generate_body_text(
     user_message = '\n\n'.join(parts) + '\n\nDevolvé sólo el texto plano del cuerpo del certificado.'
 
     try:
-        text = call_ai(system=CERT_BODY_SYSTEM, user=user_message)
+        from .prompts import get_prompt
+        text = call_ai(system=get_prompt('cert_body'), user=user_message)
     except NotImplementedError as exc:
         return {'implemented': False, 'message': str(exc)}
     except Exception as exc:  # noqa: BLE001

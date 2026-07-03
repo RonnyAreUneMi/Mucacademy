@@ -64,6 +64,69 @@ PROVIDER_MODELS = {
 }
 
 
+class AIProviderCredential(TimestampedModel):
+    """Credencial + modelo por proveedor, con orden de fallback.
+
+    Se pueden guardar varias (una por proveedor). En runtime se arma una
+    cadena ordenada por `priority` (menor = se intenta primero) entre las
+    habilitadas con api_key y modelo; si una falla, se reintenta con la
+    siguiente automáticamente.
+    """
+    provider = models.CharField(
+        max_length=20, choices=AIProvider.choices, unique=True,
+        verbose_name='Proveedor',
+    )
+    api_key = EncryptedCharField(
+        max_length=1000, blank=True, default='',
+        help_text='Cifrada en reposo con Fernet.',
+    )
+    model = models.CharField(
+        max_length=80, blank=True, default='',
+        verbose_name='Modelo',
+        help_text='Identificador del modelo (ej. gpt-4o-mini).',
+    )
+    enabled = models.BooleanField(default=False, verbose_name='Habilitado')
+    priority = models.PositiveSmallIntegerField(
+        default=100, verbose_name='Prioridad (menor = primero)',
+    )
+
+    class Meta:
+        verbose_name = 'AI Provider Credential'
+        verbose_name_plural = 'AI Provider Credentials'
+        ordering = ['priority', 'provider']
+
+    def __str__(self) -> str:
+        return f'{self.provider}:{self.model} (p{self.priority}, {"on" if self.enabled else "off"})'
+
+    def is_ready(self) -> bool:
+        return self.enabled and bool(self.api_key) and bool(self.model)
+
+    def masked_api_key(self) -> str:
+        if not self.api_key:
+            return ''
+        if len(self.api_key) <= 8:
+            return '••••••••'
+        return f'{self.api_key[:4]}••••••••{self.api_key[-4:]}'
+
+
+class AIPrompt(TimestampedModel):
+    """Prompt de sistema editable por cada feature de IA.
+
+    `content` vacío = usar el prompt por defecto del código (registry en
+    `core.services.ai.prompts`). Así 'restaurar por defecto' = vaciar content.
+    """
+    key = models.CharField(max_length=50, unique=True, verbose_name='Feature')
+    content = models.TextField(blank=True, default='', verbose_name='Prompt')
+
+    class Meta:
+        verbose_name = 'AI Prompt'
+        verbose_name_plural = 'AI Prompts'
+        ordering = ['key']
+
+    def __str__(self) -> str:
+        return f'AIPrompt<{self.key}>'
+
+
 class AIConfig(SingletonModel, TimestampedModel):
     """Singleton with the active AI provider configuration.
 

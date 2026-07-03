@@ -5,6 +5,9 @@ urlpatterns = [
     # Configuración IA (proveedor + key + modelo)
     path('config/', views.AIConfigView.as_view(), name='ai_config'),
     path('config/test/', views.AITestView.as_view(), name='ai_config_test'),
+    # Multi-proveedor (fallback) + prompts editables
+    path('providers/', views.AIProvidersView.as_view(), name='ai_providers'),
+    path('prompts/', views.AIPromptsView.as_view(), name='ai_prompts'),
     # Features IA
     path('event-description/', views.EventDescriptionView.as_view(), name='ai_event_description'),
     path('event-banner/', views.EventBannerView.as_view(), name='ai_event_banner'),

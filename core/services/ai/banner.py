@@ -18,7 +18,7 @@ from pathlib import Path
 
 from django.conf import settings
 
-from .client import get_runtime
+from .client import get_runtime_for
 
 # Lienzo final del banner (recomendado en el form: 1200x600).
 CANVAS_W, CANVAS_H = 1200, 600
@@ -37,15 +37,13 @@ FONT_BODY = _STATIC / 'fonts' / 'Quicksand-Bold.ttf'
 
 
 def build_prompt(title: str, custom: str = '') -> str:
-    """Arma el prompt para la IA. Siempre fuerza estilo UNEMI y SIN texto."""
+    """Arma el prompt para la IA. Estilo editable + reglas fijas (sin texto)."""
+    from .prompts import get_prompt
     tema = custom.strip() or title.strip()
+    style = get_prompt('banner')
     return (
         'Fondo abstracto y profesional para el banner de un evento académico '
-        f"universitario. Tema visual: {tema}. "
-        'Estilo moderno, limpio y elegante, con colores institucionales azul '
-        'marino oscuro (#162054) y acentos naranja (#F58830). Composición con '
-        'amplio espacio negativo a la izquierda para colocar texto encima. '
-        'Iluminación suave, alta calidad, sensación tecnológica y educativa. '
+        f"universitario. Tema visual: {tema}. {style} "
         'MUY IMPORTANTE: sin ningún texto, sin letras, sin palabras, sin logos, '
         'sin marcas de agua, sin personas mirando a cámara.'
     )
@@ -57,15 +55,11 @@ def _generate_background(prompt: str) -> bytes:
     Lanza NotImplementedError si no hay IA configurada o el proveedor no
     soporta imágenes (solo OpenAI).
     """
-    rt = get_runtime()
+    rt = get_runtime_for('openai')
     if rt is None:
         raise NotImplementedError(
-            'IA no configurada. Andá a /panel/ai/config/ y elegí OpenAI + API key.'
-        )
-    if rt.provider != 'openai':
-        raise NotImplementedError(
-            f'La generación de imágenes requiere proveedor OpenAI '
-            f'(actual: {rt.provider}). Cambialo en /panel/ai/config/.'
+            'La generación de imágenes requiere un proveedor OpenAI habilitado '
+            'con API key. Agregalo en /panel/ai/config/.'
         )
     try:
         from openai import OpenAI

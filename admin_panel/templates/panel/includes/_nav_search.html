@@ -1,29 +1,129 @@
 {% comment %}
-═══════════════════════════════════════════════════════════════════
-COMPONENT · NavSearch — input de búsqueda del nav (Liquid Glass).
-
-Args (todos opcionales):
-    placeholder (str)  default 'Buscar…'
-    min_width   (str)  ej 'w-52' (default), 'w-40'
-    focus_width (str)  ej 'w-72' (default)
-    show_kbd    (bool) default True — muestra el chip ⌘K
-
-Uso:
-    {% include 'panel/includes/_nav_search.html' %}
-═══════════════════════════════════════════════════════════════════
+NavSearch — buscador del nav con dropdown inline (typeahead).
+Busca módulos (con sinónimos) y datos reales por nombre: eventos, programas,
+participantes (vía /api/v1/admin/search/). Incluir una vez en el nav.
 {% endcomment %}
-<div class="hidden lg:block relative">
+<div class="hidden lg:block relative" id="navsearch">
     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xs pointer-events-none"></i>
-    <input type="text"
+    <input id="ns-input" type="text" autocomplete="off"
         class="bg-white/60 dark:bg-white/5 border border-slate-300/60 dark:border-white/10
                hover:border-slate-400/70 dark:hover:border-white/20
                focus:border-[#F58830] focus:bg-white dark:focus:bg-white/10
                text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500
-               text-sm rounded-xl {{ min_width|default:'w-52' }} focus:{{ focus_width|default:'w-72' }}
-               pl-9 pr-3 py-2 transition-all focus:outline-none
-               focus:ring-2 focus:ring-[#F58830]/20"
+               text-sm rounded-xl {{ min_width|default:'w-52' }} focus:w-72
+               pl-9 pr-9 py-2 transition-all focus:outline-none focus:ring-2 focus:ring-[#F58830]/20"
         placeholder="{{ placeholder|default:'Buscar…' }}">
-    {% if show_kbd|default:True %}
     <kbd class="absolute right-2 top-1/2 -translate-y-1/2 hidden xl:flex items-center text-[9px] font-mono text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded bg-slate-200/60 dark:bg-white/5 border border-slate-300/40 dark:border-white/10">⌘K</kbd>
-    {% endif %}
+
+    <div id="ns-dropdown" class="hidden absolute top-full right-0 mt-2 w-[420px] max-w-[85vw] max-h-[70vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#162054] border border-gray-200 dark:border-blue-900/40 shadow-2xl z-[200] p-2"></div>
 </div>
+
+<script>
+(function () {
+    const MODULES = [
+        { label: 'Inicio', url: '/panel/', icon: 'fa-gauge', group: 'Panel' },
+        {% for group in nav_groups %}{% for item in group.items %}{ label: '{{ item.label|escapejs }}', url: '{{ item.url|escapejs }}', icon: '{{ item.icon|escapejs }}', group: '{{ group.label|escapejs }}' },
+        {% endfor %}{% endfor %}
+    ];
+    const SYN = {
+        'inicio': 'panel home dashboard resumen tablero principal',
+        'eventos': 'seminarios seminario sesiones sesion charlas webinar clases taller conferencia qr asistencia registro',
+        'programas': 'programa cursos curso evaluacion examen banco de preguntas',
+        'participantes': 'estudiantes alumnos inscritos personas asistentes gente',
+        'ver lotes': 'certificados certificado lotes lote diplomas emitidos',
+        'subir nuevo': 'nuevo lote cargar excel importar generar certificados',
+        'solicitudes': 'pendientes aprobar rechazar registro admin acceso',
+        'titulos academicos': 'titulos grados phd msc dr ing abreviaturas ponentes',
+        'firmas inst.': 'firmas autoridades rector decano sello',
+        'diseno global': 'diseno plantilla certificado colores logo',
+        'design system': 'tokens ui tema estilos colores tipografia',
+        'configuracion ia': 'ia inteligencia artificial prompts modelos proveedores openai claude gpt groq fallback',
+        'usuarios': 'administradores admin cuentas usuarios superadmin',
+    };
+    const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    MODULES.forEach(m => { m._kw = norm(m.label + ' ' + m.group + ' ' + (SYN[norm(m.label)] || '')); });
+
+    const box = document.getElementById('navsearch');
+    const input = document.getElementById('ns-input');
+    const dd = document.getElementById('ns-dropdown');
+    let flat = [], sel = -1, timer = null, lastQ = '';
+
+    function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+    function moduleMatches(q) {
+        const terms = norm(q).split(/\s+/).filter(Boolean);
+        if (!terms.length) return [];
+        return MODULES.filter(m => terms.every(t => m._kw.includes(t)))
+            .map(m => ({ url: m.url, icon: m.icon, title: m.label, sub: m.group }));
+    }
+
+    function sectionHTML(title, items) {
+        if (!items.length) return '';
+        return `<div class="px-2 pt-2 pb-1 text-[10px] font-black uppercase tracking-wider text-gray-400">${title}</div>` +
+            items.map(it => {
+                const gi = flat.push(it) - 1;
+                return `<a href="${it.url}" data-i="${gi}" class="ns-item flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-[#F58830]/10">
+                    <span class="w-8 h-8 rounded-lg bg-[#F58830]/10 text-[#F58830] flex items-center justify-center text-sm flex-shrink-0"><i class="fa-solid ${it.icon}"></i></span>
+                    <span class="flex-1 min-w-0"><span class="block text-sm font-bold text-gray-800 dark:text-white truncate">${esc(it.title)}</span>${it.sub ? `<span class="block text-[11px] text-gray-400 truncate">${esc(it.sub)}</span>` : ''}</span>
+                </a>`;
+            }).join('');
+    }
+
+    function render(q, data) {
+        flat = []; sel = -1;
+        const mods = moduleMatches(q);
+        const events = (data?.events || []).map(e => ({ url: e.url, icon: 'fa-calendar-day', title: e.title, sub: 'Evento' + (e.date ? ' · ' + e.date : '') }));
+        const programs = (data?.programs || []).map(p => ({ url: p.url, icon: 'fa-diagram-project', title: p.name, sub: 'Programa' }));
+        const parts = (data?.participants || []).map(p => ({ url: p.url, icon: 'fa-user-graduate', title: p.name, sub: p.email }));
+
+        const html = sectionHTML('Módulos', mods) + sectionHTML('Eventos', events) + sectionHTML('Programas', programs) + sectionHTML('Participantes', parts);
+        if (!html) {
+            dd.innerHTML = `<p class="text-center text-sm text-gray-400 py-6">Sin resultados${q ? ' para “' + esc(q) + '”' : ''}.</p>`;
+        } else {
+            dd.innerHTML = html;
+        }
+        dd.classList.remove('hidden');
+        if (flat.length) { sel = 0; highlight(); }
+    }
+
+    function highlight() {
+        dd.querySelectorAll('.ns-item').forEach((el, i) => el.classList.toggle('bg-[#F58830]/10', i === sel));
+        const el = dd.querySelector(`.ns-item[data-i="${sel}"]`);
+        if (el) el.scrollIntoView({ block: 'nearest' });
+    }
+
+    async function fetchData(q) {
+        try {
+            const res = await fetch('/api/v1/admin/search/?q=' + encodeURIComponent(q), { credentials: 'same-origin' });
+            return res.ok ? await res.json() : null;
+        } catch (e) { return null; }
+    }
+
+    function onType() {
+        const q = input.value.trim();
+        if (!q) { dd.classList.add('hidden'); return; }
+        // Módulos al instante; datos con debounce.
+        render(q, null);
+        clearTimeout(timer);
+        if (q.length < 2) return;
+        timer = setTimeout(async () => {
+            lastQ = q;
+            const data = await fetchData(q);
+            if (input.value.trim() === lastQ) render(q, data);
+        }, 220);
+    }
+
+    input.addEventListener('input', onType);
+    input.addEventListener('focus', () => { if (input.value.trim()) onType(); });
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(sel + 1, flat.length - 1); highlight(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(sel - 1, 0); highlight(); }
+        else if (e.key === 'Enter') { e.preventDefault(); if (flat[sel]) window.location.href = flat[sel].url; }
+        else if (e.key === 'Escape') { dd.classList.add('hidden'); input.blur(); }
+    });
+    document.addEventListener('click', (e) => { if (!box.contains(e.target)) dd.classList.add('hidden'); });
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); input.focus(); }
+    });
+})();
+</script>

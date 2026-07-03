@@ -111,7 +111,8 @@ def generate_questions(evaluation, count: int = 10) -> list[dict]:
     if not material.strip():
         material = f'Programa/seminario: {evaluation.owner_label}. (Sin resumen disponible; genera preguntas conceptuales generales del tema.)'
 
-    system = _SYSTEM + _SHAPE.format(n=count)
+    from .prompts import get_prompt
+    system = get_prompt('questions') + _SHAPE.format(n=count)
     user = f'Material:\n\n{material[:12000]}\n\nGenera el arreglo JSON de {count} preguntas.'
     raw = call_ai(system, user)
     questions = _normalize(_extract_list(raw))[:count]

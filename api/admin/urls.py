@@ -9,6 +9,7 @@ urlpatterns = [
     path('programs/', include('api.admin.programs.urls')),
     path('evaluations/', include(evaluations_router.urls)),
     path('evaluation-questions/', include(questions_router.urls)),
+    path('search/', include('api.admin.search.urls')),
     path('batches/', include('api.admin.batches.urls')),
     path('participants/', include('api.admin.participants.urls')),
     path('certificates/', include('api.admin.certificates.urls')),

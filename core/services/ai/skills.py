@@ -68,8 +68,9 @@ def suggest_skills_for_event(event) -> list[str]:
         if puntos:
             parts.append('Puntos clave: ' + '; '.join(str(p) for p in puntos[:8]))
 
+    from .prompts import get_prompt
     user = '\n\n'.join(parts) + '\n\nDevuelve el arreglo JSON de competencias.'
-    raw = call_ai(_SYSTEM, user)
+    raw = call_ai(get_prompt('skills'), user)
     skills = _extract_list(raw)[:6]
     log.info('Skills sugeridas para evento %s: %s', getattr(event, 'id', '?'), skills)
     return skills

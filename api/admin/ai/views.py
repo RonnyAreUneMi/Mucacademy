@@ -166,6 +166,122 @@ class AIConfigView(APIView):
         return Response(AIConfigSerializer(cfg).data)
 
 
+class AIProvidersView(APIView):
+    """GET/PUT: credenciales por proveedor (con orden de fallback) + params globales."""
+    permission_classes = [permissions.IsAdminUser]
+
+    def _available_models(self):
+        from core.models import PROVIDER_MODELS
+        return {
+            provider: [{'id': mid, 'label': lbl} for mid, lbl in models]
+            for provider, models in PROVIDER_MODELS.items()
+        }
+
+    def get(self, request):
+        from core.models import AIConfig, AIProviderCredential, AIProvider
+        cfg, _ = AIConfig.objects.get_or_create(pk=1)
+        existing = {c.provider: c for c in AIProviderCredential.objects.all()}
+        providers = []
+        for value, label in AIProvider.choices:
+            c = existing.get(value)
+            providers.append({
+                'provider': value,
+                'provider_label': label,
+                'model': c.model if c else '',
+                'enabled': c.enabled if c else False,
+                'priority': c.priority if c else 100,
+                'has_key': bool(c.api_key) if c else False,
+                'api_key_masked': c.masked_api_key() if c else '',
+            })
+        providers.sort(key=lambda p: p['priority'])
+        return Response({
+            'enabled': cfg.enabled,
+            'temperature': cfg.temperature,
+            'max_tokens': cfg.max_tokens,
+            'system_prompt_override': cfg.system_prompt_override,
+            'available_models': self._available_models(),
+            'providers': providers,
+        })
+
+    def put(self, request):
+        from core.models import AIConfig, AIProviderCredential, AIProvider
+        data = request.data or {}
+        cfg, _ = AIConfig.objects.get_or_create(pk=1)
+        # Params globales + master switch.
+        if 'enabled' in data:
+            cfg.enabled = bool(data['enabled'])
+        if 'temperature' in data:
+            cfg.temperature = float(data['temperature'])
+        if 'max_tokens' in data:
+            cfg.max_tokens = int(data['max_tokens'])
+        if 'system_prompt_override' in data:
+            cfg.system_prompt_override = data['system_prompt_override'] or ''
+        cfg.save()
+
+        valid = {v for v, _ in AIProvider.choices}
+        for row in data.get('providers', []):
+            provider = row.get('provider')
+            if provider not in valid:
+                continue
+            cred, _ = AIProviderCredential.objects.get_or_create(provider=provider)
+            if 'model' in row:
+                cred.model = (row.get('model') or '').strip()
+            if 'enabled' in row:
+                cred.enabled = bool(row['enabled'])
+            if 'priority' in row:
+                try:
+                    cred.priority = int(row['priority'])
+                except (TypeError, ValueError):
+                    pass
+            new_key = (row.get('api_key_input') or '').strip()
+            if new_key:
+                cred.api_key = new_key
+            cred.save()
+
+        log_audit(request.user, 'AI_PROVIDERS_UPDATE',
+                  f'enabled={cfg.enabled} providers={len(data.get("providers", []))}')
+        return self.get(request)
+
+
+class AIPromptsView(APIView):
+    """GET/PUT: prompts editables por feature (override de BD sobre defaults)."""
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        from core.models import AIPrompt
+        from core.services.ai.prompts import REGISTRY, default_prompt
+        overrides = {p.key: p.content for p in AIPrompt.objects.all()}
+        prompts = []
+        for key, meta in REGISTRY.items():
+            content = (overrides.get(key) or '').strip()
+            prompts.append({
+                'key': key,
+                'label': meta['label'],
+                'description': meta['description'],
+                'default': meta['default'],
+                'content': content,                       # override ('' = usa default)
+                'effective': content or default_prompt(key),
+                'is_custom': bool(content),
+            })
+        return Response({'prompts': prompts})
+
+    def put(self, request):
+        from core.models import AIPrompt
+        from core.services.ai.prompts import REGISTRY
+        for row in (request.data or {}).get('prompts', []):
+            key = row.get('key')
+            if key not in REGISTRY:
+                continue
+            content = (row.get('content') or '').strip()
+            if content:
+                AIPrompt.objects.update_or_create(key=key, defaults={'content': content})
+            else:
+                # Vacío = restaurar por defecto → borramos el override.
+                AIPrompt.objects.filter(key=key).delete()
+        log_audit(request.user, 'AI_PROMPTS_UPDATE', 'prompts actualizados')
+        return self.get(request)
+
+
 class AITestView(APIView):
     """POST: prueba la config con overrides opcionales del form (sin persistir).
 

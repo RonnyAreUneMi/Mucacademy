@@ -7,7 +7,7 @@ Solo accesible para superadmins.
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render
 
-from core.models import AIConfig, PROVIDER_MODELS
+from core.models import AIConfig
 
 from ._shared import _is_superadmin
 
@@ -15,13 +15,7 @@ from ._shared import _is_superadmin
 @login_required
 @user_passes_test(_is_superadmin)
 def ai_config(request):
-    cfg, _ = AIConfig.objects.get_or_create(pk=1)
-    # Aplanamos PROVIDER_MODELS para inyectar como JSON en el template.
-    available_models = {
-        provider: [{'id': mid, 'label': lbl} for mid, lbl in models]
-        for provider, models in PROVIDER_MODELS.items()
-    }
-    return render(request, 'panel/ai/config.html', {
-        'cfg': cfg,
-        'available_models': available_models,
-    })
+    """Shell de la config IA. Los datos (proveedores + prompts) los trae el JS
+    desde /api/v1/admin/ai/providers/ y /prompts/."""
+    AIConfig.objects.get_or_create(pk=1)
+    return render(request, 'panel/ai/config.html', {})

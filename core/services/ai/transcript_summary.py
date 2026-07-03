@@ -23,7 +23,7 @@ import random
 import re
 from dataclasses import dataclass, field
 
-from .client import call_ai_full, get_runtime
+from .client import generate, is_configured
 
 
 log = logging.getLogger(__name__)
@@ -90,17 +90,23 @@ código (sin ```json).
 
 
 def build_system_prompt(include_quiz: bool = True) -> str:
-    """Arma el system prompt según si el evento usa cuestionario o no."""
+    """Arma el system prompt según si el evento usa cuestionario o no.
+
+    La persona/intro es editable desde /panel/ai/config/ (prompt 'summary');
+    las reglas estrictas de formato JSON se agregan aquí en código.
+    """
+    from .prompts import get_prompt
+    intro = get_prompt('summary')
     if include_quiz:
-        return _BASE_INTRO + _COMMON_RULES + _JSON_SHAPE_WITH_QUIZ + _QUIZ_RULES
+        return intro + _COMMON_RULES + _JSON_SHAPE_WITH_QUIZ + _QUIZ_RULES
     return (
-        _BASE_INTRO + _COMMON_RULES + _JSON_SHAPE_NO_QUIZ +
+        intro + _COMMON_RULES + _JSON_SHAPE_NO_QUIZ +
         '\nEste evento NO requiere cuestionario: deja "cuestionario" como lista vacía.'
     )
 
 
-# Compat: prompt por defecto (con quiz).
-SYSTEM_PROMPT = build_system_prompt(True)
+# Compat: prompt por defecto (con quiz). Estático (sin DB) para import-time.
+SYSTEM_PROMPT = _BASE_INTRO + _COMMON_RULES + _JSON_SHAPE_WITH_QUIZ + _QUIZ_RULES
 
 
 USER_TEMPLATE = """Sesión: {titulo}
@@ -225,8 +231,7 @@ def summarize_transcript(
       - ValueError si la respuesta no se pudo parsear tras 1 reintento.
       - RuntimeError si el SDK del proveedor falta.
     """
-    rt = get_runtime()
-    if rt is None:
+    if not is_configured():
         raise NotImplementedError(
             'IA no configurada. Andá a /panel/ai/config/ para activarla.'
         )
@@ -240,11 +245,13 @@ def summarize_transcript(
         transcript=truncated,
     )
 
-    resp = call_ai_full(rt, system_prompt, user_msg)
+    # generate() recorre la cadena de proveedores con fallback automático.
+    resp = generate(system_prompt, user_msg)
     total_in = resp.input_tokens
     total_out = resp.output_tokens
+    used_model = resp.model
     log.info('IA respondió %d chars (modelo=%s, in=%d, out=%d)',
-             len(resp.text), rt.model, total_in, total_out)
+             len(resp.text), used_model, total_in, total_out)
 
     try:
         data = _parse_json_strict(resp.text)
@@ -257,9 +264,10 @@ def summarize_transcript(
             'Esta vez devuelve EXCLUSIVAMENTE el objeto JSON, sin texto antes '
             'ni después, sin ```.'
         )
-        resp = call_ai_full(rt, retry_system, user_msg)
+        resp = generate(retry_system, user_msg)
         total_in += resp.input_tokens
         total_out += resp.output_tokens
+        used_model = resp.model
         data = _parse_json_strict(resp.text)
         _validate_summary(data)
 
@@ -276,7 +284,7 @@ def summarize_transcript(
         proximos_pasos=list(data.get('proximos_pasos', [])),
         cuestionario=cuestionario,
         duracion_minutos=duracion_minutos,
-        ai_model=rt.model,
+        ai_model=used_model,
         ai_input_tokens=total_in,
         ai_output_tokens=total_out,
     )
