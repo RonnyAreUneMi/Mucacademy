@@ -112,7 +112,9 @@ def generate_questions(evaluation, count: int = 10) -> list[dict]:
         material = f'Programa/seminario: {evaluation.owner_label}. (Sin resumen disponible; genera preguntas conceptuales generales del tema.)'
 
     from .prompts import get_prompt
-    system = get_prompt('questions') + _SHAPE.format(n=count)
+    # No usamos .format(): _SHAPE tiene ejemplos JSON con llaves ({"kind":...})
+    # que .format interpretaría como campos → KeyError. Sustituimos {n} a mano.
+    system = get_prompt('questions') + _SHAPE.replace('{n}', str(count))
     user = f'Material:\n\n{material[:12000]}\n\nGenera el arreglo JSON de {count} preguntas.'
     raw = call_ai(system, user)
     questions = _normalize(_extract_list(raw))[:count]
