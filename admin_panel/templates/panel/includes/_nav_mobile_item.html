@@ -1,0 +1,14 @@
+{% comment %}Un ítem del menú mobile. Args: item, pendientes_count.{% endcomment %}
+<a href="{{ item.url }}"
+   class="nav-item nav-item--{{ item.color|default:'brand' }} relative flex items-center gap-2.5 p-2.5 rounded-xl
+          bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5
+          hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:border-[var(--ds-brand)]/40 transition-all group/item">
+    <span class="nav-disc flex-shrink-0">
+        {% if item.svg %}<span class="nav-disc-icon flex items-center justify-center">{{ item.svg }}</span>{% else %}<i class="fa-solid {{ item.icon }} nav-disc-icon"></i>{% endif %}
+    </span>
+    <span class="flex-1 min-w-0 text-sm font-medium text-slate-700 group-hover/item:text-slate-900
+                 dark:text-slate-200 dark:group-hover/item:text-white transition-colors truncate">{{ item.label }}</span>
+    {% if item.badge == 'pendientes_count' and pendientes_count > 0 %}
+    <span class="qp-badge !static !top-auto !right-auto flex-shrink-0">{{ pendientes_count }}</span>
+    {% endif %}
+</a>

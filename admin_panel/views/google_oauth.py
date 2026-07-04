@@ -11,13 +11,44 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.views.decorators.http import require_http_methods
 
 from core.models import GoogleCredential
 from core.services.meet import oauth as goauth
 
-from ._shared import _is_superadmin
+from ._shared import _is_superadmin, _log_audit
+
+
+@login_required
+@user_passes_test(_is_superadmin)
+def google_config(request):
+    """Pantalla de administración de la integración Google Cloud (Meet/Calendar/Drive)."""
+    cred = GoogleCredential.get_singleton()
+    has_oauth = bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET)
+    return render(request, 'panel/google/config.html', {
+        'cred': cred,
+        'connected': cred is not None,
+        'has_oauth_config': has_oauth,
+        'oauth_email_hint': settings.GOOGLE_OAUTH_EMAIL,
+        'redirect_uri': settings.GOOGLE_REDIRECT_URI,
+        'scopes': getattr(settings, 'GOOGLE_OAUTH_SCOPES', []),
+    })
+
+
+@login_required
+@user_passes_test(_is_superadmin)
+@require_http_methods(['POST'])
+def google_disconnect(request):
+    """Desvincula la cuenta Google (borra la credencial guardada)."""
+    n, _ = GoogleCredential.objects.all().delete()
+    if n:
+        _log_audit(request.user, 'DELETE', 'Cuenta Google desvinculada')
+        messages.success(request, 'Cuenta de Google desvinculada. Las sesiones virtuales ya no generarán Meet automático hasta reconectar.')
+    else:
+        messages.info(request, 'No había ninguna cuenta de Google conectada.')
+    return redirect('panel:google_config')
 
 
 @login_required

@@ -136,6 +136,9 @@ urlpatterns = [
     #      RedirectView.as_view(url='/api/v1/admin/participants/%(id)s/toggle_leader/', permanent=False),
     #      name='lideres_remove'),
 
+    # Modelado de datos (ERD interactivo)
+    path('modelado/', superadmin_page('panel/sistema/modelado.html'), name='modelado_datos'),
+
     # Títulos académicos (catálogo)
     path('titulos/', titulos_list, name='titulos_list'),
     path('titulos/add/', titulos_create, name='titulos_create'),
@@ -166,9 +169,11 @@ urlpatterns = [
          name='firma_delete'),
 
     # Google OAuth (Meet + Calendar + Drive)
+    path('google/', google_views.google_config, name='google_config'),
     path('google/connect/', google_views.google_connect, name='google_connect'),
     path('google/callback/', google_views.google_callback, name='google_callback'),
     path('google/status/', google_views.google_status, name='google_status'),
+    path('google/disconnect/', google_views.google_disconnect, name='google_disconnect'),
 
     # Configuración IA (proveedor + API key)
     path('ai/config/', ai_config_views.ai_config, name='ai_config'),

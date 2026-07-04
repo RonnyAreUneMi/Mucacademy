@@ -4,25 +4,21 @@ Args:
     group: dict con {label, icon, items}
     pendientes_count: int
 {% endcomment %}
+{% comment %}Ítem mobile reutilizable via macro-like include no disponible; usamos loop directo.{% endcomment %}
 <div class="border-b border-slate-200 dark:border-white/5 last:border-b-0 py-2">
     <p class="px-4 pt-2 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
         <i class="fa-solid {{ group.icon }} mr-1.5 text-[var(--ds-brand)]"></i> {{ group.label }}
     </p>
-    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 px-3">
-        {% for item in group.items %}
-        <a href="{{ item.url }}"
-           class="nav-item nav-item--{{ item.color|default:'brand' }} relative flex items-center gap-2.5 p-2.5 rounded-xl
-                  bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5
-                  hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:border-[var(--ds-brand)]/40 transition-all group/item">
-            <span class="nav-disc flex-shrink-0">
-                <i class="fa-solid {{ item.icon }} nav-disc-icon"></i>
-            </span>
-            <span class="flex-1 min-w-0 text-sm font-medium text-slate-700 group-hover/item:text-slate-900
-                         dark:text-slate-200 dark:group-hover/item:text-white transition-colors truncate">{{ item.label }}</span>
-            {% if item.badge == 'pendientes_count' and pendientes_count > 0 %}
-            <span class="qp-badge !static !top-auto !right-auto flex-shrink-0">{{ pendientes_count }}</span>
-            {% endif %}
-        </a>
+    {% if group.sections %}
+        {% for section in group.sections %}
+        <p class="px-4 pt-1 pb-1 text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{{ section.title }}</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 px-3 mb-1">
+            {% for item in section.items %}{% include 'panel/includes/_nav_mobile_item.html' with item=item %}{% endfor %}
+        </div>
         {% endfor %}
-    </div>
+    {% else %}
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 px-3">
+            {% for item in group.items %}{% include 'panel/includes/_nav_mobile_item.html' with item=item %}{% endfor %}
+        </div>
+    {% endif %}
 </div>

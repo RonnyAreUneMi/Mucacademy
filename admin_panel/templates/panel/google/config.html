@@ -1,0 +1,150 @@
+{% extends 'panel/base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-black text-gray-800 dark:text-white tracking-tight flex items-center gap-3">
+            <i class="fa-brands fa-google text-[#F58830]"></i> Google Cloud
+        </h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">
+            Conexión con la cuenta institucional para Google Meet, Calendar y Drive.
+        </p>
+    </div>
+
+    {% if not has_oauth_config %}
+    <div class="lg-card rounded-2xl p-5 border-l-8 border-red-500">
+        <p class="font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation"></i> Falta configuración base
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            No están definidas <code>GOOGLE_CLIENT_ID</code> / <code>GOOGLE_CLIENT_SECRET</code> en el
+            archivo <code>.env</code>. Sin eso no se puede iniciar la conexión con Google.
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Estado de la conexión -->
+    <div class="lg-card rounded-3xl p-6 md:p-8">
+        {% if connected %}
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <span class="w-14 h-14 rounded-2xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-circle-check"></i>
+                </span>
+                <div>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white">Proyecto sincronizado ✓</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Cuenta conectada: <span class="font-bold text-[#F58830]">{{ cred.email }}</span></p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="{% url 'panel:google_connect' %}" class="px-4 py-2.5 rounded-xl bg-[#F58830] hover:bg-[#D97520] text-white font-bold text-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-rotate"></i> Reconectar
+                </a>
+                <form method="post" action="{% url 'panel:google_disconnect' %}" id="google-disconnect-form">
+                    {% csrf_token %}
+                    <button type="button"
+                        onclick="showConfirm({
+                            title: 'Desvincular cuenta de Google',
+                            message: 'Las sesiones virtuales dejarán de generar Meet automático hasta reconectar. ¿Continuar?',
+                            type: 'danger',
+                            confirmText: 'Desvincular',
+                            callback: () => document.getElementById('google-disconnect-form').submit()
+                        })"
+                        class="px-4 py-2.5 rounded-xl border border-red-400/60 text-red-600 dark:text-red-400 font-bold text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-link-slash"></i> Desvincular
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200/60 dark:border-white/10">
+            <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Conectado desde</p>
+                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{{ cred.created_at|date:'d/m/Y H:i' }}</p>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Token expira</p>
+                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{{ cred.expiry|date:'d/m/Y H:i'|default:'—' }} <span class="text-[10px] text-gray-400">(se renueva solo)</span></p>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Permisos</p>
+                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{{ cred.scopes|length }} scopes</p>
+            </div>
+        </div>
+        {% else %}
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <span class="w-14 h-14 rounded-2xl bg-amber-500/15 text-amber-500 flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-plug-circle-xmark"></i>
+                </span>
+                <div>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white">Sin sincronizar</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Todavía no hay ninguna cuenta de Google conectada.</p>
+                </div>
+            </div>
+            {% if has_oauth_config %}
+            <a href="{% url 'panel:google_connect' %}" class="px-5 py-3 rounded-xl bg-[#F58830] hover:bg-[#D97520] text-white font-bold text-sm shadow-lg shadow-[#F58830]/30 transition-all flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-brands fa-google"></i> Iniciar con Google
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Qué hace y por qué es necesario -->
+    <div class="lg-card rounded-3xl p-6 md:p-8 space-y-4">
+        <h2 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-[#F58830]"></i> ¿Qué hace esta conexión y por qué es necesaria?
+        </h2>
+        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+            Al conectar la cuenta institucional de Google, el sistema puede automatizar todo el flujo
+            de los eventos virtuales usando la propia infraestructura de la universidad:
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10">
+                <i class="fa-solid fa-video text-2xl text-blue-500 mb-2"></i>
+                <p class="font-bold text-sm text-gray-800 dark:text-white">Google Meet automático</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Cada evento virtual genera su enlace de Meet solo, sin pegarlo a mano.</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10">
+                <i class="fa-solid fa-calendar-days text-2xl text-emerald-500 mb-2"></i>
+                <p class="font-bold text-sm text-gray-800 dark:text-white">Calendar</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Crea y actualiza el evento en el calendario institucional con fecha y hora.</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10">
+                <i class="fa-brands fa-google-drive text-2xl text-amber-500 mb-2"></i>
+                <p class="font-bold text-sm text-gray-800 dark:text-white">Drive (grabación)</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Busca la grabación y transcripción para generar el resumen IA y el cuestionario.</p>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed border-t border-gray-200/60 dark:border-white/10 pt-4">
+            <i class="fa-solid fa-shield-halved text-[#F58830] mr-1"></i>
+            Es una autorización estándar de Google (OAuth). El sistema guarda un token seguro para actuar
+            en nombre de la cuenta; no almacena tu contraseña y podés <strong>desvincular</strong> cuando quieras.
+            Sin esta conexión, los eventos virtuales quedan <strong>sin enlace de Meet</strong> y no se genera el resumen automático.
+        </p>
+    </div>
+
+    <!-- Datos técnicos / requisitos -->
+    <div class="lg-card rounded-3xl p-6 md:p-8 space-y-3">
+        <h2 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Datos de la configuración</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Cuenta esperada (.env)</p>
+                <p class="font-mono text-gray-800 dark:text-gray-200 break-all">{{ oauth_email_hint|default:'—' }}</p>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">URI de redirección autorizada</p>
+                <p class="font-mono text-gray-800 dark:text-gray-200 break-all">{{ redirect_uri }}</p>
+            </div>
+        </div>
+        <p class="text-[11px] text-gray-400 leading-relaxed">
+            Esa URI de redirección debe estar registrada en Google Cloud Console (credenciales OAuth).
+            Si Google muestra <code>redirect_uri_mismatch</code>, hay que agregarla ahí. Entrá siempre por
+            <strong>localhost</strong> (no 127.0.0.1) para que coincida.
+        </p>
+    </div>
+</div>
+{% endblock %}
