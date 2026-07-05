@@ -18,11 +18,10 @@
 
         <div>
             <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Nombre del programa</label>
-            <input type="text" id="p-name" placeholder="Ej: Analítica de Datos" required class="{{ css }}">
+            <input type="text" id="p-name" name="name" placeholder="Ej: Analítica de Datos" required class="{{ css }}">
         </div>
         <div>
-            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Descripción (opcional)</label>
-            <textarea id="p-desc" rows="3" placeholder="¿De qué trata el programa?" class="{{ css }} resize-none"></textarea>
+            {% include 'panel/includes/_description_with_ai.html' with title_input_name='name' description_name='description' %}
         </div>
         <div>
             <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Facultad</label>
@@ -78,8 +77,9 @@ document.getElementById('program-form').addEventListener('submit', async (e) => 
     try {
         const fd = new FormData();
         fd.set('name', name);
-        fd.set('description', document.getElementById('p-desc').value.trim());
+        fd.set('description', (window.getDescriptionHTML && window.getDescriptionHTML()) || '');
         fd.set('faculty', document.getElementById('p-faculty').value);
+        fd.set('is_active', 'true');
         const banner = window.getProgramBannerFile && window.getProgramBannerFile();
         if (banner) fd.set('banner_image', banner);
         const res = await fetch('/api/v1/admin/programs/', {

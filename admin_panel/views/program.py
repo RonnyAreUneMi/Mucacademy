@@ -1,7 +1,8 @@
 """Views de programas: shells HTML. La lógica (CRUD + progreso) va por API."""
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from core.models import Program
+from core.services import programs as program_service
 from ._shared import admin_required
 
 
@@ -22,3 +23,11 @@ def program_detail(request, id):
     """Detalle de un programa: cursos + progreso de participantes."""
     program = get_object_or_404(Program, id=id)
     return render(request, 'panel/programs/detail.html', {'program': program})
+
+
+@admin_required
+def program_certificate_design(request, id):
+    """Crea (si falta) el lote-certificado del programa y abre el diseñador con preview."""
+    program = get_object_or_404(Program, id=id)
+    batch = program_service.get_or_create_program_batch(program, administrator=request.user)
+    return redirect('panel:batch_configure', id=batch.id)

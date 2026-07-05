@@ -26,6 +26,7 @@ class EvaluationSerializer(serializers.ModelSerializer):
     owner_label = serializers.CharField(read_only=True)
     question_count = serializers.IntegerField(read_only=True)
     questions = QuestionSerializer(source='active_questions', many=True, read_only=True)
+    document_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Evaluation
@@ -33,9 +34,15 @@ class EvaluationSerializer(serializers.ModelSerializer):
             'id', 'program', 'event', 'owner_label', 'title', 'description',
             'pass_threshold', 'max_attempts', 'questions_per_attempt',
             'shuffle_questions', 'is_active', 'question_count', 'questions',
-            'created_at',
+            'document', 'document_name', 'created_at',
         ]
         read_only_fields = ('created_at',)
+
+    def get_document_name(self, obj):
+        try:
+            return obj.document.name.split('/')[-1] if obj.document else ''
+        except Exception:
+            return ''
 
     def validate(self, attrs):
         program = attrs.get('program', getattr(self.instance, 'program', None))

@@ -167,7 +167,7 @@
             backdrop-filter: blur(40px) saturate(180%);
             background: rgba(10,21,53,0.85);
             border-top: 1px solid rgba(255,255,255,0.08);
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem;
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.25rem;
         }
         .light .bottom-nav { background: rgba(255,255,255,0.92); border-top-color: rgba(15,23,42,0.06); }
         .bottom-nav-item {
@@ -273,9 +273,11 @@
                 {% url 'public:account_dashboard' as url_dash %}
                 {% url 'public:account_certificados' as url_certs %}
                 {% url 'public:account_eventos' as url_eventos %}
+                {% url 'public:account_programas' as url_programas %}
                 <a href="{{ url_dash }}"   class="acc-tab {% if request.path == url_dash %}is-active{% endif %}"><i class="fa-solid fa-house"></i> Inicio</a>
                 <a href="{{ url_certs }}"  class="acc-tab {% if request.path == url_certs %}is-active{% endif %}"><i class="fa-solid fa-certificate"></i> Mis certificados</a>
                 <a href="{{ url_eventos }}" class="acc-tab {% if request.path == url_eventos %}is-active{% endif %}"><i class="fa-solid fa-calendar-days"></i> Eventos</a>
+                <a href="{{ url_programas }}" class="acc-tab {% if url_programas in request.path %}is-active{% endif %}"><i class="fa-solid fa-layer-group"></i> Programas</a>
             </div>
 
             <!-- Right -->
@@ -360,6 +362,7 @@
     {% url 'public:account_dashboard' as url_dash %}
     {% url 'public:account_certificados' as url_certs %}
     {% url 'public:account_eventos' as url_eventos %}
+    {% url 'public:account_programas' as url_programas %}
     {% url 'public:account_perfil' as url_perfil %}
     <a href="{{ url_dash }}"   class="bottom-nav-item {% if request.path == url_dash %}is-active{% endif %}">
         <i class="fa-solid fa-house"></i><span>Inicio</span>
@@ -369,6 +372,9 @@
     </a>
     <a href="{{ url_eventos }}" class="bottom-nav-item {% if request.path == url_eventos %}is-active{% endif %}">
         <i class="fa-solid fa-calendar-days"></i><span>Eventos</span>
+    </a>
+    <a href="{{ url_programas }}" class="bottom-nav-item {% if url_programas in request.path %}is-active{% endif %}">
+        <i class="fa-solid fa-layer-group"></i><span>Programas</span>
     </a>
     <a href="{{ url_perfil }}" class="bottom-nav-item {% if request.path == url_perfil %}is-active{% endif %}">
         <i class="fa-solid fa-user"></i><span>Perfil</span>

@@ -89,7 +89,15 @@ def batch_detail(request, id):
 @admin_required
 def configure_batch(request, id):
     """Form de diseño personalizado para un lote (colores, firmas, logos)."""
+    from django.urls import reverse
+    from core.models.catalogs.enums import CertificateKind
     lote = get_object_or_404(CertificateBatch, id=id)
+
+    # Si el lote es de un programa, salir/finalizar vuelve al programa.
+    if getattr(lote, 'kind', None) == CertificateKind.PROGRAM and lote.program_id:
+        back_url = reverse('panel:program_detail', args=[lote.program_id])
+    else:
+        back_url = reverse('panel:batch_detail', args=[lote.id])
 
     if request.method == 'POST':
         from core.models import GlobalDesign
@@ -145,9 +153,13 @@ def configure_batch(request, id):
             'Diseño personalizado guardado para este lote.' if lote.customize_design
             else 'Lote actualizado. Está usando el Diseño Global.',
         )
-        return redirect('panel:batch_configure', id=lote.id)
+        # "Guardar Cambios" (preview) se queda; "Finalizar" sale a back_url.
+        if request.POST.get('preview'):
+            return redirect('panel:batch_configure', id=lote.id)
+        return redirect(back_url)
 
     return render(request, 'panel/batch/config.html', {
         'lote': lote,
         'firmas_institucionales': Signature.objects.filter(is_active=True).order_by('name'),
+        'back_url': back_url,
     })

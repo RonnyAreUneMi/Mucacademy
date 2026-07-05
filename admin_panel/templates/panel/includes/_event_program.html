@@ -16,13 +16,17 @@ Contexto: `programs` (lista), opcional `sesion` (edición) y `preset_program_id`
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
             <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1"><i class="fa-solid fa-diagram-project mr-1 text-[#F58830]"></i> Programa</label>
-            <select id="ev-program-select" class="{{ css }} text-sm">
+            <select id="ev-program-select" class="{{ css }} text-sm {% if preset_program_id %}opacity-70 cursor-not-allowed{% endif %}" {% if preset_program_id %}disabled{% endif %}>
                 <option value="">— Ninguno (seminario suelto) —</option>
                 {% for pr in programs %}
                 <option value="{{ pr.id }}" {% if sesion.program_id == pr.id or preset_program_id == pr.id %}selected{% endif %}>{{ pr.name }}</option>
                 {% endfor %}
             </select>
+            {% if preset_program_id %}
+            <p class="text-[11px] text-[#F58830] mt-1 font-semibold"><i class="fa-solid fa-lock mr-1"></i> Este seminario pertenece al programa seleccionado.</p>
+            {% else %}
             <p class="text-[11px] text-gray-400 mt-1">Si pertenece a un programa, se agrupa bajo él.</p>
+            {% endif %}
         </div>
         <div>
             <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1"><i class="fa-solid fa-clock mr-1 text-[#F58830]"></i> Horas del seminario</label>
@@ -30,15 +34,15 @@ Contexto: `programs` (lista), opcional `sesion` (edición) y `preset_program_id`
         </div>
     </div>
 
-    <!-- Habilidades / competencias -->
-    <div>
+    <!-- Habilidades / competencias — solo si el seminario pertenece a un programa -->
+    <div id="ev-skills-section" class="hidden">
         <div class="flex items-center justify-between mb-1">
-            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block"><i class="fa-solid fa-award mr-1 text-[#F58830]"></i> Habilidades del seminario</label>
+            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block"><i class="fa-solid fa-award mr-1 text-[#F58830]"></i> Habilidad del seminario</label>
             <button type="button" id="ev-skills-ai" onclick="evSuggestSkills()" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 text-violet-600 dark:text-violet-400 text-[11px] font-bold transition-all">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Sugerir con IA
             </button>
         </div>
-        <p class="text-[11px] text-gray-400 mb-2">Se listan en el certificado de programa. Enter o coma para agregar.</p>
+        <p class="text-[11px] text-gray-400 mb-2">Cada seminario aporta <strong>una</strong> habilidad al certificado del programa (ej: SQL, BI…).</p>
         <div id="ev-skills-box" class="flex flex-wrap gap-2 p-2.5 rounded-xl bg-gray-50 dark:bg-[#0F163A]/50 border border-gray-200 dark:border-blue-900/30 min-h-[48px]">
             <input type="text" id="ev-skills-input" placeholder="Escribe una habilidad…" class="flex-1 min-w-[140px] bg-transparent outline-none text-sm text-gray-800 dark:text-white">
         </div>
@@ -50,6 +54,14 @@ Contexto: `programs` (lista), opcional `sesion` (edición) y `preset_program_id`
     const select = document.getElementById('ev-program-select');
     const skillsBox = document.getElementById('ev-skills-box');
     const skillsInput = document.getElementById('ev-skills-input');
+    const skillsSection = document.getElementById('ev-skills-section');
+
+    // Las habilidades solo aplican a seminarios que pertenecen a un programa.
+    function toggleSkills() {
+        if (skillsSection) skillsSection.classList.toggle('hidden', !select.value);
+    }
+    select.addEventListener('change', toggleSkills);
+    toggleSkills();  // init (respeta el programa preseleccionado)
 
     function chip(text) {
         const el = document.createElement('span');
@@ -63,9 +75,10 @@ Contexto: `programs` (lista), opcional `sesion` (edición) y `preset_program_id`
     window.evAddSkill = function (text) {
         text = (text || '').trim();
         if (!text) return;
-        const existing = Array.from(skillsBox.querySelectorAll('.ev-skill-chip')).map(c => c.dataset.value.toLowerCase());
-        if (existing.includes(text.toLowerCase())) return;
+        // Una sola habilidad por seminario: reemplaza la anterior.
+        skillsBox.querySelectorAll('.ev-skill-chip').forEach(c => c.remove());
         chip(text);
+        skillsInput.placeholder = '';
     };
     skillsInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ',') {
@@ -100,7 +113,7 @@ Contexto: `programs` (lista), opcional `sesion` (edición) y `preset_program_id`
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) { alert(data.error || 'No se pudo generar.'); return; }
-            (data.skills || []).forEach(s => window.evAddSkill(s));
+            if (data.skills && data.skills.length) window.evAddSkill(data.skills[0]);
         } catch (err) {
             alert('Error de red: ' + err.message);
         } finally {

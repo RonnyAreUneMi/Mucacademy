@@ -8,10 +8,9 @@
 
     <!-- ═══════════ Hoja única del programa ═══════════ -->
     <div class="lg-card rounded-3xl overflow-hidden">
-        <!-- Banner hero -->
-        <!-- Banner (imagen completa; ya trae título y logo) -->
-        <div id="hdr-banner-wrap" class="hidden">
-            <img id="hdr-banner" alt="" class="w-full aspect-[2/1] object-cover block">
+        <!-- Banner en recuadro contenido (decorativo; ya trae título y logo) -->
+        <div id="hdr-banner-wrap" class="hidden px-4 md:px-6 pt-4 md:pt-6">
+            <img id="hdr-banner" alt="" class="w-full h-36 md:h-48 object-cover rounded-2xl block shadow-lg">
         </div>
 
         <!-- Header (datos + acciones) -->
@@ -23,7 +22,7 @@
                     </div>
                     <div>
                         <h1 id="hdr-name" class="text-2xl md:text-3xl font-black text-gray-800 dark:text-white tracking-tight">{{ program.name }}</h1>
-                        <p id="hdr-desc" class="text-gray-500 dark:text-gray-400 mt-1">{{ program.description|default:"Sin descripción" }}</p>
+                        <div id="hdr-desc" class="prog-desc-box text-sm text-gray-600 dark:text-gray-300 mt-2 p-4 rounded-2xl bg-gray-50 dark:bg-[#0F163A]/50 border border-gray-200 dark:border-blue-900/30 max-h-40 overflow-y-auto leading-relaxed">{{ program.description|default:"Sin descripción"|safe }}</div>
                         <div class="flex flex-wrap items-center gap-4 mt-3 text-sm">
                             <span class="hdr-stat text-gray-600 dark:text-gray-300"><i class="fa-solid fa-book text-[#F58830] mr-1"></i> <span id="hdr-courses">{{ program.course_count }}</span> seminario(s)</span>
                             <span class="hdr-stat text-gray-600 dark:text-gray-300"><i class="fa-solid fa-clock text-[#F58830] mr-1"></i> <span id="hdr-hours">{{ program.total_hours }}</span> horas totales</span>
@@ -32,9 +31,15 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="togglePublish()" id="publish-btn" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold transition-all">
+                        <i class="fa-solid fa-eye"></i> <span id="publish-label">…</span>
+                    </button>
                     <button onclick="toggleEdit()" id="edit-btn" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-blue-900/30 text-gray-600 dark:text-gray-300 font-bold hover:border-[#F58830] hover:text-[#F58830] transition-all">
                         <i class="fa-solid fa-gear"></i> Editar
                     </button>
+                    <a href="/panel/programas/{{ program.id }}/certificado/" id="cert-btn" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-blue-900/30 text-gray-600 dark:text-gray-300 font-bold hover:border-[#F58830] hover:text-[#F58830] transition-all">
+                        <i class="fa-solid fa-stamp"></i> Certificado
+                    </a>
                     <button onclick="issueCerts()" id="issue-btn" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg transition-all">
                         <i class="fa-solid fa-award"></i> Emitir certificados
                     </button>
@@ -49,7 +54,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label class="text-xs font-bold text-gray-500 block mb-1">Nombre</label>
-                            <input id="cfg-name" type="text" class="{{ css }}">
+                            <input id="cfg-name" name="cfg-name" type="text" class="{{ css }}">
                         </div>
                         <div>
                             <label class="text-xs font-bold text-gray-500 block mb-1">Facultad</label>
@@ -63,37 +68,21 @@
                             </select>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="text-xs font-bold text-gray-500 block mb-1">Descripción</label>
-                            <textarea id="cfg-desc" rows="2" class="{{ css }} resize-none"></textarea>
+                            {% include 'panel/includes/_description_with_ai.html' with title_input_name='cfg-name' description_name='description' %}
                         </div>
                         <div class="md:col-span-2">
                             {% include 'panel/includes/_program_banner.html' with title_selector='#cfg-name' %}
                         </div>
                     </div>
                 </div>
-                <div class="pt-1 border-t border-gray-200/70 dark:border-white/5">
-                    <h3 class="text-sm font-black text-gray-700 dark:text-gray-200 uppercase tracking-wider mb-3 mt-4"><i class="fa-solid fa-clipboard-question text-[#F58830] mr-1"></i> Evaluación</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 block mb-1">Nota mínima (%)</label>
-                            <input id="cfg-threshold" type="number" min="1" max="100" class="{{ css }}">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 block mb-1">Intentos</label>
-                            <input id="cfg-attempts" type="number" min="1" class="{{ css }}">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 block mb-1">Preguntas por intento (0 = todas)</label>
-                            <input id="cfg-perattempt" type="number" min="0" class="{{ css }}">
-                        </div>
-                    </div>
-                </div>
+                <p class="text-[11px] text-gray-400"><i class="fa-solid fa-circle-info mr-1"></i> La evaluación (nota mínima, intentos, banco de preguntas) se configura por seminario en la pestaña <strong>Preguntas</strong>.</p>
                 {% endwith %}
                 <div class="flex gap-2 pt-1">
                     <button onclick="saveConfig()" id="cfg-save" class="bg-[#F58830] hover:bg-[#D97520] text-white font-bold px-5 py-2.5 rounded-xl transition-all"><i class="fa-solid fa-check mr-1"></i> Guardar</button>
                     <button onclick="toggleEdit()" class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-blue-900/30 text-gray-500 font-bold">Cancelar</button>
                 </div>
             </div>
+
         </div>
 
         <!-- Tabs -->
@@ -122,13 +111,17 @@
                 <div id="progress-list" class="space-y-2"><div class="text-center py-8 text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i></div></div>
             </div>
 
-            <!-- Preguntas -->
+            <!-- Preguntas (banco por seminario) -->
             <div data-panel="preguntas" class="hidden">
+                <p class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2"><i class="fa-solid fa-layer-group text-[#F58830] mr-1"></i> Elegí el seminario</p>
+                <div id="course-selector" class="flex flex-wrap gap-2 mb-4"></div>
                 <div id="preguntas-body"><div class="text-center py-8 text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i></div></div>
             </div>
 
-            <!-- Calificaciones -->
+            <!-- Calificaciones (por seminario) -->
             <div data-panel="calificaciones" class="hidden">
+                <p class="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2"><i class="fa-solid fa-layer-group text-[#F58830] mr-1"></i> Elegí el seminario</p>
+                <div id="grade-course-selector" class="flex flex-wrap gap-2 mb-4"></div>
                 <div id="gradebook-body"><div class="text-center py-8 text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i></div></div>
             </div>
         </div>
@@ -155,6 +148,15 @@
     .prog-tab:hover { color: #64748b; }
     .prog-tab.active { color: #F58830; border-color: #F58830; }
     .dark .prog-tab.active { color: #F58830; }
+    /* Descripción enriquecida dentro del cuadro */
+    .prog-desc-box { max-width: 62ch; }
+    .prog-desc-box p { margin: 0 0 .5rem; }
+    .prog-desc-box p:last-child { margin-bottom: 0; }
+    .prog-desc-box h2, .prog-desc-box h3 { font-weight: 800; color: inherit; margin: .6rem 0 .3rem; }
+    .prog-desc-box h2 { font-size: .95rem; } .prog-desc-box h3 { font-size: .875rem; }
+    .prog-desc-box ul { list-style: disc; padding-left: 1.25rem; margin: .25rem 0 .5rem; }
+    .prog-desc-box ol { list-style: decimal; padding-left: 1.25rem; margin: .25rem 0 .5rem; }
+    .prog-desc-box a { color: #F58830; text-decoration: underline; }
 </style>
 
 <script>
@@ -198,11 +200,8 @@ function toggleEdit() {
     const opening = panel.classList.contains('hidden');
     if (opening && PROGRAM) {
         document.getElementById('cfg-name').value = PROGRAM.name || '';
-        document.getElementById('cfg-desc').value = PROGRAM.description || '';
+        if (window.setDescriptionHTML) window.setDescriptionHTML(PROGRAM.description || '');
         document.getElementById('cfg-faculty').value = PROGRAM.faculty || 'FACI';
-        document.getElementById('cfg-threshold').value = EVAL ? EVAL.pass_threshold : 70;
-        document.getElementById('cfg-attempts').value = EVAL ? EVAL.max_attempts : 2;
-        document.getElementById('cfg-perattempt').value = EVAL ? EVAL.questions_per_attempt : 0;
         if (window.programBannerClear) window.programBannerClear();
         if (window.programBannerSetPreview) window.programBannerSetPreview(PROGRAM.banner_url);
     }
@@ -215,8 +214,9 @@ async function saveConfig() {
     try {
         const fd = new FormData();
         fd.set('name', document.getElementById('cfg-name').value.trim());
-        fd.set('description', document.getElementById('cfg-desc').value.trim());
+        fd.set('description', (window.getDescriptionHTML && window.getDescriptionHTML()) || '');
         fd.set('faculty', document.getElementById('cfg-faculty').value);
+        fd.set('is_active', 'true');
         const banner = window.getProgramBannerFile && window.getProgramBannerFile();
         if (banner) fd.set('banner_image', banner);
         const pRes = await fetch(`/api/v1/admin/programs/${PID}/`, {
@@ -225,25 +225,6 @@ async function saveConfig() {
             body: fd,
         });
         if (!pRes.ok) { toast('No se pudo guardar el programa.', 'error'); return; }
-
-        const evalPayload = {
-            pass_threshold: parseInt(document.getElementById('cfg-threshold').value, 10) || 70,
-            max_attempts: parseInt(document.getElementById('cfg-attempts').value, 10) || 2,
-            questions_per_attempt: parseInt(document.getElementById('cfg-perattempt').value, 10) || 0,
-        };
-        if (EVAL) {
-            await fetch(`/api/v1/admin/evaluations/${EVAL.id}/`, {
-                method: 'PATCH', credentials: 'same-origin',
-                headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
-                body: JSON.stringify(evalPayload),
-            });
-        } else {
-            await fetch('/api/v1/admin/evaluations/', {
-                method: 'POST', credentials: 'same-origin',
-                headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ program: PID, title: 'Evaluación final del programa', ...evalPayload }),
-            });
-        }
         toast('Cambios guardados.');
         document.getElementById('config-panel').classList.add('hidden');
         await loadDetail();
@@ -251,15 +232,43 @@ async function saveConfig() {
     } finally { btn.disabled = false; }
 }
 
+// ── Publicar / borrador ───────────────────────────────────────
+function renderPublishState() {
+    const btn = document.getElementById('publish-btn');
+    const label = document.getElementById('publish-label');
+    if (!btn) return;
+    const open = !!(PROGRAM && PROGRAM.is_open);
+    label.textContent = open ? 'Publicado' : 'Borrador';
+    btn.querySelector('i').className = open ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+    btn.className = 'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold transition-all ' +
+        (open ? 'border-emerald-400/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+              : 'border-amber-400/60 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20');
+    btn.title = open ? 'Visible para participantes — click para volver a borrador' : 'En configuración — click para publicar';
+}
+
+async function togglePublish() {
+    if (!PROGRAM) return;
+    const next = !PROGRAM.is_open;
+    if (next) {
+        const ok = await dsConfirm('El programa quedará visible para los participantes. ¿Publicar?', { title: 'Publicar programa', okText: 'Publicar' });
+        if (!ok) return;
+    }
+    const fd = new FormData(); fd.set('is_open', next ? 'true' : 'false');
+    const res = await fetch(`/api/v1/admin/programs/${PID}/`, { method: 'PATCH', credentials: 'same-origin', headers: { 'X-CSRFToken': CSRF }, body: fd });
+    if (res.ok) { PROGRAM.is_open = next; renderPublishState(); toast(next ? 'Programa publicado.' : 'Programa en borrador.'); }
+    else toast('No se pudo cambiar el estado.', 'error');
+}
+
 // ── Cargar detalle ────────────────────────────────────────────
 async function loadDetail() {
     const res = await fetch(`/api/v1/admin/programs/${PID}/`, { credentials: 'same-origin' });
     PROGRAM = await res.json();
     document.getElementById('hdr-name').textContent = PROGRAM.name;
-    document.getElementById('hdr-desc').textContent = PROGRAM.description || 'Sin descripción';
+    document.getElementById('hdr-desc').innerHTML = PROGRAM.description || 'Sin descripción';
     document.getElementById('hdr-courses').textContent = PROGRAM.course_count;
     document.getElementById('hdr-hours').textContent = PROGRAM.total_hours;
     document.getElementById('hdr-faculty').textContent = FACULTY_LABEL[PROGRAM.faculty] || PROGRAM.faculty;
+    renderPublishState();
 
     const hasBanner = !!PROGRAM.banner_url;
     const bannerWrap = document.getElementById('hdr-banner-wrap');
@@ -331,11 +340,37 @@ async function issueCerts() {
     }
 }
 
-// ── Preguntas (tab) ───────────────────────────────────────────
+// ── Preguntas por seminario ───────────────────────────────────
+let CURRENT_COURSE = null;
+
+function renderCourseSelector(containerId, handler) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const courses = (PROGRAM && PROGRAM.courses) || [];
+    if (!courses.length) { el.innerHTML = '<p class="text-sm text-gray-400 italic">Agregá seminarios primero.</p>'; return; }
+    el.innerHTML = courses.map(c => `
+        <button type="button" onclick="${handler}(${c.id})"
+            class="px-3 py-2 rounded-xl text-sm font-bold border transition-all ${CURRENT_COURSE === c.id ? 'bg-[#F58830] text-white border-[#F58830]' : 'bg-gray-50 dark:bg-[#0F163A]/50 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-blue-900/30 hover:border-[#F58830]'}">
+            ${esc(c.title) || '(sin título)'}
+        </button>`).join('');
+}
+
 async function loadEvaluation() {
-    const res = await fetch(`/api/v1/admin/evaluations/?program=${PID}`, { credentials: 'same-origin' });
-    const data = await res.json();
-    const items = data.results || data;
+    renderCourseSelector('course-selector', 'pickCourse');
+    const courses = (PROGRAM && PROGRAM.courses) || [];
+    if (!courses.length) {
+        document.getElementById('preguntas-body').innerHTML = '<p class="text-center py-10 text-gray-400 text-sm italic">Este programa aún no tiene seminarios. Agregá uno para configurar su evaluación.</p>';
+        EVAL = null; return;
+    }
+    const pick = (CURRENT_COURSE && courses.some(c => c.id === CURRENT_COURSE)) ? CURRENT_COURSE : courses[0].id;
+    await pickCourse(pick);
+}
+
+async function pickCourse(courseId) {
+    CURRENT_COURSE = courseId;
+    renderCourseSelector('course-selector', 'pickCourse');
+    const res = await fetch(`/api/v1/admin/evaluations/?event=${courseId}`, { credentials: 'same-origin' });
+    const data = await res.json(); const items = data.results || data;
     EVAL = items.length ? await (await fetch(`/api/v1/admin/evaluations/${items[0].id}/`, { credentials: 'same-origin' })).json() : null;
     renderPreguntas();
 }
@@ -344,7 +379,7 @@ function renderPreguntas() {
     const body = document.getElementById('preguntas-body');
     if (!EVAL) {
         body.innerHTML = `<div class="text-center py-10">
-            <p class="text-gray-500 dark:text-gray-400 mb-4">Este programa aún no tiene evaluación configurada.</p>
+            <p class="text-gray-500 dark:text-gray-400 mb-4">Este seminario aún no tiene evaluación.</p>
             <button onclick="createEvaluation()" class="bg-[#F58830] hover:bg-[#D97520] text-white font-bold px-5 py-2.5 rounded-xl"><i class="fa-solid fa-plus mr-1"></i> Crear evaluación</button>
         </div>`;
         return;
@@ -360,10 +395,22 @@ function renderPreguntas() {
                 <p id="draw-hint" class="text-[11px] text-gray-500 dark:text-gray-400"></p>
             </div>
         </div>
+        <div class="mb-4 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 space-y-2">
+            <p class="text-[11px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">Fuente para generar preguntas con IA (podés combinar)</p>
+            <div class="flex flex-wrap gap-4 text-sm text-gray-700 dark:text-gray-200">
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" class="src-check accent-violet-600" value="summary" checked> Resumen IA</label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" class="src-check accent-violet-600" value="document"> Documento</label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" class="src-check accent-violet-600" value="title"> Solo el título</label>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <input id="eval-doc-input" type="file" accept=".pdf,.txt,.md" class="text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-violet-500/10 file:text-violet-600 file:font-bold file:cursor-pointer">
+                <span class="text-[11px] text-gray-400">${EVAL.document_name ? '<i class=\'fa-solid fa-paperclip\'></i> ' + esc(EVAL.document_name) : 'Adjuntá un PDF/texto para generar preguntas del documento'}</span>
+            </div>
+        </div>
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div class="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
-                <span><i class="fa-solid fa-ribbon text-[#F58830] mr-1"></i> Mínimo ${EVAL.pass_threshold}%</span>
-                <span><i class="fa-solid fa-repeat text-[#F58830] mr-1"></i> ${EVAL.max_attempts} intentos</span>
+            <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                <label class="flex items-center gap-1"><i class="fa-solid fa-ribbon text-[#F58830]"></i> Mín <input id="ev-threshold" type="number" min="1" max="100" value="${EVAL.pass_threshold}" onchange="saveEvalConfig()" class="w-14 bg-gray-100 dark:bg-[#0F163A] rounded px-1 py-0.5 text-center text-gray-800 dark:text-white">%</label>
+                <label class="flex items-center gap-1"><i class="fa-solid fa-repeat text-[#F58830]"></i> <input id="ev-attempts" type="number" min="1" value="${EVAL.max_attempts}" onchange="saveEvalConfig()" class="w-12 bg-gray-100 dark:bg-[#0F163A] rounded px-1 py-0.5 text-center text-gray-800 dark:text-white"> intentos</label>
                 <span><i class="fa-solid fa-list-ol text-[#F58830] mr-1"></i> ${q.length} en el banco</span>
             </div>
             <div class="flex items-center gap-2">
@@ -415,12 +462,25 @@ function questionRow(q) {
 }
 
 async function createEvaluation() {
+    if (!CURRENT_COURSE) { toast('Elegí un seminario primero.', 'error'); return; }
     const res = await fetch('/api/v1/admin/evaluations/', {
         method: 'POST', credentials: 'same-origin',
         headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ program: PID, title: 'Evaluación final del programa' }),
+        body: JSON.stringify({ event: CURRENT_COURSE, title: 'Evaluación del seminario' }),
     });
-    if (res.ok) { toast('Evaluación creada.'); loadEvaluation(); } else toast('No se pudo crear.', 'error');
+    if (res.ok) { toast('Evaluación creada.'); pickCourse(CURRENT_COURSE); } else toast('No se pudo crear.', 'error');
+}
+
+async function saveEvalConfig() {
+    if (!EVAL) return;
+    const pt = Math.max(1, Math.min(100, parseInt(document.getElementById('ev-threshold').value, 10) || 70));
+    const ma = Math.max(1, parseInt(document.getElementById('ev-attempts').value, 10) || 2);
+    const res = await fetch(`/api/v1/admin/evaluations/${EVAL.id}/`, {
+        method: 'PATCH', credentials: 'same-origin',
+        headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pass_threshold: pt, max_attempts: ma }),
+    });
+    if (res.ok) { EVAL.pass_threshold = pt; EVAL.max_attempts = ma; toast('Config guardada.'); }
 }
 
 async function updateDrawValue(v) {
@@ -439,17 +499,28 @@ async function updateDrawValue(v) {
 async function generateAI() {
     const btn = document.getElementById('ai-btn');
     const count = parseInt(document.getElementById('ai-count').value, 10) || 10;
+    const sources = Array.from(document.querySelectorAll('.src-check:checked')).map(c => c.value);
+    if (!sources.length) { toast('Elegí al menos una fuente.', 'error'); return; }
+    const docInput = document.getElementById('eval-doc-input');
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando…';
     try {
+        // Si adjuntaron documento, lo subimos primero a la evaluación.
+        if (sources.includes('document') && docInput && docInput.files[0]) {
+            const dfd = new FormData(); dfd.set('document', docInput.files[0]);
+            await fetch(`/api/v1/admin/evaluations/${EVAL.id}/`, {
+                method: 'PATCH', credentials: 'same-origin',
+                headers: { 'X-CSRFToken': CSRF }, body: dfd,
+            });
+        }
         const res = await fetch(`/api/v1/admin/evaluations/${EVAL.id}/generate-questions/`, {
             method: 'POST', credentials: 'same-origin',
             headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ count }),
+            body: JSON.stringify({ count, sources }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) { toast(data.error || 'No se pudo generar.', 'error'); return; }
         toast(`${data.created} preguntas generadas.`);
-        await loadEvaluation();
+        await pickCourse(CURRENT_COURSE);
     } finally { btn.disabled = false; }
 }
 
@@ -521,11 +592,30 @@ async function deleteQuestion(id) {
     if (res.ok || res.status === 204) { toast('Pregunta eliminada.'); loadEvaluation(); }
 }
 
-// ── Calificaciones (tab) ──────────────────────────────────────
+// ── Calificaciones (tab) — por seminario ──────────────────────
 async function loadGradebook() {
+    renderCourseSelector('grade-course-selector', 'pickGradeCourse');
+    const courses = (PROGRAM && PROGRAM.courses) || [];
+    if (!courses.length) { document.getElementById('gradebook-body').innerHTML = '<p class="text-center py-10 text-gray-400 italic">Agregá seminarios primero.</p>'; return; }
+    if (!CURRENT_COURSE || !courses.some(c => c.id === CURRENT_COURSE)) CURRENT_COURSE = courses[0].id;
+    await pickGradeCourse(CURRENT_COURSE);
+}
+
+async function pickGradeCourse(courseId) {
+    CURRENT_COURSE = courseId;
+    renderCourseSelector('grade-course-selector', 'pickGradeCourse');
     const body = document.getElementById('gradebook-body');
-    if (!EVAL) { body.innerHTML = '<p class="text-center py-10 text-gray-400 italic">Primero creá la evaluación (pestaña Preguntas).</p>'; return; }
     body.innerHTML = '<div class="text-center py-8 text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+    const er = await fetch(`/api/v1/admin/evaluations/?event=${courseId}`, { credentials: 'same-origin' });
+    const ed = await er.json(); const items = ed.results || ed;
+    if (!items.length) { body.innerHTML = '<p class="text-center py-10 text-gray-400 italic">Este seminario aún no tiene evaluación.</p>'; EVAL = null; return; }
+    EVAL = { id: items[0].id };
+    await renderGradebook();
+}
+
+async function renderGradebook() {
+    const body = document.getElementById('gradebook-body');
+    if (!EVAL) return;
     const res = await fetch(`/api/v1/admin/evaluations/${EVAL.id}/gradebook/`, { credentials: 'same-origin' });
     const data = await res.json();
     if (!data.rows.length) { body.innerHTML = '<p class="text-center py-10 text-gray-400 italic">Todavía nadie rindió la evaluación.</p>'; return; }
@@ -551,7 +641,7 @@ async function grantAttempt(pid, name) {
         method: 'POST', credentials: 'same-origin',
         headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' }, body: JSON.stringify({ participant_id: pid, extra: 1 }),
     });
-    if (res.ok) { toast('Intento adicional otorgado.'); loadGradebook(); } else toast('No se pudo otorgar.', 'error');
+    if (res.ok) { toast('Intento adicional otorgado.'); renderGradebook(); } else toast('No se pudo otorgar.', 'error');
 }
 
 // Recargar calificaciones al abrir su tab

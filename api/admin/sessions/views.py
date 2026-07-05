@@ -308,10 +308,16 @@ class SesionViewSet(AuditedModelViewSet):
                 faculty=facultad,
             )
 
-            firmas_default = list(Signature.objects.filter(is_active=True).order_by('sort_order')[:3])
-            for i, firma in enumerate(firmas_default, start=1):
-                setattr(lote, f'signature_inst_{i}', firma)
-
+            # Si el seminario pertenece a un programa, hereda el diseño del
+            # certificado del programa (mismo para todos sus seminarios). Suelto = default.
+            applied = False
+            if sesion.program_id:
+                from core.services import programs as program_service
+                applied = program_service.apply_program_design(sesion.program, lote)
+            if not applied:
+                firmas_default = list(Signature.objects.filter(is_active=True).order_by('sort_order')[:3])
+                for i, firma in enumerate(firmas_default, start=1):
+                    setattr(lote, f'signature_inst_{i}', firma)
             # Sin logos hardcodeados: los logos salen del Diseño Global / config del lote.
             lote.save()
 

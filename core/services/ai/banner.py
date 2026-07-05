@@ -37,15 +37,30 @@ FONT_BODY = _STATIC / 'fonts' / 'Quicksand-Bold.ttf'
 
 
 def build_prompt(title: str, custom: str = '') -> str:
-    """Arma el prompt para la IA. Estilo editable + reglas fijas (sin texto)."""
+    """Arma el prompt para la IA.
+
+    Fuerza SIEMPRE un fondo institucional oscuro (azul marino UNEMI) con gráficos
+    del tema en la paleta UNEMI (azul + naranja), integrados al fondo, sin ningún
+    cuadro/tarjeta blanca, sin texto ni logos (el branding real lo componemos aparte).
+    """
     from .prompts import get_prompt
     tema = custom.strip() or title.strip()
     style = get_prompt('banner')
     return (
-        'Fondo abstracto y profesional para el banner de un evento académico '
-        f"universitario. Tema visual: {tema}. {style} "
-        'MUY IMPORTANTE: sin ningún texto, sin letras, sin palabras, sin logos, '
-        'sin marcas de agua, sin personas mirando a cámara.'
+        'Ilustración horizontal para el banner de un evento académico universitario, '
+        'estilo moderno, plano/vectorial, elegante y profesional. '
+        f'Tema visual: {tema}. '
+        'FONDO obligatorio: azul marino MUY oscuro institucional (entre #0A1535 y '
+        '#162054), uniforme y envolvente, atmósfera tecnológica y educativa. '
+        'Sobre ese fondo oscuro coloca gráficos e íconos abstractos relacionados con '
+        'el tema (líneas, formas geométricas, elementos con brillo suave), en la '
+        'paleta institucional: acentos naranja (#F58830) y azules, integrados al '
+        'fondo — NADA de cuadros, tarjetas ni recuadros blancos. Concentra los '
+        'gráficos hacia la derecha y deja la mitad izquierda más despejada. '
+        f'{style} '
+        'MUY IMPORTANTE: el fondo debe ser SIEMPRE oscuro (nunca blanco ni claro), '
+        'sin ningún rectángulo/tarjeta blanca, sin texto, sin letras, sin palabras, '
+        'sin logos, sin marcas de agua, sin personas mirando a cámara.'
     )
 
 
@@ -129,22 +144,19 @@ def compose_banner(bg_bytes: bytes, title: str) -> bytes:
 
     pad = 56
 
-    # Logo UNEMI (arriba a la izquierda). El logo es navy oscuro, así que se
-    # coloca sobre un "chip" blanco redondeado para que sea legible en el fondo
-    # oscuro (si no, se pierde por contraste navy-sobre-navy).
+    # Logo UNEMI (arriba a la izquierda). El PNG es navy oscuro; lo recoloreamos a
+    # BLANCO conservando su alpha, así se ve limpio y profesional sobre el fondo
+    # oscuro SIN necesidad de un cuadro blanco detrás.
     try:
         logo = Image.open(LOGO_PATH).convert('RGBA')
         logo.thumbnail((230, 92), Image.LANCZOS)
-        cx, cy, cpad = pad, 40, 16
-        chip = Image.new('RGBA', (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
-        ImageDraw.Draw(chip).rounded_rectangle(
-            [cx - cpad, cy - cpad, cx + logo.width + cpad, cy + logo.height + cpad],
-            radius=18, fill=(255, 255, 255, 240),
-        )
-        canvas = Image.alpha_composite(canvas, chip)
-        canvas.alpha_composite(logo, (cx, cy))
-        draw = ImageDraw.Draw(canvas)  # recrear el draw tras el composite
-        logo_bottom = cy + logo.height + cpad
+        alpha = logo.split()[3]
+        white_logo = Image.new('RGBA', logo.size, (255, 255, 255, 255))
+        white_logo.putalpha(alpha)
+        cx, cy = pad, 40
+        canvas.alpha_composite(white_logo, (cx, cy))
+        draw = ImageDraw.Draw(canvas)
+        logo_bottom = cy + logo.height
     except FileNotFoundError:
         logo_bottom = 60
 
@@ -175,6 +187,16 @@ def compose_banner(bg_bytes: bytes, title: str) -> bytes:
     font_body = ImageFont.truetype(str(FONT_BODY), 24)
     draw.text((pad, y + 24), 'UNEMI · Universidad Estatal de Milagro',
               font=font_body, fill=(226, 232, 240))
+
+    # Wordmark de la app (certifAI) abajo a la izquierda — branding profesional.
+    try:
+        font_brand = ImageFont.truetype(str(FONT_TITLE), 26)
+        bx, by = pad, CANVAS_H - 46
+        draw.text((bx, by), 'certif', font=font_brand, fill=(255, 255, 255))
+        wcertif = draw.textlength('certif', font=font_brand)
+        draw.text((bx + wcertif, by), 'AI', font=font_brand, fill=ORANGE)
+    except Exception:
+        pass
 
     out = BytesIO()
     canvas.convert('RGB').save(out, format='PNG', optimize=True)

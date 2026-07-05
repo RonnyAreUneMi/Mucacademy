@@ -23,7 +23,7 @@ from .views import (
     session_list, session_create, session_edit,
     session_qr_display, session_generate_batch,
     # program
-    program_list, program_create, program_detail,
+    program_list, program_create, program_detail, program_certificate_design,
     # impersonate
     impersonate_participant, stop_impersonation,
     # design
@@ -106,6 +106,7 @@ urlpatterns = [
     path('programas/', program_list, name='program_list'),
     path('programas/nuevo/', program_create, name='program_create'),
     path('programas/<int:id>/', program_detail, name='program_detail'),
+    path('programas/<int:id>/certificado/', program_certificate_design, name='program_certificate_design'),
     path('sessions/<int:id>/edit/', session_edit, name='session_edit'),
     path('sessions/<int:id>/qr/', session_qr_display, name='session_qr_display'),
     path('sessions/<int:id>/generate-batch/', session_generate_batch, name='session_generate_batch'),

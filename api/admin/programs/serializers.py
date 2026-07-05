@@ -24,9 +24,10 @@ class ProgramSerializer(serializers.ModelSerializer):
     class Meta:
         model = Program
         fields = [
-            'id', 'name', 'description', 'faculty', 'is_active',
+            'id', 'name', 'description', 'faculty', 'is_active', 'is_open',
             'certificate_body', 'course_count', 'total_hours',
             'banner_image', 'banner_url',
+            'template', 'signature_inst_1', 'signature_inst_2', 'signature_inst_3',
             'courses', 'created_at',
         ]
         read_only_fields = ('created_at',)

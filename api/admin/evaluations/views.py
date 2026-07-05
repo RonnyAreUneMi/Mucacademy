@@ -26,14 +26,20 @@ class EvaluationViewSet(AuditedModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='generate-questions')
     def generate_questions(self, request, pk=None):
-        """POST {count?} → genera preguntas con IA y las agrega al banco."""
+        """POST {count?, sources?} → genera preguntas con IA y las agrega al banco.
+
+        sources: lista opcional de fuentes ['summary','document','title'] (mixto).
+        """
         evaluation = self.get_object()
         count = int(request.data.get('count', 10) or 10)
         count = max(1, min(count, 30))
+        sources = request.data.get('sources') or None
+        if isinstance(sources, str):
+            sources = [s.strip() for s in sources.split(',') if s.strip()]
 
         from core.services.ai.question_bank import generate_questions as ai_generate
         try:
-            items = ai_generate(evaluation, count=count)
+            items = ai_generate(evaluation, count=count, sources=sources)
         except NotImplementedError:
             return Response(
                 {'error': 'IA no configurada. Actívala en /panel/ai/config/.'},

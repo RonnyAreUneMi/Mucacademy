@@ -23,6 +23,7 @@ from core.models import (
     Attendance,
     SessionSummary,
     Event,
+    Program,
 )
 from public.services import auth as account_auth
 from public.services import google_auth as gsignin
@@ -172,9 +173,10 @@ def dashboard(request):
         .prefetch_related('speakers')
         .order_by('date', 'start_time')[:3])
 
-    # Recomendaciones — futuros activos sin inscripción
+    # Recomendaciones — futuros activos sin inscripción.
+    # Excluimos seminarios de programa: se descubren a través del programa.
     eventos_recomendados = (Event.objects
-        .filter(is_active=True, date__gte=today)
+        .filter(is_active=True, date__gte=today, program__isnull=True)
         .exclude(id__in=eventos_inscrito_ids)
         .prefetch_related('speakers')
         .order_by('date', 'start_time')[:6])
@@ -334,8 +336,9 @@ def eventos_view(request):
     mis_ids = confirmados_ids | asistidos_ids
 
     if tab == 'disponibles':
+        # Solo seminarios sueltos: los de programa se ven desde el programa.
         eventos = (Event.objects
-            .filter(is_active=True, date__gte=today)
+            .filter(is_active=True, date__gte=today, program__isnull=True)
             .exclude(id__in=mis_ids)
             .prefetch_related('speakers')
             .order_by('date', 'start_time'))
@@ -374,8 +377,111 @@ def eventos_view(request):
         'tab': tab,
         'eventos_data': eventos_data,
         'count_mios': len(mis_ids),
-        'count_disponibles': Event.objects.filter(is_active=True, date__gte=today).exclude(id__in=mis_ids).count(),
+        'count_disponibles': Event.objects.filter(is_active=True, date__gte=today, program__isnull=True).exclude(id__in=mis_ids).count(),
     })
+
+
+# ════════════════════════════════════════════════════════════════
+# Programas (feed + detalle) — un programa agrupa varios seminarios
+# ════════════════════════════════════════════════════════════════
+
+def _program_card_data(program):
+    """Datos derivados de un programa para las tarjetas/detalle del participante."""
+    cursos = list(program.active_courses)
+    grades, skills = [], []
+    for c in cursos:
+        ev = getattr(c, 'evaluation', None)
+        if ev and ev.is_active:
+            grades.append(ev.pass_threshold)
+        for s in (c.skills or []):
+            if s not in skills:
+                skills.append(s)
+    return {
+        'prog': program,
+        'cursos': cursos,
+        'course_count': len(cursos),
+        'total_hours': sum(c.hours or 0 for c in cursos),
+        'min_grade': max(grades) if grades else None,
+        'skills': skills,
+    }
+
+
+@account_auth.login_required
+def programas_view(request):
+    """Feed de programas publicados (estilo tarjetas, mismo diseño de eventos)."""
+    p: Participant = request.participant
+    programas = (Program.objects
+        .filter(is_active=True, is_open=True)
+        .prefetch_related('courses__evaluation')
+        .order_by('name'))
+
+    # Programas en los que ya está inscrito (por cualquiera de sus seminarios)
+    inscrito_ids = set(
+        Enrollment.objects
+        .filter(participant=p, event__program__isnull=False)
+        .values_list('event__program_id', flat=True)
+    )
+
+    data = []
+    for prog in programas:
+        card = _program_card_data(prog)
+        card['inscrito'] = prog.id in inscrito_ids
+        data.append(card)
+
+    return render(request, 'public/account/programas.html', {
+        'p': p,
+        'programas_data': data,
+    })
+
+
+@account_auth.login_required
+def programa_detalle_view(request, program_id: int):
+    """Detalle de un programa: nota mínima + seminarios con descripción e imagen."""
+    p: Participant = request.participant
+    prog = (Program.objects
+        .filter(pk=program_id, is_active=True, is_open=True)
+        .prefetch_related('courses__evaluation')
+        .first())
+    if prog is None:
+        raise Http404
+
+    card = _program_card_data(prog)
+    seminarios = []
+    for c in card['cursos']:
+        ev = getattr(c, 'evaluation', None)
+        cskills = c.skills or []
+        seminarios.append({
+            'e': c,
+            'min_grade': ev.pass_threshold if (ev and ev.is_active) else None,
+            'skill': cskills[0] if cskills else None,
+        })
+
+    inscrito = Enrollment.objects.filter(participant=p, event__program=prog).exists()
+
+    return render(request, 'public/account/programa_detalle.html', {
+        'p': p,
+        'prog': prog,
+        'seminarios': seminarios,
+        'min_grade': card['min_grade'],
+        'total_hours': card['total_hours'],
+        'course_count': card['course_count'],
+        'skills': card['skills'],
+        'inscrito': inscrito,
+    })
+
+
+@account_auth.login_required
+@require_POST
+def programa_inscribir(request, program_id: int):
+    """Inscribe al participante al programa → lo asocia a TODOS sus seminarios."""
+    from core.services import programs as program_service
+    p: Participant = request.participant
+    prog = Program.objects.filter(pk=program_id, is_active=True, is_open=True).first()
+    if prog is None:
+        raise Http404
+    program_service.enroll_participant_in_program(prog, p)
+    messages.success(request, f'Te inscribiste al programa "{prog.name}". Ya estás en todos sus seminarios.')
+    return redirect('public:account_programa_detalle', program_id=prog.id)
 
 
 @account_auth.login_required
@@ -709,8 +815,9 @@ def escanear_registrar(request):
 
 def home(request):
     today = timezone.localdate()
+    # Seminarios sueltos: los de programa se descubren desde el programa.
     eventos = (Event.objects
-        .filter(is_active=True, date__gte=today)
+        .filter(is_active=True, date__gte=today, program__isnull=True)
         .order_by('date', 'start_time'))
 
     # 5 destacados para el hero (los más próximos)

@@ -191,6 +191,19 @@ class SesionWriteSerializer(serializers.ModelSerializer):
         if 'skills_json' in validated_data:
             validated_data['skills'] = validated_data.pop('skills_json')
 
+    def _ensure_program_evaluation(self, event):
+        """Regla: todo seminario que pertenece a un programa DEBE tener evaluación.
+
+        Si el evento tiene programa y aún no tiene evaluación, la creamos vacía
+        (el admin le agrega/gemera las preguntas después).
+        """
+        if event.program_id and not hasattr(event, 'evaluation'):
+            from core.models import Evaluation
+            Evaluation.objects.get_or_create(
+                event=event,
+                defaults={'title': f'Evaluación · {event.title or "seminario"}'},
+            )
+
     def create(self, validated_data):
         ponentes_data = validated_data.pop('ponentes_json', None)
         self._apply_series(validated_data)
@@ -199,6 +212,7 @@ class SesionWriteSerializer(serializers.ModelSerializer):
         event = super().create(validated_data)
         if ponentes_data is not None:
             self._save_ponentes(event, ponentes_data)
+        self._ensure_program_evaluation(event)
         return event
 
     def update(self, instance, validated_data):
@@ -209,6 +223,7 @@ class SesionWriteSerializer(serializers.ModelSerializer):
         event = super().update(instance, validated_data)
         if ponentes_data is not None:
             self._save_ponentes(event, ponentes_data)
+        self._ensure_program_evaluation(event)
         return event
 
 

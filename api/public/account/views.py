@@ -9,10 +9,15 @@ from rest_framework.views import APIView
 
 from core.models import (
     Certificate, Enrollment, Participant, ParticipantToken,
-    Attendance, Event,
+    Attendance, Event, Program,
 )
 
 from .authentication import ParticipanteTokenAuthentication
+
+# En las listas de EVENTOS sueltos solo mostramos seminarios que NO pertenecen
+# a un programa. Los seminarios de programa se descubren a través del programa
+# (lista/detalle de programas), no sueltos.
+VISIBLE_EVENT = Q(program__isnull=True)
 from .serializers import (
     CertificadoSerializer, LoginInputSerializer, ParticipanteSerializer,
     RegisterInputSerializer, SesionMobileSerializer,
@@ -125,6 +130,7 @@ class LandingView(APIView):
         today = timezone.localdate()
         eventos = (Event.objects
             .filter(is_active=True, date__gte=today)
+            .filter(VISIBLE_EVENT)
             .order_by('date', 'start_time')[:5])
 
         agg = Certificate.objects.aggregate(total_horas=Sum('hours'))
@@ -191,6 +197,7 @@ class EventosView(_AuthenticatedBase):
         if tab == 'disponibles':
             eventos = list(Event.objects
                 .filter(is_active=True, date__gte=today)
+                .filter(VISIBLE_EVENT)
                 .exclude(id__in=mis_ids)
                 .order_by('date', 'start_time'))
         else:
@@ -220,7 +227,7 @@ class EventosView(_AuthenticatedBase):
         return Response({
             'tab': tab,
             'count_mios':       len(mis_ids),
-            'count_disponibles': Event.objects.filter(is_active=True, date__gte=today).exclude(id__in=mis_ids).count(),
+            'count_disponibles': Event.objects.filter(is_active=True, date__gte=today).filter(VISIBLE_EVENT).exclude(id__in=mis_ids).count(),
             'results': results,
         })
 
@@ -407,6 +414,7 @@ class DashboardView(_AuthenticatedBase):
 
         recomendados = (Event.objects
             .filter(is_active=True, date__gte=today)
+            .filter(VISIBLE_EVENT)
             .exclude(id__in=confirmados_ids)
             .order_by('date', 'start_time')[:5])
 
@@ -421,4 +429,29 @@ class DashboardView(_AuthenticatedBase):
             'proximos':       SesionMobileSerializer(proximos, many=True).data,
             'recomendados':   SesionMobileSerializer(recomendados, many=True).data,
             'certificados_recientes': CertificadoSerializer(certificados[:3], many=True).data,
+        })
+
+
+class ProgramEnrollView(_AuthenticatedBase):
+    """POST /api/v1/public/account/programs/<id>/enroll/
+
+    Una sola inscripción al programa asocia al participante a TODOS sus
+    seminarios activos. Solo programas publicados (is_open).
+    """
+
+    def post(self, request, program_id):
+        p = self.get_participante()
+        program = Program.objects.filter(pk=program_id, is_active=True).first()
+        if program is None:
+            return Response({'ok': False, 'error': 'Programa no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        if not program.is_open:
+            return Response({'ok': False, 'error': 'Este programa aún no está disponible.'}, status=status.HTTP_403_FORBIDDEN)
+
+        from core.services import programs as program_service
+        nuevas = program_service.enroll_participant_in_program(program, p)
+        return Response({
+            'ok': True,
+            'program_id': program.id,
+            'nuevas_inscripciones': nuevas,
+            'seminarios': program.course_count,
         })

@@ -1,0 +1,176 @@
+{% extends 'public/account/_base.html' %}
+{% block page_title %}{{ prog.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-5">
+
+    <!-- Volver -->
+    <a href="{% url 'public:account_programas' %}"
+       class="inline-flex items-center gap-2 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-[var(--ds-brand)] transition-colors">
+        <i class="fa-solid fa-arrow-left"></i> Programas
+    </a>
+
+    <!-- Card principal -->
+    <div class="lg-card rounded-3xl overflow-hidden">
+        <!-- Hero (imagen clara, altura contenida) -->
+        <div class="relative h-48 sm:h-56 overflow-hidden">
+            {% if prog.banner_image %}
+            <img src="{{ prog.banner_image.url }}" alt="" class="w-full h-full object-cover">
+            {% else %}
+            <div class="w-full h-full bg-gradient-to-br from-[var(--ds-accent)] via-[#1e2f6b] to-[var(--ds-brand-dark)] flex items-center justify-center">
+                <i class="fa-solid fa-layer-group text-white/30 text-7xl"></i>
+            </div>
+            {% endif %}
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+            <div class="absolute bottom-4 left-5 right-5">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur-md
+                             bg-[var(--ds-accent)]/90 text-white ring-1 ring-white/25 mb-2">
+                    <i class="fa-solid fa-layer-group text-[9px]"></i> Programa académico
+                </span>
+                <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow">
+                    {{ prog.name }}
+                </h1>
+            </div>
+        </div>
+
+        <!-- Cuerpo -->
+        <div class="p-5 sm:p-6 space-y-5">
+            <!-- Stats rápidos -->
+            <div class="grid grid-cols-3 gap-3">
+                <div class="rounded-2xl bg-slate-100/70 dark:bg-white/5 p-3 text-center">
+                    <p class="text-lg font-black text-slate-900 dark:text-white">{{ course_count }}</p>
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Seminarios</p>
+                </div>
+                <div class="rounded-2xl bg-slate-100/70 dark:bg-white/5 p-3 text-center">
+                    <p class="text-lg font-black text-slate-900 dark:text-white">{{ total_hours }}h</p>
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Horas</p>
+                </div>
+                <div class="rounded-2xl bg-slate-100/70 dark:bg-white/5 p-3 text-center">
+                    <p class="text-lg font-black {% if min_grade %}text-[var(--ds-brand)]{% else %}text-slate-900 dark:text-white{% endif %}">
+                        {% if min_grade %}{{ min_grade }}{% else %}—{% endif %}
+                    </p>
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Nota mínima</p>
+                </div>
+            </div>
+
+            <!-- Nota mínima explicada -->
+            {% if min_grade %}
+            <div class="flex items-start gap-3 rounded-2xl bg-[var(--ds-brand)]/8 ring-1 ring-[var(--ds-brand)]/15 p-3.5">
+                <i class="fa-solid fa-award text-[var(--ds-brand)] mt-0.5"></i>
+                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Para obtener el certificado del programa necesitás aprobar la evaluación de
+                    <strong>cada seminario</strong> con al menos <strong>{{ min_grade }}/100</strong>.
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Descripción -->
+            {% if prog.description %}
+            <div class="prose-sm">
+                <p class="text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1.5">Sobre el programa</p>
+                <div class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{{ prog.description|safe }}</div>
+            </div>
+            {% endif %}
+
+            <!-- Habilidades -->
+            {% if skills %}
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-2">Habilidades que ganás</p>
+                <div class="flex flex-wrap gap-1.5">
+                    {% for s in skills %}
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold
+                                 bg-[var(--ds-brand)]/10 text-[var(--ds-brand-dark)] dark:text-[var(--ds-brand)]">
+                        <i class="fa-solid fa-bolt text-[9px]"></i> {{ s }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- CTA inscripción -->
+            {% if inscrito %}
+            <div class="flex items-center justify-center gap-2 rounded-2xl bg-emerald-500/10 ring-1 ring-emerald-500/20 py-3 text-sm font-bold text-emerald-600 dark:text-emerald-300">
+                <i class="fa-solid fa-circle-check"></i> Ya estás inscrito en este programa
+            </div>
+            {% else %}
+            <form method="post" action="{% url 'public:account_programa_inscribir' prog.id %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-sm font-black text-white
+                               bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)]
+                               shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_20px_-6px_rgba(245,136,48,0.45)]
+                               hover:brightness-110 transition-all">
+                    <i class="fa-solid fa-bookmark"></i> Inscribirme al programa
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Seminarios -->
+    <div>
+        <h2 class="text-sm font-black uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-3 px-1">
+            <i class="fa-solid fa-book"></i> Seminarios del programa
+        </h2>
+        <div class="space-y-3">
+            {% for s in seminarios %}
+            <div class="lg-card rounded-2xl overflow-hidden flex flex-col sm:flex-row">
+                <!-- Imagen clara y contenida -->
+                <div class="relative sm:w-44 h-36 sm:h-auto flex-shrink-0 overflow-hidden">
+                    {% if s.e.banner_image %}
+                    <img src="{{ s.e.banner_image.url }}" alt="" class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full {% if s.e.is_virtual %}bg-gradient-to-br from-blue-500 to-blue-700{% else %}bg-gradient-to-br from-[var(--ds-brand)] to-[var(--ds-brand-dark)]{% endif %} flex items-center justify-center">
+                        <i class="fa-solid {% if s.e.is_virtual %}fa-video{% else %}fa-chalkboard-user{% endif %} text-white/40 text-3xl"></i>
+                    </div>
+                    {% endif %}
+                    <span class="absolute top-2 left-2 inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-black
+                                 bg-white/90 dark:bg-black/60 text-[var(--ds-brand)] ring-1 ring-white/50 dark:ring-white/15">
+                        {{ forloop.counter }}
+                    </span>
+                </div>
+                <!-- Info -->
+                <div class="p-4 flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2">
+                        <h3 class="font-black text-sm text-slate-900 dark:text-white leading-snug">
+                            {{ s.e.title|default:s.e.day_of_week }}
+                        </h3>
+                        {% if s.skill %}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold flex-shrink-0
+                                     bg-[var(--ds-brand)]/10 text-[var(--ds-brand-dark)] dark:text-[var(--ds-brand)]">
+                            <i class="fa-solid fa-bolt text-[8px]"></i> {{ s.skill }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% if s.e.description %}
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1.5"
+                       style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
+                        {{ s.e.description|striptags }}
+                    </p>
+                    {% endif %}
+                    <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-2.5">
+                        {% if s.e.hours %}
+                        <span class="inline-flex items-center gap-1"><i class="fa-solid fa-clock"></i> {{ s.e.hours }}h</span>
+                        {% endif %}
+                        <span class="inline-flex items-center gap-1">
+                            <i class="fa-solid {% if s.e.is_virtual %}fa-video{% else %}fa-building{% endif %}"></i>
+                            {{ s.e.is_virtual|yesno:'Virtual,Presencial' }}
+                        </span>
+                        {% if s.min_grade %}
+                        <span class="inline-flex items-center gap-1 text-[var(--ds-brand)]">
+                            <i class="fa-solid fa-award"></i> Aprobás con {{ s.min_grade }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="lg-card rounded-2xl p-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                Este programa aún no tiene seminarios cargados.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

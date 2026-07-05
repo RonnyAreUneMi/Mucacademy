@@ -21,6 +21,7 @@ urlpatterns = [
     path('events/<int:event_id>/register/',  views.InscribirEventoView.as_view(), name='mobile-event-register'),
     path('attendances/',                     views.AsistenciasView.as_view(),     name='mobile-attendances'),
     path('checkin/',                         views.CheckinByQRView.as_view(),     name='mobile-checkin-qr'),
+    path('programs/<int:program_id>/enroll/', views.ProgramEnrollView.as_view(),  name='mobile-program-enroll'),
 
     # Evaluaciones (rendir)
     path('evaluations/',                        eval_views.EvaluationsListView.as_view(),  name='mobile-evaluations'),

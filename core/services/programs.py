@@ -48,7 +48,73 @@ def get_or_create_program_batch(program: Program, administrator=None) -> Certifi
     )
     batch.save()
     _attach_batch_defaults(batch)
+    _set_program_header_logo(batch)
     return batch
+
+
+def _set_program_header_logo(batch: CertificateBatch) -> None:
+    """Deja SOLO el logo UNEMI en el centro (izq/der vacíos; la derecha es CertifAI).
+
+    Fuerza customize_design=True para que use los logos del lote (no el Diseño Global).
+    """
+    import os
+    from django.conf import settings
+    from django.core.files import File
+    batch.customize_design = True
+    batch.header_logo_1 = None
+    batch.header_logo_3 = None
+    if not batch.header_logo_2:
+        path = os.path.join(settings.BASE_DIR, 'static', 'img', 'logo-unemi-removebg-preview.png')
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                batch.header_logo_2.save('unemi.png', File(f), save=False)
+    batch.save()
+
+
+DESIGN_FIELDS = (
+    'customize_design', 'template',
+    'color_primary', 'color_secondary', 'color_tertiary', 'color_text',
+    'body_text', 'signatures_position',
+    'signature_inst_1', 'signature_inst_2', 'signature_inst_3', 'signature_inst_4',
+    'header_logo_1', 'header_logo_2', 'header_logo_3',
+)
+
+
+def copy_batch_design(src: CertificateBatch, dst: CertificateBatch) -> None:
+    """Copia el diseño (plantilla, colores, firmas, logos) de un lote a otro."""
+    for f in DESIGN_FIELDS:
+        setattr(dst, f, getattr(src, f))
+    dst.save()
+
+
+def apply_program_design(program: Program, dst_batch: CertificateBatch) -> bool:
+    """Aplica el diseño del certificado del PROGRAMA a un lote de seminario.
+
+    El diseño vive en el lote de programa (configurado en el diseñador con
+    preview). Devuelve True si se aplicó, False si el programa no tiene diseño.
+    """
+    program_batch = program.batches.filter(kind=CertificateKind.PROGRAM).first()
+    if program_batch is None:
+        return False
+    copy_batch_design(program_batch, dst_batch)
+    return True
+
+
+def enroll_participant_in_program(program: Program, participant) -> int:
+    """Inscribe al participante en TODOS los seminarios activos del programa.
+
+    Una sola inscripción al programa → queda asociado a cada seminario.
+    Idempotente (get_or_create). Devuelve cuántas inscripciones nuevas creó.
+    """
+    from core.models import Enrollment
+    nuevas = 0
+    for course in program.active_courses:
+        _, created = Enrollment.objects.get_or_create(
+            participant=participant, event=course, defaults={'confirmed': True},
+        )
+        if created:
+            nuevas += 1
+    return nuevas
 
 
 def participant_attended_all(program: Program, participant) -> bool:
@@ -65,15 +131,12 @@ def participant_attended_all(program: Program, participant) -> bool:
 def participant_completed_program(program: Program, participant) -> bool:
     """True if the participant may receive the program certificate.
 
-    Requisitos (decisión del proyecto): asistió a TODOS los seminarios y,
-    si el programa tiene una evaluación activa, la aprobó.
+    Requisitos (decisión del proyecto): asistió a TODOS los seminarios Y aprobó
+    la evaluación de CADA seminario que tenga una activa (regla por-seminario).
     """
     if not participant_attended_all(program, participant):
         return False
-    evaluation = getattr(program, 'evaluation', None)
-    if evaluation is not None and evaluation.is_active:
-        return evaluation.passed_by(participant)
-    return True
+    return program.certificate_unlocked_for(participant)
 
 
 def issue_program_certificate(program: Program, participant, *, administrator=None):

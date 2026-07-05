@@ -16,7 +16,7 @@
                     <button type="submit" form="configForm" class="bg-unemi-blue text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors shadow-lg active:scale-95 text-sm font-bold flex items-center gap-2">
                         <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
                     </button>
-                    <a href="{% url 'panel:batch_detail' lote.id %}" class="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors bg-gray-50 dark:bg-blue-900/20 p-2 rounded-lg">
+                    <a href="{{ back_url }}" class="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors bg-gray-50 dark:bg-blue-900/20 p-2 rounded-lg">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </a>
                 </div>
@@ -275,7 +275,7 @@
                                 {% if lote.header_logo_1 %}
                                     <img src="{{lote.header_logo_1.url}}" class="h-full object-contain">
                                 {% else %}
-                                    <img src="/static/img/muc.png" class="h-full object-contain" title="Logo por defecto">
+                                    <span class="text-[10px] text-gray-400 italic">Sin logo</span>
                                 {% endif %}
                             </div>
                             <label class="cursor-pointer block w-full">
@@ -293,7 +293,7 @@
                                 {% if lote.header_logo_2 %}
                                     <img src="{{lote.header_logo_2.url}}" class="h-full object-contain">
                                 {% else %}
-                                    <img src="/static/img/logo-unemi-removebg-preview.png" class="h-full object-contain" title="Logo por defecto">
+                                    <span class="text-[10px] text-gray-400 italic">Sin logo</span>
                                 {% endif %}
                             </div>
                             <label class="cursor-pointer block w-full">

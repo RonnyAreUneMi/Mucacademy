@@ -45,11 +45,42 @@ def draw_program_wow(c, certificado, width, height, pri, sec, ter, txt, template
     inner_w = content_right - content_left
     center_x = (content_left + content_right) / 2
 
-    # === Logos header (admin a la izquierda) + marca CertifAI fija a la derecha ===
+    # === Header: UNEMI + CertifAI centrados como un par ===
+    import os
+    from django.conf import settings
+    from reportlab.lib.utils import ImageReader
     logo_h = 2.5*cm
     logo_area_y = height - 15*mm - logo_h
-    draw_smart_logos(c, lote, content_left, logo_area_y, inner_w, logo_h, align='left')
-    draw_certifai_brand(c, content_left, logo_area_y, inner_w, logo_h)
+
+    # Ruta del logo del lote (centro) o fallback al UNEMI estático.
+    unemi_path = None
+    try:
+        if lote.header_logo_2:
+            unemi_path = lote.header_logo_2.path
+    except Exception:
+        unemi_path = None
+    if not unemi_path or not os.path.exists(unemi_path):
+        unemi_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'logo-unemi-removebg-preview.png')
+
+    uh = logo_h * 0.9
+    try:
+        iw, ih = ImageReader(unemi_path).getSize()
+        uw = uh * (iw / ih)
+    except Exception:
+        uw = uh * 2.5
+
+    gap = 1.0*cm
+    certifai_w = 4.2*cm            # ancho reservado para el bloque CertifAI (tigre + wordmark)
+    group_w = uw + gap + certifai_w
+    gx = center_x - group_w / 2    # esquina izquierda del grupo, centrado en la hoja
+
+    if os.path.exists(unemi_path):
+        try:
+            c.drawImage(unemi_path, gx, logo_area_y + (logo_h - uh) / 2, width=uw, height=uh,
+                        mask='auto', preserveAspectRatio=True)
+        except Exception:
+            pass
+    draw_certifai_brand(c, gx + uw + gap, logo_area_y, certifai_w, logo_h)
 
     main_y = height - 62*mm
 
@@ -69,13 +100,22 @@ def draw_program_wow(c, certificado, width, height, pri, sec, ter, txt, template
     nombre = f"{certificado.first_name} {certificado.last_name}".title()
     c.drawCentredString(center_x, name_y, nombre)
 
-    # Intro del programa
+    # Intro del programa — usa el TEXTO PRINCIPAL configurado en el diseñador
+    # (con variables {programa}/{curso}/{horas}); si está vacío, texto por defecto.
     program_name = (certificado.course or '').title()
     total_hours = certificado.hours or 0
-    intro = (
-        f"Por haber culminado satisfactoriamente el programa “{program_name}”, "
-        f"con un total de {total_hours} horas académicas, que comprende:"
-    )
+    body_cfg = (getattr(lote, 'body_text', '') or '').strip()
+    if body_cfg:
+        intro = (
+            body_cfg.replace('{programa}', program_name)
+                    .replace('{curso}', program_name)
+                    .replace('{horas}', str(total_hours))
+        )
+    else:
+        intro = (
+            f"Por haber culminado satisfactoriamente el programa “{program_name}”, "
+            f"con un total de {total_hours} horas académicas, que comprende:"
+        )
     c.setFont(BODY_FONT, 12.5)
     c.setFillColor(HexColor("#000000"))
     y = name_y - 12*mm

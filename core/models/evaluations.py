@@ -51,6 +51,13 @@ class Evaluation(TimestampedModel):
     shuffle_questions = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
 
+    # Documento asociado (opcional) — fuente para generar preguntas con IA.
+    document = models.FileField(
+        upload_to='evaluation_docs/', null=True, blank=True,
+        verbose_name='Documento asociado',
+        help_text='PDF o texto usado como fuente para generar preguntas.',
+    )
+
     class Meta:
         verbose_name = 'Evaluation'
         verbose_name_plural = 'Evaluations'

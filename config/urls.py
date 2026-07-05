@@ -1,8 +1,8 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, re_path, include
 from django.views.generic import TemplateView
+from django.views.static import serve as _media_serve
 from django.conf import settings
-from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 
@@ -28,4 +28,8 @@ urlpatterns = [
     path('test-403/', TemplateView.as_view(template_name='403.html')),
     path('test-404/', TemplateView.as_view(template_name='404.html')),
     path('test-500/', TemplateView.as_view(template_name='500.html')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+    # Media (banners, PDFs, avatars). El helper static() solo sirve en DEBUG;
+    # esta ruta sirve /media/ también en producción/Docker (disco local).
+    re_path(r'^media/(?P<path>.*)$', _media_serve, {'document_root': settings.MEDIA_ROOT}),
+]
