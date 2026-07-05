@@ -1,10 +1,19 @@
 # CertifAI
 
-> Plataforma de certificación digital con IA · Universidad Estatal de Milagro
+> Plataforma de certificación académica con IA · Universidad Estatal de Milagro (UNEMI)
 
-CertifAI gestiona el ciclo completo de eventos académicos: registro de
-participantes, asistencia con QR, generación masiva de diplomas, verificación
-pública con código único, y resúmenes automáticos de las reuniones con IA.
+CertifAI gestiona el ciclo completo de la formación académica: **programas** y
+**seminarios**, inscripción y asistencia con **QR**, **evaluaciones** con banco
+de preguntas generado por IA, **generación masiva de certificados** en PDF,
+**verificación pública** por código único, automatización de eventos virtuales
+con **Google Meet/Calendar/Drive**, y **resúmenes + cuestionarios automáticos**
+de las reuniones con IA (asistente "Betto").
+
+Es un **monorepo**: backend Django (`server/`) + app móvil Expo/React Native (`mobile/`).
+
+![Arquitectura y stack de CertifAI](docs/architecture.png)
+
+> App móvil · Backend Django · Celery/Redis · PostgreSQL · Google Workspace · IA · certificados con QR.
 
 ---
 
@@ -12,13 +21,15 @@ pública con código único, y resúmenes automáticos de las reuniones con IA.
 
 - [Stack](#stack)
 - [Arquitectura](#arquitectura)
-- [Flujos principales](#flujos-principales)
-- [Setup local](#setup-local)
-- [Setup con Docker](#setup-con-docker)
-- [Tests](#tests)
+- [Backend · módulos](#backend--módulos)
+- [App móvil](#app-móvil)
 - [Tareas asíncronas (Celery)](#tareas-asíncronas-celery)
-- [API · Documentación](#api--documentación)
-- [Decisiones de arquitectura (ADRs)](#decisiones-de-arquitectura-adrs)
+- [Integraciones externas](#integraciones-externas)
+- [Setup con Docker (recomendado)](#setup-con-docker-recomendado)
+- [Setup local sin Docker](#setup-local-sin-docker)
+- [Correr la app móvil](#correr-la-app-móvil)
+- [Deploy en Railway](#deploy-en-railway)
+- [Tests](#tests)
 - [Estructura del repositorio](#estructura-del-repositorio)
 
 ---
@@ -27,284 +38,248 @@ pública con código único, y resúmenes automáticos de las reuniones con IA.
 
 | Capa | Tecnología |
 |---|---|
-| **Backend** | Django 5.2 + Django REST Framework |
-| **Frontend** | Server-side rendering (Django Templates) + Tailwind CDN + JS vanilla |
-| **DB** | SQLite (dev) · PostgreSQL (producción) |
-| **Cache + colas** | Redis · Celery |
-| **Auth** | Sesión Django (admin) · JWT (`simplejwt`) · Sesión propia (participantes) |
-| **PDFs** | ReportLab |
-| **IA** | Anthropic Claude / OpenAI / Groq (proveedor seleccionable) |
-| **Integraciones** | Google Workspace (Calendar · Drive · Gmail) vía OAuth 2.0 |
-| **Tests** | pytest + pytest-django + factory-boy |
-| **API docs** | drf-spectacular (OpenAPI 3 + Swagger UI + ReDoc) |
-| **Deploy** | Docker · Railway · gunicorn + whitenoise |
+| **Backend** | Django 5.x + Django REST Framework |
+| **Base de datos** | PostgreSQL 16 (prod y Docker) · SQLite (fallback dev) |
+| **Cache + colas** | Redis · Celery (worker + beat) |
+| **App móvil** | Expo / React Native (expo-router, TypeScript) |
+| **Web** | Server-side rendering (Django Templates) + Tailwind (CDN) + JS vanilla |
+| **Auth** | Sesión Django (panel admin) · JWT `simplejwt` (API) · token de participante (móvil) |
+| **PDFs** | ReportLab (certificados individuales y de programa) |
+| **IA** | OpenAI / Anthropic Claude / Groq (proveedor seleccionable, API OpenAI-compat) |
+| **Google** | Workspace vía OAuth 2.0 — Meet · Calendar · Drive · Gmail |
+| **Servidor** | gunicorn + WhiteNoise |
+| **Deploy** | Docker Compose (local) · Railway / Nixpacks + Dockerfile (prod) |
+| **Tests** | pytest + pytest-django |
 
 ---
 
 ## Arquitectura
 
-**Patrón**: Monolito modular en capas con interfaz REST (Layered Modular Monolith).
+**Patrón**: monolito modular en capas con API REST + cliente móvil. No son
+microservicios — es **una sola app** con servicios de apoyo (DB, Redis, workers)
+que en local corren con Docker Compose y en prod en un único servicio + Postgres.
 
 ```mermaid
 flowchart TB
-  subgraph "Presentación"
-    UI_PUB["Public<br/>(landing · cuenta · eventos)"]
-    UI_ADM["Admin Panel<br/>(certificados · sesiones · IA · users)"]
+  subgraph Clientes
+    MOB["App móvil · Expo/React Native"]
+    WEB_PUB["Web pública · landing · cuenta participante"]
+    WEB_ADM["Panel admin · Django templates"]
   end
 
   subgraph "API REST · DRF"
-    API_PUB["api.public<br/>(verify · search · checkin · attendance)"]
-    API_ADM["api.admin<br/>(sessions · batches · users · ai-config)"]
+    API_PUB["api.public<br/>account · programs · sessions · attendance<br/>checkin · certificates · verify · stats"]
+    API_ADM["api.admin<br/>sessions · programs · evaluations · batches<br/>certificates · participants · users · ai · design · audit"]
   end
 
-  subgraph "Capa de Servicios"
+  subgraph "Servicios (core/services)"
+    SVC_AI["ai · resúmenes · preguntas · banners · insights"]
+    SVC_MEET["meet · Calendar · Drive · transcript"]
     SVC_EMAIL["email · Gmail API"]
-    SVC_MEET["meet · Calendar OAuth"]
-    SVC_AI["ai · Claude · OpenAI · Groq"]
     SVC_PDF["pdf · ReportLab"]
-    SVC_TASKS["tasks · Celery"]
   end
 
-  subgraph "Capa de Dominio"
-    M_USR["usuarios · Usuario · SolicitudAcceso"]
-    M_SES["sesiones · Sesion · Ponente · Confirmacion"]
-    M_CRT["certificados · Lote · Certificado"]
-    M_PRT["participantes · Participante"]
-    M_FRM["firmas · DisenoGlobal"]
-    M_INT["integrations · GoogleCredential · AIConfig · UIDesignTokens"]
+  subgraph "Async · Celery"
+    W["worker"]
+    B["beat (cron)"]
   end
 
-  DB[(PostgreSQL / SQLite)]
-  REDIS[(Redis · cache + broker)]
-  GOOGLE[Google Workspace<br/>Calendar · Drive · Gmail]
+  DB[(PostgreSQL)]
+  REDIS[(Redis · broker + cache)]
+  GOOGLE["Google Workspace<br/>Meet · Calendar · Drive · Gmail"]
+  AIPROV["Proveedor IA<br/>OpenAI · Claude · Groq"]
 
-  UI_PUB --> API_PUB
-  UI_ADM --> API_ADM
-  API_PUB --> SVC_EMAIL & SVC_PDF & SVC_TASKS
-  API_ADM --> SVC_EMAIL & SVC_MEET & SVC_AI & SVC_PDF & SVC_TASKS
-  SVC_EMAIL --> M_PRT & M_CRT & GOOGLE
-  SVC_MEET --> M_SES & GOOGLE
-  SVC_AI --> M_INT
-  SVC_PDF --> M_CRT & M_FRM
-  SVC_TASKS --> REDIS
-  M_USR & M_SES & M_CRT & M_PRT & M_FRM & M_INT --> DB
+  MOB --> API_PUB
+  WEB_PUB --> API_PUB
+  WEB_ADM --> API_ADM
+  API_ADM --> SVC_AI & SVC_MEET & SVC_EMAIL & SVC_PDF
+  API_PUB --> SVC_EMAIL & SVC_PDF
+  API_ADM & API_PUB -->|encolar| REDIS --> W & B
+  W --> SVC_AI & SVC_MEET & SVC_EMAIL
+  SVC_AI --> AIPROV
+  SVC_MEET & SVC_EMAIL --> GOOGLE
+  API_ADM & API_PUB --> DB
 ```
 
-**Apps como bounded contexts (DDD ligero)**:
+---
+
+## Backend · módulos
+
+Django project en `server/config`. Apps como *bounded contexts*:
 
 | App | Responsabilidad |
 |---|---|
-| `core` | Modelos de dominio + servicios + lógica compartida |
-| `api/admin` | Endpoints REST autenticados (CRUD + reportes) |
-| `api/public` | Endpoints REST públicos (verificar · registrarse · buscar) |
+| `core` | Modelos de dominio, servicios, tasks Celery, comandos de gestión |
+| `api/admin` | API REST autenticada (panel/gestión) |
+| `api/public` | API REST pública / participante (móvil + web) |
 | `admin_panel` | UI del panel administrativo (templates + vistas) |
-| `public` | UI pública (landing · cuenta participante · registro a eventos) |
-| `config` | Settings · URLs raíz · Celery app · WSGI |
+| `public` | UI pública (landing, cuenta del participante, registro a eventos) |
+
+**Módulos de la API pública** (`server/api/public/`): `account`, `programs`,
+`sessions`, `attendance`, `checkin`, `certificates`, `verify`, `stats`.
+
+**Módulos de la API admin** (`server/api/admin/`): `sessions`, `programs`,
+`evaluations`, `batches`, `certificates`, `participants`, `users`, `ai`,
+`design`, `firmas`, `search`, `dashboard`, `audit`.
+
+**Dominio (`core/models`)** incluye, entre otros: `Program`, `Event` (seminario),
+`Participant`, `Enrollment`, `Attendance`, `Evaluation` + `Question` +
+`EvaluationAttempt`, `Certificate` + `CertificateBatch`, `Signature`,
+`GlobalDesign`, `SessionSummary`, `AIConfig`, `GoogleCredential`.
 
 ---
 
-## Flujos principales
+## App móvil
 
-### 1 · Inscripción a evento → certificado
+Expo + expo-router en `mobile/`. Consume la **API pública** con autenticación
+por token de participante.
 
-```
-Estudiante navega a /cuenta/eventos/
-  ↓
-Click "Inscribirme"
-  ↓
-public.views.evento_inscribir
-  ├─ Crea ConfirmacionAsistencia
-  └─ celery: send_event_inscription_async  →  Gmail API  →  inbox del user
-```
-
-### 2 · Generación masiva de diplomas
-
-```
-Admin click "Generar lote" en /panel/sessions/<id>/generate-batch/
-  ↓
-POST /api/v1/admin/sessions/<id>/generate-batch/
-  ↓
-api.admin.sessions.generate_batch
-  ├─ Crea LoteCertificados con firmas + logos default
-  ├─ Crea N×Certificado (bulk_create)
-  ├─ Asocia sesion.lote = lote
-  └─ celery: send_certificate_issued_bulk(lote_id)
-                ↓
-        worker procesa en background
-                ↓
-        Gmail API envía a todos los inscritos
-```
-
-### 3 · Verificación pública
-
-```
-Cualquier persona ingresa a /verificar/<hash>/
-  ↓
-GET /api/v1/public/verify/<hash>/
-  ↓
-api.public.verify
-  ├─ Lookup por hash_verificacion
-  ├─ Incrementa veces_buscado (analítica)
-  └─ Devuelve datos públicos del cert + lote
-```
+- **Tabs**: Inicio, Eventos, Certificados, Asistencia (escáner QR), Perfil.
+- **Pantallas**: detalle de evento (`event/[id]`), **detalle de programa**
+  (`program/[id]`, con seminarios navegables), evaluación (`evaluation`),
+  escáner QR (`scanner`), auth (login / registro / landing).
+- La URL del backend se configura en [`mobile/app.json`](mobile/app.json) →
+  `expo.extra.apiBaseUrl`.
 
 ---
 
-## Setup local
+## Tareas asíncronas (Celery)
+
+Definidas en `server/core/tasks/`:
+
+| Task | Módulo | Qué hace |
+|---|---|---|
+| `send_certificate_issued_bulk(lote_id)` | `email_tasks` | Notifica por Gmail a todos los del lote |
+| `send_welcome_email_async(...)` | `email_tasks` | Correo de bienvenida |
+| `send_event_inscription_async(...)` | `email_tasks` | Confirmación de inscripción |
+| `issue_program_certificates_for_event(...)` | `program_tasks` | Emite certificados de programa al completar |
+| `process_past_events()` | `program_tasks` | Barrido de eventos pasados (beat) |
+| `process_event_transcript(...)` | `transcript_tasks` | Busca grabación en Drive → resumen + cuestionario IA |
+
+En dev sin Redis: `CELERY_TASK_ALWAYS_EAGER=True` corre las tareas sincrónicas
+dentro del request.
+
+---
+
+## Integraciones externas
+
+- **IA** (`core/services/ai/`): `transcript_summary` (resúmenes "Betto"),
+  `question_bank` (genera preguntas de evaluación desde el resumen, un documento
+  o el título), `banner` (imágenes promocionales), `insights`, `recommender`,
+  `skills`, `copilot`, `voice`. Proveedor configurable (OpenAI / Claude / Groq).
+- **Google** (`core/services/meet/`): `oauth` (OAuth 2.0), `calendar_client`
+  (crea/actualiza eventos), `drive_client` (busca grabaciones/transcripciones),
+  `transcript_parser`. Callback admin: `/panel/google/callback/`.
+- **Email**: Gmail API de la cuenta institucional (`core/services/email/`).
+
+---
+
+## Setup con Docker (recomendado)
+
+El `docker-compose.yml` (en la raíz) levanta todo el stack; el backend vive en `server/`.
 
 ```bash
-# 1. Clonar y crear venv
-git clone <repo>
-cd CertifAI
-python -m venv .venv
-source .venv/bin/activate  # o .venv\Scripts\activate en Windows
+docker compose up -d --build          # web + db + redis + worker + beat
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py createsuperuser
+docker compose logs -f web worker
+docker compose down                   # apagar
+```
 
-# 2. Instalar dependencias
+| Servicio | Puerto host | Descripción |
+|---|---|---|
+| `web` | **8500** → 8000 | Django + gunicorn |
+| `db` | **5433** → 5432 | PostgreSQL 16 |
+| `redis` | **6380** → 6379 | Redis (broker + cache) |
+| `worker` | — | Celery worker |
+| `beat` | — | Celery beat (cron) |
+
+App en **http://localhost:8500** · panel en **/panel/**.
+
+Los secretos del backend se inyectan desde `server/.env` (ver `server/.env.example`).
+
+---
+
+## Setup local sin Docker
+
+```bash
+cd server
+python -m venv ../venv && source ../venv/bin/activate
 pip install -r requirements.txt
-
-# 3. Configurar entorno
-cp .env.example .env
-# Editar .env con tus credenciales (Google OAuth, secret key, etc.)
-
-# 4. Migrar DB
+cp .env.example .env          # editar credenciales
 python manage.py migrate
 python manage.py createsuperuser
-
-# 5. Correr el servidor
-python manage.py runserver 0.0.0.0:8500
+python manage.py runserver 0.0.0.0:8000
 ```
-
-Visita [http://localhost:8500](http://localhost:8500).
 
 ---
 
-## Setup con Docker
+## Correr la app móvil
 
 ```bash
-# Levanta web + db (postgres) + redis + celery worker + beat
-docker compose up -d
-
-# Migrar DB
-docker compose exec web python manage.py migrate
-
-# Crear superuser
-docker compose exec web python manage.py createsuperuser
-
-# Logs en vivo
-docker compose logs -f web worker
-
-# Apagar
-docker compose down
+cd mobile
+npm install
+npx expo start                # QR para Expo Go, o i/a para simuladores
 ```
 
-Servicios:
+Ajustá `expo.extra.apiBaseUrl` en `mobile/app.json` para apuntar al backend
+(local LAN `http://TU_IP:8500` o el dominio de producción).
 
-| Servicio | Puerto | Descripción |
-|---|---|---|
-| `web` | 8000 | Django + gunicorn |
-| `db` | 5432 | PostgreSQL 16 |
-| `redis` | 6379 | Cache + Celery broker |
-| `worker` | — | Celery worker (1+ procesos) |
-| `beat` | — | Celery beat scheduler (cron jobs) |
+Para un APK instalable sin Expo Go: `eas build -p android --profile preview`.
+
+---
+
+## Deploy en Railway
+
+El backend se despliega desde `server/` (**Root Directory = `server`** en Railway).
+
+- Servicios: **web** (este repo) + **PostgreSQL** (plugin). Redis + worker son
+  opcionales (para tareas IA en segundo plano).
+- Arranque: [`server/start.sh`](server/start.sh) → `migrate` (con reintento por
+  la red privada) → `import_data` (carga inicial idempotente) → `ensure_admin`
+  → `gunicorn` en `[::]:8000`.
+- Variables mínimas: `SECRET_KEY`, `DEBUG=False`, `DATABASE_URL=${{Postgres.DATABASE_URL}}`.
+  Para IA/Google: `GOOGLE_CLIENT_ID/SECRET`, `GOOGLE_REDIRECT_URI`, y la API key del proveedor IA.
+- `ALLOWED_HOSTS`/`CSRF` aceptan cualquier `*.railway.app` automáticamente.
+
+Ver la guía paso a paso en [`DEPLOY.md`](DEPLOY.md).
 
 ---
 
 ## Tests
 
 ```bash
-# Todos
-pytest
-
-# Sólo tests críticos del dominio
-pytest tests/test_critical_flows.py -v
-
-# Con coverage
-pytest --cov=core --cov=api --cov=public --cov=admin_panel
-
-# Test específico
-pytest tests/test_critical_flows.py::test_verify_certificate_happy_path
+cd server
+pytest                        # con DEBUG=True SECRET_KEY=... en el entorno
 ```
 
-13 tests críticos cubren los 4 flujos no-rompibles:
-verificación pública por hash · inscripción a evento · generación de lote · auth pública.
-
----
-
-## Tareas asíncronas (Celery)
-
-```bash
-# Worker (en otra terminal, con redis corriendo)
-celery -A config worker -l info
-
-# Beat scheduler (jobs cron)
-celery -A config beat -l info
-
-# En desarrollo sin Redis: setear CELERY_TASK_ALWAYS_EAGER=True en .env
-# las tareas correrán sincrónicas en el mismo request.
-```
-
-Tasks definidas en [`core/tasks/email_tasks.py`](core/tasks/email_tasks.py):
-
-- `send_certificate_issued_bulk(lote_id)` — envía notificación de cert emitido a todos los participantes del lote
-- `send_welcome_email_async(participante_id)`
-- `send_event_inscription_async(participante_id, sesion_id)`
-
-Todas con `autoretry_for=(Exception,)` y backoff exponencial (max 3 retries).
-
----
-
-## API · Documentación
-
-Una vez corriendo el server:
-
-| URL | Descripción |
-|---|---|
-| `/api/docs/` | **Swagger UI** interactivo |
-| `/api/redoc/` | ReDoc (read-only, más estético) |
-| `/api/schema/` | OpenAPI 3 schema (JSON) |
-
----
-
-## Decisiones de arquitectura (ADRs)
-
-Las decisiones grandes están documentadas en [`docs/adr/`](docs/adr/):
-
-1. [ADR-001 · Monolito modular vs microservicios](docs/adr/0001-monolito-modular-vs-microservicios.md)
-2. [ADR-002 · DRF vs FastAPI](docs/adr/0002-drf-vs-fastapi.md)
-3. [ADR-003 · Auth dual (Sesión Django + JWT + Participante)](docs/adr/0003-auth-dual.md)
-4. [ADR-004 · Singleton config (Design System · AI · Google)](docs/adr/0004-singleton-config.md)
-5. [ADR-005 · Tailwind CDN vs bundler](docs/adr/0005-tailwind-cdn-vs-bundler.md)
+El CI (GitHub Actions) corre `check`, `makemigrations --check` y `pytest` en
+Python 3.10/3.11/3.12, además de `ruff`.
 
 ---
 
 ## Estructura del repositorio
 
 ```
-CertifAI/
-├── config/             → settings · urls · celery app
-├── core/
-│   ├── models/         → bounded contexts (usuarios · sesiones · certs · etc.)
-│   ├── services/       → email · meet · ai · pdf · excel
-│   ├── tasks/          → tareas Celery
-│   ├── managers/       → custom QuerySets
-│   └── base/           → SingletonModel · TimestampedModel · mixins
-├── api/
-│   ├── admin/          → endpoints REST autenticados
-│   └── public/         → endpoints REST públicos
-├── admin_panel/        → UI del panel administrativo (templates + vistas)
-├── public/             → UI pública (landing · cuenta · etc.)
-├── static/
-│   ├── js/
-│   │   ├── components/ → JS reutilizable (theme · carousel · countdown · etc.)
-│   │   └── pages/      → Entry-points por pantalla
-│   └── img/
-├── templates/
-│   ├── components/     → loader · background_decor compartidos
-│   └── emails/         → plantillas HTML transaccionales
-├── tests/              → pytest + factories
-└── docs/
-    ├── adr/            → Architecture Decision Records
-    └── ARCHITECTURE.md → vista global
+certifai/
+├── docker-compose.yml        → orquesta todo el stack local
+├── mobile/                   → app Expo / React Native
+│   └── app/                  → rutas (tabs, event, program, evaluation, auth)
+├── server/                   → backend Django (unidad desplegable)
+│   ├── config/               → settings · urls · celery · wsgi
+│   ├── core/
+│   │   ├── models/           → dominio (programas, eventos, certs, evaluaciones…)
+│   │   ├── services/         → ai · meet · email · pdf
+│   │   ├── tasks/            → tareas Celery
+│   │   └── management/       → comandos (import_data, ensure_admin, …)
+│   ├── api/{admin,public}/   → endpoints REST
+│   ├── admin_panel/          → UI del panel
+│   ├── public/               → UI pública + cuenta participante
+│   ├── tests/                → pytest
+│   ├── Dockerfile · requirements.txt · railway.json · start.sh · .env
+│   └── manage.py
+├── DEPLOY.md                 → guía de deploy en Railway
+└── .github/workflows/ci.yml  → CI
 ```
 
 ---
