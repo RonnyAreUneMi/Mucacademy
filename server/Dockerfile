@@ -26,7 +26,8 @@ RUN python manage.py collectstatic --noinput || true
 
 EXPOSE 8000
 
-# Default: migra y levanta gunicorn en el puerto que provee el entorno ($PORT en
-# Railway; 8000 local). Shell-form para que ${PORT} se expanda.
-# docker-compose override este CMD para web/worker/beat.
-CMD sh -c "python manage.py migrate --noinput && python manage.py create_default_superuser && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3 --timeout 60 --log-file -"
+# Arranque robusto (Railway/local):
+#  1) migrate  2) superusuario (con timeout: si se cuelga, no bloquea)
+#  3) gunicorn en $PORT (fallback 8000 local), 2 workers para no pasarnos de RAM.
+# Shell-form para que ${PORT} se expanda. docker-compose override este CMD.
+CMD sh -c "python manage.py migrate --noinput && (timeout 30 python manage.py create_default_superuser || true) && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120 --log-file - --access-logfile -"
