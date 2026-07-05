@@ -1,0 +1,2336 @@
+[
+{
+  "model": "core.faculty",
+  "pk": 1,
+  "fields": {
+    "code": "FACI",
+    "name": "FACI - Ingeniería",
+    "description": "",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2026-06-03T00:33:59.251Z",
+    "updated_at": "2026-06-03T00:33:59.251Z"
+  }
+},
+{
+  "model": "core.faculty",
+  "pk": 2,
+  "fields": {
+    "code": "FACS",
+    "name": "FACS - Salud",
+    "description": "",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2026-06-03T00:33:59.251Z",
+    "updated_at": "2026-06-03T00:33:59.251Z"
+  }
+},
+{
+  "model": "core.faculty",
+  "pk": 3,
+  "fields": {
+    "code": "FACE",
+    "name": "FACE - Educación",
+    "description": "",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2026-06-03T00:33:59.252Z",
+    "updated_at": "2026-06-03T00:33:59.252Z"
+  }
+},
+{
+  "model": "core.faculty",
+  "pk": 4,
+  "fields": {
+    "code": "FACSECYD",
+    "name": "FACSECYD - Ciencias Sociales",
+    "description": "",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2026-06-03T00:33:59.252Z",
+    "updated_at": "2026-06-03T00:33:59.252Z"
+  }
+},
+{
+  "model": "core.faculty",
+  "pk": 5,
+  "fields": {
+    "code": "POSGRADO",
+    "name": "Posgrado / Otra",
+    "description": "",
+    "sort_order": 5,
+    "is_active": true,
+    "created_at": "2026-06-03T00:33:59.252Z",
+    "updated_at": "2026-06-03T00:33:59.252Z"
+  }
+},
+{
+  "model": "core.faculty",
+  "pk": 6,
+  "fields": {
+    "code": "COMUNIDAD",
+    "name": "Comunidad Universitaria",
+    "description": "Opción transversal: aplica a toda la comunidad, no a una facultad específica.",
+    "sort_order": 90,
+    "is_active": true,
+    "created_at": "2026-07-01T13:54:50.693Z",
+    "updated_at": "2026-07-01T13:54:50.693Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 1,
+  "fields": {
+    "abbreviation": "Dr.",
+    "name": "Doctor",
+    "sort_order": 10,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.313Z",
+    "updated_at": "2026-06-17T14:45:54.313Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 2,
+  "fields": {
+    "abbreviation": "Dra.",
+    "name": "Doctora",
+    "sort_order": 20,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.313Z",
+    "updated_at": "2026-06-17T14:45:54.313Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 3,
+  "fields": {
+    "abbreviation": "PhD",
+    "name": "Doctor of Philosophy",
+    "sort_order": 30,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.313Z",
+    "updated_at": "2026-06-17T14:45:54.313Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 4,
+  "fields": {
+    "abbreviation": "Mg.",
+    "name": "Magíster",
+    "sort_order": 40,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.314Z",
+    "updated_at": "2026-06-17T14:45:54.314Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 5,
+  "fields": {
+    "abbreviation": "MSc.",
+    "name": "Máster en Ciencias",
+    "sort_order": 50,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.314Z",
+    "updated_at": "2026-06-17T14:45:54.314Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 6,
+  "fields": {
+    "abbreviation": "Ing.",
+    "name": "Ingeniero/a",
+    "sort_order": 60,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.314Z",
+    "updated_at": "2026-06-17T14:45:54.314Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 7,
+  "fields": {
+    "abbreviation": "Lic.",
+    "name": "Licenciado/a",
+    "sort_order": 70,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.314Z",
+    "updated_at": "2026-06-17T14:45:54.314Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 8,
+  "fields": {
+    "abbreviation": "Ab.",
+    "name": "Abogado/a",
+    "sort_order": 80,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.314Z",
+    "updated_at": "2026-06-17T14:45:54.314Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 9,
+  "fields": {
+    "abbreviation": "Econ.",
+    "name": "Economista",
+    "sort_order": 90,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.314Z",
+    "updated_at": "2026-06-17T14:45:54.314Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 10,
+  "fields": {
+    "abbreviation": "Arq.",
+    "name": "Arquitecto/a",
+    "sort_order": 100,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.315Z",
+    "updated_at": "2026-06-17T14:45:54.315Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 11,
+  "fields": {
+    "abbreviation": "Psic.",
+    "name": "Psicólogo/a",
+    "sort_order": 110,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.315Z",
+    "updated_at": "2026-06-17T14:45:54.315Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 12,
+  "fields": {
+    "abbreviation": "Tlgo.",
+    "name": "Tecnólogo/a",
+    "sort_order": 120,
+    "is_active": true,
+    "created_at": "2026-06-17T14:45:54.315Z",
+    "updated_at": "2026-06-17T14:45:54.315Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 13,
+  "fields": {
+    "abbreviation": "Tnlg.",
+    "name": "Tecnólogo",
+    "sort_order": 5,
+    "is_active": true,
+    "created_at": "2026-06-17T14:47:48.089Z",
+    "updated_at": "2026-06-17T14:47:48.089Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 14,
+  "fields": {
+    "abbreviation": "Mgs.",
+    "name": "Magíster (alt.)",
+    "sort_order": 45,
+    "is_active": true,
+    "created_at": "2026-06-18T00:15:31.859Z",
+    "updated_at": "2026-06-18T00:15:31.859Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 15,
+  "fields": {
+    "abbreviation": "MBA",
+    "name": "Máster en Administración de Empresas",
+    "sort_order": 55,
+    "is_active": true,
+    "created_at": "2026-06-18T00:15:31.860Z",
+    "updated_at": "2026-06-18T00:15:31.860Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 16,
+  "fields": {
+    "abbreviation": "Esp.",
+    "name": "Especialista",
+    "sort_order": 58,
+    "is_active": true,
+    "created_at": "2026-06-18T00:15:31.860Z",
+    "updated_at": "2026-06-18T00:15:31.860Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 17,
+  "fields": {
+    "abbreviation": "Dr(c).",
+    "name": "Doctorando (candidato)",
+    "sort_order": 85,
+    "is_active": true,
+    "created_at": "2026-06-18T00:15:31.861Z",
+    "updated_at": "2026-06-18T00:15:31.861Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 18,
+  "fields": {
+    "abbreviation": "CPA",
+    "name": "Contador Público Autorizado",
+    "sort_order": 130,
+    "is_active": true,
+    "created_at": "2026-06-18T00:15:31.862Z",
+    "updated_at": "2026-06-18T00:15:31.862Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 19,
+  "fields": {
+    "abbreviation": "Od.",
+    "name": "Odontólogo/a",
+    "sort_order": 140,
+    "is_active": true,
+    "created_at": "2026-06-18T00:15:31.862Z",
+    "updated_at": "2026-06-18T00:15:31.862Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 20,
+  "fields": {
+    "abbreviation": "Md.",
+    "name": "Médico/a",
+    "sort_order": 150,
+    "is_active": true,
+    "created_at": "2026-06-18T00:15:31.863Z",
+    "updated_at": "2026-06-18T00:15:31.863Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 21,
+  "fields": {
+    "abbreviation": "Q.F.",
+    "name": "Químico/a Farmacéutico/a",
+    "sort_order": 160,
+    "is_active": true,
+    "created_at": "2026-06-18T00:15:31.863Z",
+    "updated_at": "2026-06-18T00:15:31.863Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 22,
+  "fields": {
+    "abbreviation": "Sr.",
+    "name": "Señor",
+    "sort_order": 900,
+    "is_active": true,
+    "created_at": "2026-06-18T00:15:31.864Z",
+    "updated_at": "2026-06-18T00:15:31.864Z"
+  }
+},
+{
+  "model": "core.academictitle",
+  "pk": 23,
+  "fields": {
+    "abbreviation": "Sra.",
+    "name": "Señora",
+    "sort_order": 910,
+    "is_active": true,
+    "created_at": "2026-06-18T00:15:31.864Z",
+    "updated_at": "2026-06-18T00:15:31.864Z"
+  }
+},
+{
+  "model": "core.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$u9ScrdfPpRH5v6c567M71W$NhxqEYVAFjqfc0Yu/h0/f2RsdZKZLZrNkMpNjkwgVaM=",
+    "last_login": "2026-07-05T04:11:47.219Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "admin",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-06-03T00:34:34.133Z",
+    "role": "superadmin",
+    "faculty": "",
+    "phone": "",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "core.globaldesign",
+  "pk": 1,
+  "fields": {
+    "template": "geometric",
+    "color_primary": "#162054",
+    "color_secondary": "#D4AF37",
+    "color_tertiary": "#F3F4F6",
+    "color_text": "#333333",
+    "body_text": "Por haber completado satisfactoriamente el curso de capacitación continua, demostrando compromiso y excelencia académica. Por su participación en el seminario '{curso}', contribuyendo de manera activa y profesional al desarrollo de nuevas competencias.",
+    "signature_inst_1": null,
+    "signature_inst_2": null,
+    "signature_inst_3": null,
+    "signature_name_4": "",
+    "signature_role_4": "",
+    "signature_image_4": "",
+    "header_logo_1": "",
+    "header_logo_2": "",
+    "header_logo_3": "",
+    "signatures_position": 4.2,
+    "signature_1_offset_y": 0.0,
+    "signature_1_scale": 100.0,
+    "signature_2_offset_y": 0.0,
+    "signature_2_scale": 100.0,
+    "signature_3_offset_y": 0.0,
+    "signature_3_scale": 100.0,
+    "signature_4_offset_y": 0.0,
+    "signature_4_scale": 100.0,
+    "updated_at": "2026-06-17T14:11:30.187Z"
+  }
+},
+{
+  "model": "core.participant",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-06-03T00:34:34.261Z",
+    "updated_at": "2026-07-05T14:51:37.190Z",
+    "national_id": "0928374651",
+    "first_name": "Ronny Isaac",
+    "last_name": "Arellano Urgiles",
+    "email": "ronnyareu22@gmail.com",
+    "phone": "+593 99 123 4567",
+    "is_leader": false,
+    "password_hash": "pbkdf2_sha256$1000000$Rh7uhKEXSOz8x8Xh0ncIZM$cKI0lRXKs2b0oCngCCcvVt7hGVa/ZTqon0zJtQPqBS4=",
+    "last_login": "2026-07-05T14:51:47.259Z",
+    "avatar": ""
+  }
+},
+{
+  "model": "core.participant",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-07-01T13:37:01.665Z",
+    "updated_at": "2026-07-01T13:37:01.665Z",
+    "national_id": "0000000001",
+    "first_name": "María",
+    "last_name": "Demo",
+    "email": "demo.participante@unemi.edu.ec",
+    "phone": "",
+    "is_leader": false,
+    "password_hash": "",
+    "last_login": null,
+    "avatar": ""
+  }
+},
+{
+  "model": "core.certificatebatch",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-06-03T00:34:34.383Z",
+    "updated_at": "2026-06-03T00:34:34.383Z",
+    "name": "[Seed] Taller IA Aplicada · FACI",
+    "excel_file": "",
+    "administrator": [
+      "admin"
+    ],
+    "is_active": true,
+    "kind": "course",
+    "program": null,
+    "faculty": "FACI",
+    "customize_design": true,
+    "template": "classic",
+    "color_primary": "#162054",
+    "color_secondary": "#F58830",
+    "color_tertiary": "#F3F4F6",
+    "color_text": "#333333",
+    "body_text": "Por haber completado satisfactoriamente el curso de capacitación continua, demostrando compromiso y excelencia académica. Por su participación en el seminario '{curso}', contribuyendo de manera activa y profesional al desarrollo de nuevas competencias.",
+    "signature_inst_1": null,
+    "signature_name_1": "",
+    "signature_role_1": "",
+    "signature_image_1": null,
+    "signature_inst_2": null,
+    "signature_name_2": "",
+    "signature_role_2": "",
+    "signature_image_2": null,
+    "signature_inst_3": null,
+    "signature_name_3": "",
+    "signature_role_3": "",
+    "signature_image_3": null,
+    "signature_inst_4": null,
+    "signature_name_4": "",
+    "signature_role_4": "",
+    "signature_image_4": null,
+    "header_logo_1": "",
+    "header_logo_2": "",
+    "header_logo_3": "",
+    "signatures_position": 4.2
+  }
+},
+{
+  "model": "core.certificatebatch",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-06-03T00:34:34.384Z",
+    "updated_at": "2026-06-03T00:34:34.384Z",
+    "name": "[Seed] Bootcamp Data Science · FACI",
+    "excel_file": "",
+    "administrator": [
+      "admin"
+    ],
+    "is_active": true,
+    "kind": "course",
+    "program": null,
+    "faculty": "FACI",
+    "customize_design": true,
+    "template": "classic",
+    "color_primary": "#0A1535",
+    "color_secondary": "#D4AF37",
+    "color_tertiary": "#F8F8F8",
+    "color_text": "#333333",
+    "body_text": "Por haber completado satisfactoriamente el curso de capacitación continua, demostrando compromiso y excelencia académica. Por su participación en el seminario '{curso}', contribuyendo de manera activa y profesional al desarrollo de nuevas competencias.",
+    "signature_inst_1": null,
+    "signature_name_1": "",
+    "signature_role_1": "",
+    "signature_image_1": null,
+    "signature_inst_2": null,
+    "signature_name_2": "",
+    "signature_role_2": "",
+    "signature_image_2": null,
+    "signature_inst_3": null,
+    "signature_name_3": "",
+    "signature_role_3": "",
+    "signature_image_3": null,
+    "signature_inst_4": null,
+    "signature_name_4": "",
+    "signature_role_4": "",
+    "signature_image_4": null,
+    "header_logo_1": "",
+    "header_logo_2": "",
+    "header_logo_3": "",
+    "signatures_position": 4.2
+  }
+},
+{
+  "model": "core.certificatebatch",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-06-03T00:34:34.384Z",
+    "updated_at": "2026-06-28T03:44:05.299Z",
+    "name": "[Seed] Curso Desarrollo Web Moderno · FACI",
+    "excel_file": "",
+    "administrator": [
+      "admin"
+    ],
+    "is_active": true,
+    "kind": "course",
+    "program": null,
+    "faculty": "FACI",
+    "customize_design": true,
+    "template": "classic",
+    "color_primary": "#162054",
+    "color_secondary": "#aa35d4",
+    "color_tertiary": "#f3f4f6",
+    "color_text": "#333333",
+    "body_text": "Por haber completado satisfactoriamente el curso de capacitación continua, demostrando compromiso y excelencia académica. Por su participación en el seminario '{curso}', contribuyendo de manera activa y profesional al desarrollo de nuevas competencias.",
+    "signature_inst_1": null,
+    "signature_name_1": "",
+    "signature_role_1": "",
+    "signature_image_1": null,
+    "signature_inst_2": null,
+    "signature_name_2": "",
+    "signature_role_2": "",
+    "signature_image_2": null,
+    "signature_inst_3": null,
+    "signature_name_3": "",
+    "signature_role_3": "",
+    "signature_image_3": null,
+    "signature_inst_4": null,
+    "signature_name_4": "",
+    "signature_role_4": "",
+    "signature_image_4": null,
+    "header_logo_1": "",
+    "header_logo_2": "",
+    "header_logo_3": "",
+    "signatures_position": 4.2
+  }
+},
+{
+  "model": "core.certificatebatch",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-06-17T14:04:21.469Z",
+    "updated_at": "2026-06-17T14:04:21.469Z",
+    "name": "Prueba",
+    "excel_file": "batches_excel/Informe_de_asistencia_de_yph-cuvg-ktt_2026-05-20_09_24.xlsx",
+    "administrator": [
+      "admin"
+    ],
+    "is_active": false,
+    "kind": "course",
+    "program": null,
+    "faculty": "FACI",
+    "customize_design": false,
+    "template": "classic",
+    "color_primary": "#162054",
+    "color_secondary": "#D4AF37",
+    "color_tertiary": "#F3F4F6",
+    "color_text": "#333333",
+    "body_text": "Por haber completado satisfactoriamente el curso de capacitación continua, demostrando compromiso y excelencia académica. Por su participación en el seminario '{curso}', contribuyendo de manera activa y profesional al desarrollo de nuevas competencias.",
+    "signature_inst_1": null,
+    "signature_name_1": "",
+    "signature_role_1": "",
+    "signature_image_1": null,
+    "signature_inst_2": null,
+    "signature_name_2": "",
+    "signature_role_2": "",
+    "signature_image_2": null,
+    "signature_inst_3": null,
+    "signature_name_3": "",
+    "signature_role_3": "",
+    "signature_image_3": null,
+    "signature_inst_4": null,
+    "signature_name_4": "",
+    "signature_role_4": "",
+    "signature_image_4": null,
+    "header_logo_1": "",
+    "header_logo_2": "",
+    "header_logo_3": "",
+    "signatures_position": 4.2
+  }
+},
+{
+  "model": "core.certificatebatch",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-06-17T14:21:00.043Z",
+    "updated_at": "2026-06-17T14:21:00.043Z",
+    "name": "hola",
+    "excel_file": "batches_excel/Informe_de_asistencia_de_yph-cuvg-ktt_2026-05-20_09_24_oHDa9WG.xlsx",
+    "administrator": [
+      "admin"
+    ],
+    "is_active": false,
+    "kind": "course",
+    "program": null,
+    "faculty": "FACI",
+    "customize_design": false,
+    "template": "classic",
+    "color_primary": "#162054",
+    "color_secondary": "#D4AF37",
+    "color_tertiary": "#F3F4F6",
+    "color_text": "#333333",
+    "body_text": "Por haber completado satisfactoriamente el curso de capacitación continua, demostrando compromiso y excelencia académica. Por su participación en el seminario '{curso}', contribuyendo de manera activa y profesional al desarrollo de nuevas competencias.",
+    "signature_inst_1": null,
+    "signature_name_1": "",
+    "signature_role_1": "",
+    "signature_image_1": null,
+    "signature_inst_2": null,
+    "signature_name_2": "",
+    "signature_role_2": "",
+    "signature_image_2": null,
+    "signature_inst_3": null,
+    "signature_name_3": "",
+    "signature_role_3": "",
+    "signature_image_3": null,
+    "signature_inst_4": null,
+    "signature_name_4": "",
+    "signature_role_4": "",
+    "signature_image_4": null,
+    "header_logo_1": "",
+    "header_logo_2": "",
+    "header_logo_3": "",
+    "signatures_position": 4.2
+  }
+},
+{
+  "model": "core.certificatebatch",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-06-17T14:24:12.346Z",
+    "updated_at": "2026-06-17T14:24:12.346Z",
+    "name": "hola",
+    "excel_file": "batches_excel/Informe_de_asistencia_de_yph-cuvg-ktt_2026-05-20_09_24_f36zbWU.xlsx",
+    "administrator": [
+      "admin"
+    ],
+    "is_active": false,
+    "kind": "course",
+    "program": null,
+    "faculty": "FACI",
+    "customize_design": false,
+    "template": "classic",
+    "color_primary": "#162054",
+    "color_secondary": "#D4AF37",
+    "color_tertiary": "#F3F4F6",
+    "color_text": "#333333",
+    "body_text": "Por haber completado satisfactoriamente el curso de capacitación continua, demostrando compromiso y excelencia académica. Por su participación en el seminario '{curso}', contribuyendo de manera activa y profesional al desarrollo de nuevas competencias.",
+    "signature_inst_1": null,
+    "signature_name_1": "",
+    "signature_role_1": "",
+    "signature_image_1": null,
+    "signature_inst_2": null,
+    "signature_name_2": "",
+    "signature_role_2": "",
+    "signature_image_2": null,
+    "signature_inst_3": null,
+    "signature_name_3": "",
+    "signature_role_3": "",
+    "signature_image_3": null,
+    "signature_inst_4": null,
+    "signature_name_4": "",
+    "signature_role_4": "",
+    "signature_image_4": null,
+    "header_logo_1": "",
+    "header_logo_2": "",
+    "header_logo_3": "",
+    "signatures_position": 4.2
+  }
+},
+{
+  "model": "core.certificatebatch",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-07-01T14:12:30.872Z",
+    "updated_at": "2026-07-01T14:12:53.905Z",
+    "name": "Conversatorio: Ética y Tecnología en la Universidad",
+    "excel_file": "",
+    "administrator": [
+      "admin"
+    ],
+    "is_active": true,
+    "kind": "course",
+    "program": null,
+    "faculty": "FACI",
+    "customize_design": true,
+    "template": "geometric",
+    "color_primary": "#bc4997",
+    "color_secondary": "#d4af37",
+    "color_tertiary": "#f3f4f6",
+    "color_text": "#333333",
+    "body_text": "Por haber completado satisfactoriamente el curso de capacitación continua, demostrando compromiso y excelencia académica. Por su participación en el seminario '{curso}', contribuyendo de manera activa y profesional al desarrollo de nuevas competencias.",
+    "signature_inst_1": null,
+    "signature_name_1": "",
+    "signature_role_1": "",
+    "signature_image_1": null,
+    "signature_inst_2": null,
+    "signature_name_2": "",
+    "signature_role_2": "",
+    "signature_image_2": null,
+    "signature_inst_3": null,
+    "signature_name_3": "",
+    "signature_role_3": "",
+    "signature_image_3": null,
+    "signature_inst_4": null,
+    "signature_name_4": "",
+    "signature_role_4": "",
+    "signature_image_4": null,
+    "header_logo_1": "logos/muc_Y91frO6.png",
+    "header_logo_2": "logos/logo-unemi-removebg-preview_frqSads.png",
+    "header_logo_3": "logos/feue_ETcCAb0.png",
+    "signatures_position": 4.2
+  }
+},
+{
+  "model": "core.certificatebatch",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-07-05T03:54:06.680Z",
+    "updated_at": "2026-07-05T04:11:47.535Z",
+    "name": "Analitica de datos",
+    "excel_file": "",
+    "administrator": [
+      "admin"
+    ],
+    "is_active": true,
+    "kind": "program",
+    "program": 1,
+    "faculty": "FACI",
+    "customize_design": true,
+    "template": "classic",
+    "color_primary": "#162054",
+    "color_secondary": "#D4AF37",
+    "color_tertiary": "#F3F4F6",
+    "color_text": "#333333",
+    "body_text": "Por haber culminado satisfactoriamente el programa '{programa}', completando la totalidad de sus cursos con un total de {horas} horas académicas y desarrollando las competencias detalladas a continuación.",
+    "signature_inst_1": null,
+    "signature_name_1": "",
+    "signature_role_1": "",
+    "signature_image_1": null,
+    "signature_inst_2": null,
+    "signature_name_2": "",
+    "signature_role_2": "",
+    "signature_image_2": null,
+    "signature_inst_3": null,
+    "signature_name_3": "",
+    "signature_role_3": "",
+    "signature_image_3": null,
+    "signature_inst_4": null,
+    "signature_name_4": "",
+    "signature_role_4": "",
+    "signature_image_4": null,
+    "header_logo_1": "",
+    "header_logo_2": "logos/unemi.png",
+    "header_logo_3": "",
+    "signatures_position": 4.2
+  }
+},
+{
+  "model": "core.certificate",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-06-03T00:34:34.392Z",
+    "updated_at": "2026-06-03T00:34:34.392Z",
+    "batch": 1,
+    "participant": 1,
+    "national_id": "0928374651",
+    "first_name": "Ronny Isaac",
+    "last_name": "Arellano Urgiles",
+    "email": "ronnyareu22@gmail.com",
+    "phone": "+593 99 123 4567",
+    "course": "Introducción a Machine Learning",
+    "course_date": "2026-04-18",
+    "hours": 4,
+    "program_data": null,
+    "verification_hash": "2bde2310ef056d92443f9c30",
+    "pdf_file": "",
+    "download_count": 2,
+    "search_count": 5,
+    "last_download_at": null
+  }
+},
+{
+  "model": "core.certificate",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-06-03T00:34:34.394Z",
+    "updated_at": "2026-06-03T00:34:34.394Z",
+    "batch": 2,
+    "participant": 1,
+    "national_id": "0928374651",
+    "first_name": "Ronny Isaac",
+    "last_name": "Arellano Urgiles",
+    "email": "ronnyareu22@gmail.com",
+    "phone": "+593 99 123 4567",
+    "course": "Visualización de Datos con Python",
+    "course_date": "2026-05-13",
+    "hours": 3,
+    "program_data": null,
+    "verification_hash": "64757b46300c6f3f123f8795",
+    "pdf_file": "",
+    "download_count": 2,
+    "search_count": 5,
+    "last_download_at": null
+  }
+},
+{
+  "model": "core.certificate",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-06-03T00:34:34.395Z",
+    "updated_at": "2026-06-03T00:34:34.395Z",
+    "batch": 3,
+    "participant": 1,
+    "national_id": "0928374651",
+    "first_name": "Ronny Isaac",
+    "last_name": "Arellano Urgiles",
+    "email": "ronnyareu22@gmail.com",
+    "phone": "+593 99 123 4567",
+    "course": "Fundamentos de Django REST",
+    "course_date": "2026-05-26",
+    "hours": 4,
+    "program_data": null,
+    "verification_hash": "fac31085548f30f03d074fa4",
+    "pdf_file": "",
+    "download_count": 2,
+    "search_count": 5,
+    "last_download_at": null
+  }
+},
+{
+  "model": "core.certificate",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-06-03T00:34:34.396Z",
+    "updated_at": "2026-06-03T00:34:34.396Z",
+    "batch": 1,
+    "participant": 1,
+    "national_id": "0928374651",
+    "first_name": "Ronny Isaac",
+    "last_name": "Arellano Urgiles",
+    "email": "ronnyareu22@gmail.com",
+    "phone": "+593 99 123 4567",
+    "course": "Deep Learning con PyTorch",
+    "course_date": "2026-06-07",
+    "hours": 0,
+    "program_data": null,
+    "verification_hash": "f2fc9545ab10dbbd01016469",
+    "pdf_file": "",
+    "download_count": 1,
+    "search_count": 0,
+    "last_download_at": "2026-07-01T14:11:38.809Z"
+  }
+},
+{
+  "model": "core.certificate",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-06-03T00:34:34.397Z",
+    "updated_at": "2026-06-03T00:34:34.397Z",
+    "batch": 2,
+    "participant": 1,
+    "national_id": "0928374651",
+    "first_name": "Ronny Isaac",
+    "last_name": "Arellano Urgiles",
+    "email": "ronnyareu22@gmail.com",
+    "phone": "+593 99 123 4567",
+    "course": "SQL Avanzado y Optimización",
+    "course_date": "2026-06-14",
+    "hours": 0,
+    "program_data": null,
+    "verification_hash": "8a2a4bae02ab4da70123a394",
+    "pdf_file": "",
+    "download_count": 1,
+    "search_count": 0,
+    "last_download_at": "2026-07-05T15:10:37.460Z"
+  }
+},
+{
+  "model": "core.certificate",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-07-01T14:12:30.878Z",
+    "updated_at": "2026-07-01T14:12:30.878Z",
+    "batch": 7,
+    "participant": 3,
+    "national_id": "0000000001",
+    "first_name": "María",
+    "last_name": "Demo",
+    "email": "demo.participante@unemi.edu.ec",
+    "phone": "",
+    "course": "CONVERSATORIO: ÉTICA Y TECNOLOGÍA EN LA UNIVERSIDAD",
+    "course_date": null,
+    "hours": 0,
+    "program_data": null,
+    "verification_hash": "6acb0a47-1802-4bde-8c24-64d04f20595b",
+    "pdf_file": "",
+    "download_count": 0,
+    "search_count": 0,
+    "last_download_at": null
+  }
+},
+{
+  "model": "core.certificate",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-07-05T04:08:06.545Z",
+    "updated_at": "2026-07-05T04:08:06.545Z",
+    "batch": 8,
+    "participant": 3,
+    "national_id": "PRV",
+    "first_name": "Estudiante",
+    "last_name": "De Prueba",
+    "email": "",
+    "phone": null,
+    "course": "Analitica de datos",
+    "course_date": null,
+    "hours": 40,
+    "program_data": [
+      {
+        "name": "SQL",
+        "hours": 20,
+        "skills": [
+          "SQL"
+        ]
+      },
+      {
+        "name": "BI",
+        "hours": 20,
+        "skills": [
+          "BI"
+        ]
+      }
+    ],
+    "verification_hash": "a5461bcc-8b04-4419-8abf-722cc5ad2fac",
+    "pdf_file": "",
+    "download_count": 0,
+    "search_count": 0,
+    "last_download_at": null
+  }
+},
+{
+  "model": "core.program",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-07-05T02:29:28.214Z",
+    "updated_at": "2026-07-05T04:18:40.366Z",
+    "name": "Analitica de datos",
+    "description": "<p>Bienvenidos al evento <strong>Analítica de Datos</strong>, donde exploraremos las herramientas y técnicas más efectivas para transformar datos en información valiosa. Este encuentro es una oportunidad única para aprender a tomar decisiones basadas en datos y optimizar procesos en sus organizaciones.</p><h2>¿Qué aprenderás?</h2><ul><li>Fundamentos de la analítica de datos y su importancia en el entorno actual.</li><li>Técnicas para la recolección y limpieza de datos.</li><li>Herramientas de visualización de datos para presentar información de manera efectiva.</li><li>Cómo interpretar resultados y aplicar insights en la toma de decisiones.</li></ul><h2>¿A quién va dirigido?</h2><p>Este evento está diseñado para profesionales de diferentes áreas, incluyendo analistas, gerentes y emprendedores interesados en potenciar sus habilidades en el manejo de datos. No se requiere experiencia previa, solo el deseo de aprender y mejorar.</p><p>Te esperamos para descubrir el poder de la analítica de datos y cómo puede transformar tu enfoque profesional.</p>",
+    "banner_image": "program_banners/banner-ia-analitica-de-datos.png",
+    "faculty": "FACI",
+    "is_active": true,
+    "is_open": true,
+    "certificate_body": "",
+    "template": "classic",
+    "signature_inst_1": null,
+    "signature_inst_2": null,
+    "signature_inst_3": null
+  }
+},
+{
+  "model": "core.event",
+  "pk": 1,
+  "fields": {
+    "batch": 1,
+    "title": "[Seed] Introducción a Machine Learning",
+    "description": "Conceptos fundamentales: regresión, clasificación, métricas. Práctica con scikit-learn.",
+    "banner_image": "",
+    "modality": "in_person",
+    "virtual_platform": "",
+    "meeting_url": "",
+    "location": "Aula 305 · Edificio FACI",
+    "date": "2026-04-18",
+    "start_time": "14:00:00",
+    "end_time": "18:00:00",
+    "qr_code": "6kDu9ZjVrJuLq3ij",
+    "capacity": 60,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-06-03T00:34:34.385Z",
+    "google_calendar_event_id": "",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 2,
+  "fields": {
+    "batch": 2,
+    "title": "[Seed] Visualización de Datos con Python",
+    "description": "Matplotlib, Seaborn y Plotly. Cómo contar historias con datos.",
+    "banner_image": "",
+    "modality": "virtual",
+    "virtual_platform": "meet",
+    "meeting_url": "https://meet.google.com/abc-defg-hij",
+    "location": "",
+    "date": "2026-05-13",
+    "start_time": "09:00:00",
+    "end_time": "12:00:00",
+    "qr_code": "DhrBNKqtQx9Uj-hs",
+    "capacity": 60,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-06-03T00:34:34.386Z",
+    "google_calendar_event_id": "",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 3,
+  "fields": {
+    "batch": 3,
+    "title": "[Seed] Fundamentos de Django REST",
+    "description": "Construye APIs profesionales con DRF. Auth, serializers, viewsets, permisos.",
+    "banner_image": "",
+    "modality": "in_person",
+    "virtual_platform": "",
+    "meeting_url": "",
+    "location": "Laboratorio 2 · FACI",
+    "date": "2026-05-26",
+    "start_time": "15:00:00",
+    "end_time": "19:00:00",
+    "qr_code": "odP0krBBbp0Bcqms",
+    "capacity": 60,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-06-03T00:34:34.386Z",
+    "google_calendar_event_id": "",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 4,
+  "fields": {
+    "batch": 1,
+    "title": "[Seed] Deep Learning con PyTorch",
+    "description": "Redes neuronales profundas, CNN, transfer learning. Sesión avanzada.",
+    "banner_image": "",
+    "modality": "virtual",
+    "virtual_platform": "zoom",
+    "meeting_url": "https://zoom.us/j/123456",
+    "location": "",
+    "date": "2026-06-07",
+    "start_time": "14:00:00",
+    "end_time": "18:00:00",
+    "qr_code": "EQdA-v82j1TLQFDz",
+    "capacity": 60,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-06-03T00:34:34.387Z",
+    "google_calendar_event_id": "",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 5,
+  "fields": {
+    "batch": 2,
+    "title": "[Seed] SQL Avanzado y Optimización",
+    "description": "Window functions, CTEs, query plans, índices. Para quien ya domina lo básico.",
+    "banner_image": "",
+    "modality": "virtual",
+    "virtual_platform": "meet",
+    "meeting_url": "https://meet.google.com/xyz-uvwx-rst",
+    "location": "",
+    "date": "2026-06-14",
+    "start_time": "18:00:00",
+    "end_time": "20:00:00",
+    "qr_code": "32DcCDWf2_OY7uBI",
+    "capacity": 60,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-06-03T00:34:34.387Z",
+    "google_calendar_event_id": "",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 6,
+  "fields": {
+    "batch": 3,
+    "title": "[Seed] React Native Pro: Animaciones y Performance",
+    "description": "Reanimated 3, gesture handler, lazy loading, memoization. Apps fluidas a 60fps.",
+    "banner_image": "",
+    "modality": "in_person",
+    "virtual_platform": "",
+    "meeting_url": "",
+    "location": "Auditorio Tecnológico",
+    "date": "2026-06-22",
+    "start_time": "15:00:00",
+    "end_time": "18:00:00",
+    "qr_code": "wl9DkHw9jYOhiawM",
+    "capacity": 60,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-06-03T00:34:34.388Z",
+    "google_calendar_event_id": "",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 7,
+  "fields": {
+    "batch": null,
+    "title": "Inteligencia artificial en campos de educación",
+    "description": "<p>Los invitamos a explorar el fascinante mundo de la <strong>inteligencia artificial</strong> aplicada a la <strong>educación</strong>. Este evento tiene como objetivo ofrecerles herramientas y conocimientos que transformen su enfoque pedagógico, potenciando el aprendizaje de sus estudiantes.</p><h2>¿Qué aprenderás?</h2><ul><li>Conceptos básicos de la inteligencia artificial y su relevancia en el ámbito educativo.</li><li>Aplicaciones prácticas de la IA en la personalización del aprendizaje.</li><li>Estrategias para integrar tecnologías de IA en el aula.</li><li>Casos de éxito y experiencias de implementación en distintas instituciones.</li></ul><h2>¿A quién va dirigido?</h2><p>Este evento está diseñado para educadores, directores de instituciones educativas, y profesionales del área de la educación que deseen innovar en sus prácticas y mejorar la experiencia de aprendizaje de sus estudiantes.</p><p>Te esperamos para que juntos descubramos cómo la inteligencia artificial puede revolucionar el campo educativo y enriquecer la enseñanza.</p>",
+    "banner_image": "",
+    "modality": "virtual",
+    "virtual_platform": "meet",
+    "meeting_url": "https://meet.google.com/mor-tbbk-usn",
+    "location": "",
+    "date": "2026-06-24",
+    "start_time": "08:00:00",
+    "end_time": "09:48:00",
+    "qr_code": "cc13fe95-0367-4d6a-ba6d-e04935f128f8",
+    "capacity": 0,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-06-24T12:50:28.941Z",
+    "google_calendar_event_id": "5vr4ffhmpioo1jvasqrvvh1j0g",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 8,
+  "fields": {
+    "batch": null,
+    "title": "Ingetligencia de negocios (BI)",
+    "description": "<p>Los invitamos a participar en el evento <strong>Inteligencia de Negocios (BI)</strong>, donde exploraremos las herramientas y técnicas más efectivas para transformar datos en decisiones estratégicas. Este encuentro está diseñado para que ustedes adquieran habilidades que potenciarán su capacidad de análisis y gestión empresarial.</p><h2>¿Qué aprenderás?</h2><ul><li>Conceptos fundamentales de <strong>Inteligencia de Negocios</strong> y su importancia en el entorno actual.</li><li>Herramientas y software más utilizados para el análisis de datos.</li><li>Estrategias para la visualización de datos que faciliten la toma de decisiones.</li><li>Casos prácticos de éxito en la implementación de BI en diversas industrias.</li></ul><h2>¿A quién va dirigido?</h2><p>Este evento está dirigido a <strong>profesionales</strong> y <strong>emprendedores</strong> que deseen mejorar su comprensión sobre el análisis de datos y su aplicación en el ámbito empresarial. No se requiere experiencia previa, solo el deseo de aprender y aplicar nuevos conocimientos.</p><p>Te esperamos para que juntos exploremos el fascinante mundo de la Inteligencia de Negocios y descubramos cómo transformar datos en oportunidades.</p>",
+    "banner_image": "event_banners/crai-1-scaled_MzmBULG.jpg",
+    "modality": "virtual",
+    "virtual_platform": "meet",
+    "meeting_url": "https://meet.google.com/cug-vdhx-tby",
+    "location": "",
+    "date": "2026-06-24",
+    "start_time": "09:13:00",
+    "end_time": "11:13:00",
+    "qr_code": "ba7cffed-1331-45de-9e86-34392a6bbccb",
+    "capacity": 0,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-06-24T13:14:24.724Z",
+    "google_calendar_event_id": "rig079ie4lut9fioqsc7k19lp0",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 9,
+  "fields": {
+    "batch": null,
+    "title": "Pruebas de cocina",
+    "description": "<p>Bienvenidos a nuestro evento <strong>Pruebas de Cocina</strong>, un espacio dedicado a los amantes de la gastronomía que desean llevar sus habilidades culinarias al siguiente nivel. Aquí, aprenderán técnicas y secretos que transformarán su forma de cocinar.</p><h2>¿Qué aprenderás?</h2><ul><li>Técnicas básicas y avanzadas de cocina.</li><li>Cómo seleccionar ingredientes frescos y de calidad.</li><li>Presentación de platos para impresionar a tus invitados.</li><li>Recetas innovadoras que puedes replicar en casa.</li></ul><h2>¿A quién va dirigido?</h2><p>Este evento está diseñado para <strong>cocineros aficionados</strong>, estudiantes de gastronomía y cualquier persona interesada en mejorar sus habilidades en la cocina. No importa si eres principiante o tienes experiencia, ¡todos son bienvenidos!</p><p>Te esperamos para disfrutar juntos de una experiencia culinaria única que enriquecerá tu pasión por la cocina.</p>",
+    "banner_image": "",
+    "modality": "virtual",
+    "virtual_platform": "meet",
+    "meeting_url": "",
+    "location": "",
+    "date": "2026-06-24",
+    "start_time": "10:12:00",
+    "end_time": "00:12:00",
+    "qr_code": "40a6f4e2-ca19-4404-802b-567488a82171",
+    "capacity": 0,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-06-24T14:12:21.835Z",
+    "google_calendar_event_id": "",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 10,
+  "fields": {
+    "batch": null,
+    "title": "Seminario de conversatorio dia internacional de la mujer en la ingeneria",
+    "description": "<p>Los invitamos a participar en el <strong>Seminario de Conversatorio por el Día Internacional de la Mujer en la Ingeniería</strong>, un espacio diseñado para reflexionar y celebrar la contribución de las mujeres en este campo. Este evento busca fomentar el diálogo y la inspiración entre profesionales y estudiantes, promoviendo la <strong>equidad de género</strong> en la ingeniería.</p><h2>¿Qué aprenderás?</h2><ul><li>Historias de éxito de mujeres ingenieras en diversas disciplinas.</li><li>Retos y oportunidades actuales para las mujeres en la ingeniería.</li><li>Estrategias para fomentar la inclusión y diversidad en el ámbito profesional.</li><li>Herramientas para el empoderamiento personal y profesional.</li></ul><h2>¿A quién va dirigido?</h2><p>Este seminario está dirigido a <strong>estudiantes</strong>, <strong>profesionales</strong> y <strong>educadores</strong> interesados en promover la participación de mujeres en la ingeniería. Es una oportunidad para todos aquellos que deseen contribuir a un entorno más <strong>inclusivo</strong> y <strong>equitativo</strong>.</p><p>Te esperamos para compartir experiencias y construir juntos un futuro donde la ingeniería sea un espacio para todos.</p>",
+    "banner_image": "event_banners/crai-1-scaled_w2XHWRU.jpg",
+    "modality": "virtual",
+    "virtual_platform": "meet",
+    "meeting_url": "https://meet.google.com/nmw-kocv-hkk",
+    "location": "",
+    "date": "2026-06-24",
+    "start_time": "10:29:00",
+    "end_time": "11:29:00",
+    "qr_code": "3c0df3a1-53ba-4d81-a66f-6aa9cc2d433f",
+    "capacity": 0,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-06-24T14:29:47.721Z",
+    "google_calendar_event_id": "83cgjhjnin63q1fch2qeslsms4",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 12,
+  "fields": {
+    "batch": null,
+    "title": "Fundamentos de Inteligencia Artificial en la Educación",
+    "description": "Sesión introductoria sobre IA aplicada a la enseñanza.",
+    "banner_image": "",
+    "modality": "virtual",
+    "virtual_platform": "meet",
+    "meeting_url": "",
+    "location": "",
+    "date": "2026-06-25",
+    "start_time": "09:00:00",
+    "end_time": "11:00:00",
+    "qr_code": "fb1ae87b-c21c-4df7-954c-b68edcbd9fa0",
+    "capacity": 0,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-07-01T13:37:01.659Z",
+    "google_calendar_event_id": "",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": true,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 13,
+  "fields": {
+    "batch": 7,
+    "title": "Conversatorio: Ética y Tecnología en la Universidad",
+    "description": "<p>Charla de sensibilización sobre ética y tecnología.</p>",
+    "banner_image": "event_banners/banner-ia-conversatorio--ética-y-tecnología-en-la.png",
+    "modality": "in_person",
+    "virtual_platform": "",
+    "meeting_url": "",
+    "location": "Auditorio Principal — Edificio A",
+    "date": "2026-06-25",
+    "start_time": "15:00:00",
+    "end_time": "16:30:00",
+    "qr_code": "7bc4eec0-3852-42e1-85e6-5313c4c8c970",
+    "capacity": 0,
+    "leaders_only": false,
+    "is_active": true,
+    "program": null,
+    "skills": [],
+    "hours": 0,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-07-01T13:37:01.663Z",
+    "google_calendar_event_id": "",
+    "transcription_enabled": true,
+    "quiz_enabled": false,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 14,
+  "fields": {
+    "batch": null,
+    "title": "Seminario 1 del prog",
+    "description": "",
+    "banner_image": "",
+    "modality": "in_person",
+    "virtual_platform": "",
+    "meeting_url": "",
+    "location": "",
+    "date": "2026-09-01",
+    "start_time": "09:00:00",
+    "end_time": "11:00:00",
+    "qr_code": "4be3bb75-f46e-4d85-b820-a87b153e3012",
+    "capacity": 0,
+    "leaders_only": false,
+    "is_active": false,
+    "program": 1,
+    "skills": [],
+    "hours": 2,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-07-05T03:13:27.787Z",
+    "google_calendar_event_id": "",
+    "transcription_enabled": true,
+    "quiz_enabled": false,
+    "certificate_requires_quiz": false,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.event",
+  "pk": 15,
+  "fields": {
+    "batch": null,
+    "title": "SQL",
+    "description": "<p>Los invitamos a participar en nuestro evento sobre <strong>SQL</strong>, una herramienta fundamental para la gestión y análisis de datos. Este encuentro está diseñado para que ustedes adquieran habilidades prácticas y teóricas que les permitirán optimizar el manejo de bases de datos en sus proyectos.</p><h2>¿Qué aprenderás?</h2><ul><li>Fundamentos de <strong>SQL</strong> y su sintaxis básica.</li><li>Cómo realizar consultas efectivas para extraer información relevante.</li><li>Prácticas de optimización en el manejo de bases de datos.</li><li>Gestión de transacciones y seguridad en el acceso a datos.</li></ul><h2>¿A quién va dirigido?</h2><p>Este evento está dirigido a <strong>profesionales</strong> y estudiantes interesados en el análisis de datos, así como a quienes deseen mejorar sus habilidades en la gestión de bases de datos. No se requiere experiencia previa, solo ganas de aprender.</p><p>Te esperamos para que juntos exploremos el fascinante mundo de <strong>SQL</strong> y potencien sus capacidades en el manejo de datos.</p>",
+    "banner_image": "",
+    "modality": "virtual",
+    "virtual_platform": "meet",
+    "meeting_url": "https://meet.google.com/xxk-ecqe-xty",
+    "location": "",
+    "date": "2026-07-25",
+    "start_time": "15:00:00",
+    "end_time": "16:25:00",
+    "qr_code": "f2703594-24db-46da-b5ab-2bfdf28645d0",
+    "capacity": 0,
+    "leaders_only": false,
+    "is_active": true,
+    "program": 1,
+    "skills": [
+      "Comprender fundamentos de SQL"
+    ],
+    "hours": 2,
+    "has_parts": false,
+    "parent_event": null,
+    "created_at": "2026-07-05T03:24:26.247Z",
+    "google_calendar_event_id": "4f5r7ki9qvfle0dgbfus3rrukc",
+    "transcription_enabled": true,
+    "quiz_enabled": true,
+    "certificate_requires_quiz": true,
+    "quiz_pass_threshold": 70
+  }
+},
+{
+  "model": "core.speaker",
+  "pk": 1,
+  "fields": {
+    "event": 1,
+    "name": "Dr. Carlos Mendoza",
+    "title": "PhD en CS · MIT",
+    "affiliation": "Universidad de Stanford",
+    "bio": "Investigador en aprendizaje supervisado.",
+    "sort_order": 1
+  }
+},
+{
+  "model": "core.speaker",
+  "pk": 2,
+  "fields": {
+    "event": 2,
+    "name": "Ing. Ana Torres",
+    "title": "Senior Data Scientist",
+    "affiliation": "Google",
+    "bio": "Líder técnica del equipo de visualización.",
+    "sort_order": 1
+  }
+},
+{
+  "model": "core.speaker",
+  "pk": 3,
+  "fields": {
+    "event": 3,
+    "name": "Lic. Pablo Ruiz",
+    "title": "Backend Engineer",
+    "affiliation": "GitLab",
+    "bio": "Mantiene el módulo de API pública.",
+    "sort_order": 1
+  }
+},
+{
+  "model": "core.speaker",
+  "pk": 4,
+  "fields": {
+    "event": 4,
+    "name": "Dra. María Fernanda Castro",
+    "title": "Research Scientist",
+    "affiliation": "OpenAI",
+    "bio": "Especialista en transformers.",
+    "sort_order": 1
+  }
+},
+{
+  "model": "core.speaker",
+  "pk": 5,
+  "fields": {
+    "event": 5,
+    "name": "Ing. Diego Salazar",
+    "title": "Database Engineer",
+    "affiliation": "PostgreSQL Community",
+    "bio": "Contribuidor del optimizador.",
+    "sort_order": 1
+  }
+},
+{
+  "model": "core.speaker",
+  "pk": 6,
+  "fields": {
+    "event": 6,
+    "name": "Sara Méndez",
+    "title": "Mobile Lead",
+    "affiliation": "Shopify",
+    "bio": "Conferencista en React Conf 2024.",
+    "sort_order": 1
+  }
+},
+{
+  "model": "core.speaker",
+  "pk": 9,
+  "fields": {
+    "event": 7,
+    "name": "Ronny Arellano",
+    "title": "Ing.",
+    "affiliation": "Estudiante UNEMI",
+    "bio": "",
+    "sort_order": 0
+  }
+},
+{
+  "model": "core.speaker",
+  "pk": 10,
+  "fields": {
+    "event": 8,
+    "name": "Dabor Garcia",
+    "title": "Ing.",
+    "affiliation": "Estudiante UNEMI",
+    "bio": "",
+    "sort_order": 0
+  }
+},
+{
+  "model": "core.speaker",
+  "pk": 11,
+  "fields": {
+    "event": 9,
+    "name": "Dabor Garcia",
+    "title": "PhD",
+    "affiliation": "",
+    "bio": "",
+    "sort_order": 0
+  }
+},
+{
+  "model": "core.speaker",
+  "pk": 12,
+  "fields": {
+    "event": 10,
+    "name": "Garcia",
+    "title": "Dr.",
+    "affiliation": "UNEMI",
+    "bio": "",
+    "sort_order": 0
+  }
+},
+{
+  "model": "core.speaker",
+  "pk": 13,
+  "fields": {
+    "event": 15,
+    "name": "Eva Chacon",
+    "title": "Dra.",
+    "affiliation": "UNEMI",
+    "bio": "",
+    "sort_order": 0
+  }
+},
+{
+  "model": "core.attendance",
+  "pk": 1,
+  "fields": {
+    "event": 1,
+    "certificate": 1,
+    "participant": 1,
+    "registered_at": "2026-06-03T00:34:34.392Z",
+    "ip_address": "192.168.0.108"
+  }
+},
+{
+  "model": "core.attendance",
+  "pk": 2,
+  "fields": {
+    "event": 2,
+    "certificate": 2,
+    "participant": 1,
+    "registered_at": "2026-06-03T00:34:34.394Z",
+    "ip_address": "192.168.0.108"
+  }
+},
+{
+  "model": "core.attendance",
+  "pk": 3,
+  "fields": {
+    "event": 3,
+    "certificate": 3,
+    "participant": 1,
+    "registered_at": "2026-06-03T00:34:34.396Z",
+    "ip_address": "192.168.0.108"
+  }
+},
+{
+  "model": "core.attendance",
+  "pk": 4,
+  "fields": {
+    "event": 12,
+    "certificate": null,
+    "participant": 3,
+    "registered_at": "2026-07-01T13:37:01.667Z",
+    "ip_address": null
+  }
+},
+{
+  "model": "core.attendance",
+  "pk": 5,
+  "fields": {
+    "event": 13,
+    "certificate": null,
+    "participant": 3,
+    "registered_at": "2026-07-01T13:37:01.668Z",
+    "ip_address": null
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 1,
+  "fields": {
+    "certificate": 1,
+    "participant": 1,
+    "event": 1,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-06-03T00:34:34.393Z"
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 2,
+  "fields": {
+    "certificate": 2,
+    "participant": 1,
+    "event": 2,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-06-03T00:34:34.395Z"
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 3,
+  "fields": {
+    "certificate": 3,
+    "participant": 1,
+    "event": 3,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-06-03T00:34:34.396Z"
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 4,
+  "fields": {
+    "certificate": 4,
+    "participant": 1,
+    "event": 4,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-06-03T00:34:34.397Z"
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 5,
+  "fields": {
+    "certificate": 5,
+    "participant": 1,
+    "event": 5,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-06-03T00:34:34.398Z"
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 6,
+  "fields": {
+    "certificate": null,
+    "participant": 1,
+    "event": 6,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-06-17T14:12:48.981Z"
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 7,
+  "fields": {
+    "certificate": null,
+    "participant": 1,
+    "event": 7,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-06-24T12:53:20.548Z"
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 8,
+  "fields": {
+    "certificate": null,
+    "participant": 1,
+    "event": 10,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-06-24T14:30:28.820Z"
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 9,
+  "fields": {
+    "certificate": null,
+    "participant": 3,
+    "event": 12,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-07-01T13:37:01.666Z"
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 10,
+  "fields": {
+    "certificate": null,
+    "participant": 3,
+    "event": 13,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-07-01T13:37:01.667Z"
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 11,
+  "fields": {
+    "certificate": null,
+    "participant": 1,
+    "event": 15,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-07-05T04:46:10.072Z"
+  }
+},
+{
+  "model": "core.enrollment",
+  "pk": 12,
+  "fields": {
+    "certificate": null,
+    "participant": 3,
+    "event": 15,
+    "confirmed": true,
+    "blocked": false,
+    "enrolled_at": "2026-07-05T15:08:17.880Z"
+  }
+},
+{
+  "model": "core.sessionsummary",
+  "pk": 1,
+  "fields": {
+    "event": 7,
+    "drive_file_id": "SIMULADO-7",
+    "drive_file_name": "Inteligencia artificial en campos de educación (2026-06-24) - Transcripción.gdoc",
+    "transcript_raw": "Transcripción\nInteligencia artificial en campos de educación - 2026/06/24 08:00 (GMT-5)\n\nIng. Ronny Arellano: Muy buenos días a todas y todos. Bienvenidos a este seminario sobre inteligencia artificial aplicada a la educación. Mi nombre es Ronny Arellano y soy estudiante de la UNEMI. Hoy vamos a explorar cómo la IA está transformando la manera en que enseñamos y aprendemos.\n\nIng. Ronny Arellano: Comencemos con una idea central: la inteligencia artificial no reemplaza al docente, sino que lo potencia. Herramientas como los asistentes conversacionales permiten a los estudiantes resolver dudas en cualquier momento, y al profesor le liberan tiempo de tareas repetitivas como la calificación automática.\n\nIng. Ronny Arellano: Un primer eje es la personalización del aprendizaje. Los sistemas de IA pueden analizar el desempeño de cada estudiante e identificar en qué temas necesita refuerzo. Por ejemplo, si un alumno falla repetidamente en problemas de fracciones, la plataforma le sugiere ejercicios adicionales y recursos específicos.\n\nParticipante María López: Profe, ¿y cómo aseguramos que el contenido que genera la IA sea correcto y no tenga sesgos?\n\nIng. Ronny Arellano: Excelente pregunta, María. La validación humana sigue siendo indispensable. El docente debe revisar el material generado, contrastarlo con fuentes confiables y enseñar a los estudiantes a pensar críticamente sobre lo que la IA produce. La alfabetización en IA es parte del nuevo currículo.\n\nIng. Ronny Arellano: El segundo eje es la evaluación. Con IA podemos crear cuestionarios adaptativos que ajustan su dificultad según las respuestas, y dar retroalimentación inmediata. Esto convierte la evaluación en una herramienta de aprendizaje, no solo de medición.\n\nIng. Ronny Arellano: El tercer eje es la accesibilidad. La IA permite transcripción automática de clases, traducción a varios idiomas y lectura de texto para estudiantes con discapacidad visual. Esto democratiza el acceso al conocimiento.\n\nParticipante Juan Pérez: ¿Qué herramientas concretas recomiendas para empezar en el aula?\n\nIng. Ronny Arellano: Para empezar recomiendo asistentes de escritura para retroalimentar ensayos, generadores de cuestionarios para ahorrar tiempo, y plataformas de tutoría inteligente. Lo importante es empezar de a poco, con un objetivo pedagógico claro, y medir el impacto en el aprendizaje.\n\nIng. Ronny Arellano: Para cerrar, tres recomendaciones: primero, capacitar a los docentes en el uso ético de la IA; segundo, proteger la privacidad de los datos de los estudiantes; y tercero, mantener siempre al ser humano en el centro de la decisión pedagógica.\n\nIng. Ronny Arellano: Muchas gracias por su atención y participación. Quedo atento a sus preguntas y nos vemos en la próxima sesión.\n",
+    "transcript_chars": 2765,
+    "summary_md": "En el seminario sobre inteligencia artificial (IA) en la educación, se destacó que la IA no reemplaza a los docentes, sino que los potencia. Herramientas como los asistentes conversacionales permiten a los estudiantes resolver dudas en cualquier momento, y a los profesores les ayudan a liberar tiempo de tareas repetitivas como la calificación automática.\n\nUno de los ejes centrales es la personalización del aprendizaje. Los sistemas de IA pueden analizar el desempeño de los estudiantes, sugiriendo ejercicios y recursos específicos para aquellos que necesitan refuerzo en ciertos temas. La validación humana del contenido generado por la IA es crucial, ya que los docentes deben revisar y contrastar el material con fuentes confiables.\n\nOtro aspecto importante es la evaluación, donde la IA permite la creación de cuestionarios adaptativos que ofrecen retroalimentación inmediata, convirtiendo la evaluación en una herramienta de aprendizaje. Además, la IA mejora la accesibilidad, facilitando transcripciones automáticas, traducciones y lectura de textos para estudiantes con discapacidades. Se recomendaron herramientas como asistentes de escritura y plataformas de tutoría inteligente para implementar en el aula, siempre con un enfoque pedagógico claro.",
+    "key_points": [
+      "La IA potencia, no reemplaza, a los docentes.",
+      "Personalización del aprendizaje mediante análisis del desempeño.",
+      "Validación humana del contenido generado por IA es esencial.",
+      "Evaluaciones adaptativas que ofrecen retroalimentación inmediata.",
+      "Mejora de la accesibilidad en la educación.",
+      "Recomendaciones para herramientas como asistentes de escritura.",
+      "Capacitación de docentes en el uso ético de la IA.",
+      "Protección de la privacidad de los datos de los estudiantes."
+    ],
+    "next_steps": [
+      "Investigar herramientas de IA aplicables en el aula.",
+      "Implementar un plan de capacitación para docentes.",
+      "Establecer protocolos para la validación de contenido generado por IA.",
+      "Fomentar la alfabetización en IA entre los estudiantes.",
+      "Medir el impacto de la IA en el aprendizaje."
+    ],
+    "quiz": [
+      {
+        "options": [
+          "Potenciar a los docentes",
+          "Reemplazar a los docentes",
+          "Reducir el aprendizaje",
+          "Aumentar la carga de trabajo"
+        ],
+        "question": "¿Cuál es el papel de la IA en la educación según el seminario?",
+        "correct_idx": 0,
+        "explanation": "La IA se presenta como una herramienta que potencia las capacidades del docente."
+      },
+      {
+        "options": [
+          "Evaluar a todos por igual",
+          "Identificar áreas de refuerzo",
+          "Aumentar la carga de tareas",
+          "Eliminar la retroalimentación"
+        ],
+        "question": "¿Qué permite la personalización del aprendizaje con IA?",
+        "correct_idx": 1,
+        "explanation": "La IA puede analizar el desempeño de los estudiantes y sugerir recursos específicos."
+      },
+      {
+        "options": [
+          "Para aumentar la carga de trabajo",
+          "Para asegurar la calidad y evitar sesgos",
+          "Porque la IA es infalible",
+          "Para ignorar las fuentes confiables"
+        ],
+        "question": "¿Por qué es importante la validación humana del contenido generado por IA?",
+        "correct_idx": 1,
+        "explanation": "La validación humana es crucial para garantizar la calidad del contenido."
+      },
+      {
+        "options": [
+          "Cuestionarios estáticos",
+          "Cuestionarios adaptativos",
+          "Exámenes estandarizados",
+          "Pruebas sin retroalimentación"
+        ],
+        "question": "¿Qué tipo de evaluaciones se pueden crear con IA?",
+        "correct_idx": 1,
+        "explanation": "Los cuestionarios adaptativos ajustan su dificultad según las respuestas del estudiante."
+      },
+      {
+        "options": [
+          "Eliminar la privacidad de los datos",
+          "Capacitar a los docentes en el uso ético de la IA",
+          "Usar IA sin supervisión",
+          "Aumentar el tiempo de clase"
+        ],
+        "question": "¿Cuál es una de las recomendaciones finales del seminario?",
+        "correct_idx": 1,
+        "explanation": "Es fundamental capacitar a los docentes para un uso ético y responsable de la IA."
+      }
+    ],
+    "duration_minutes": 3,
+    "status": "ready",
+    "error_msg": "",
+    "created_at": "2026-06-24T13:23:28.482Z",
+    "processed_at": "2026-06-24T13:23:40.621Z",
+    "ai_model": "gpt-4o-mini",
+    "ai_input_tokens": 925,
+    "ai_output_tokens": 893
+  }
+},
+{
+  "model": "core.sessionsummary",
+  "pk": 2,
+  "fields": {
+    "event": 12,
+    "drive_file_id": "",
+    "drive_file_name": "",
+    "transcript_raw": "En esta sesión se abordaron los **fundamentos de la inteligencia artificial aplicada a la educación**. Se destacó que la IA no reemplaza al docente, sino que lo potencia: automatiza tareas repetitivas y permite personalizar el aprendizaje según el desempeño de cada estudiante.\n\nSe revisaron tres ejes: **personalización**, **evaluación adaptativa** y **accesibilidad**. También se enfatizó la importancia de la validación humana del contenido generado y la protección de datos de los estudiantes.",
+    "transcript_chars": 497,
+    "summary_md": "En esta sesión se abordaron los **fundamentos de la inteligencia artificial aplicada a la educación**. Se destacó que la IA no reemplaza al docente, sino que lo potencia: automatiza tareas repetitivas y permite personalizar el aprendizaje según el desempeño de cada estudiante.\n\nSe revisaron tres ejes: **personalización**, **evaluación adaptativa** y **accesibilidad**. También se enfatizó la importancia de la validación humana del contenido generado y la protección de datos de los estudiantes.",
+    "key_points": [
+      "La IA potencia al docente, no lo reemplaza.",
+      "Personalización del aprendizaje según el desempeño.",
+      "Evaluación adaptativa con retroalimentación inmediata.",
+      "Accesibilidad: transcripción, traducción y lectura de texto.",
+      "Validación humana y protección de datos son indispensables."
+    ],
+    "next_steps": [
+      "Capacitar a docentes en uso ético de IA.",
+      "Definir políticas de privacidad de datos.",
+      "Pilotear una herramienta de tutoría inteligente."
+    ],
+    "quiz": [
+      {
+        "type": "mcq",
+        "options": [
+          "Reemplazar por completo a los docentes",
+          "Potenciar al docente y personalizar el aprendizaje",
+          "Eliminar las evaluaciones",
+          "Reducir el acceso al conocimiento"
+        ],
+        "question": "¿Cuál es el rol principal de la IA en la educación según la sesión?",
+        "correct_idx": 1,
+        "explanation": "La IA potencia al docente y permite personalizar el aprendizaje, no lo reemplaza."
+      },
+      {
+        "type": "boolean",
+        "options": [
+          "Verdadero",
+          "Falso"
+        ],
+        "question": "La validación humana del contenido generado por IA sigue siendo indispensable.",
+        "correct_idx": 0,
+        "explanation": "El docente debe revisar y contrastar el material generado por IA."
+      },
+      {
+        "type": "mcq",
+        "options": [
+          "Ajustar la dificultad según las respuestas del estudiante",
+          "Solo calificar al final del curso",
+          "Evitar toda retroalimentación",
+          "Impedir segundos intentos"
+        ],
+        "question": "¿Qué permite la evaluación adaptativa con IA?",
+        "correct_idx": 0,
+        "explanation": "La evaluación adaptativa ajusta la dificultad y da retroalimentación inmediata."
+      },
+      {
+        "type": "mcq",
+        "options": [
+          "Encarecer el material",
+          "Limitar los idiomas",
+          "Transcripción automática y lectura de texto",
+          "Prohibir el uso de dispositivos"
+        ],
+        "question": "¿Cuál de estos es un eje de accesibilidad mencionado?",
+        "correct_idx": 2,
+        "explanation": "La IA habilita transcripción, traducción y lectura para mayor accesibilidad."
+      },
+      {
+        "type": "boolean",
+        "options": [
+          "Verdadero",
+          "Falso"
+        ],
+        "question": "Se recomienda proteger la privacidad de los datos de los estudiantes al usar IA.",
+        "correct_idx": 0,
+        "explanation": "La protección de datos es una de las recomendaciones clave de la sesión."
+      }
+    ],
+    "duration_minutes": 120,
+    "status": "ready",
+    "error_msg": "",
+    "created_at": "2026-07-01T13:37:01.662Z",
+    "processed_at": "2026-07-01T13:37:01.662Z",
+    "ai_model": "demo-seed",
+    "ai_input_tokens": 0,
+    "ai_output_tokens": 0
+  }
+},
+{
+  "model": "core.sessionsummary",
+  "pk": 3,
+  "fields": {
+    "event": 13,
+    "drive_file_id": "",
+    "drive_file_name": "",
+    "transcript_raw": "Conversatorio sobre **ética y tecnología** en el ámbito universitario. Se discutieron los dilemas del uso responsable de herramientas digitales, la privacidad y el pensamiento crítico frente a la información. Fue una charla de sensibilización, sin evaluación asociada.",
+    "transcript_chars": 268,
+    "summary_md": "Conversatorio sobre **ética y tecnología** en el ámbito universitario. Se discutieron los dilemas del uso responsable de herramientas digitales, la privacidad y el pensamiento crítico frente a la información. Fue una charla de sensibilización, sin evaluación asociada.",
+    "key_points": [
+      "Uso responsable de la tecnología en la universidad.",
+      "Privacidad y pensamiento crítico frente a la información."
+    ],
+    "next_steps": [
+      "Fomentar espacios de debate sobre ética digital."
+    ],
+    "quiz": [],
+    "duration_minutes": 90,
+    "status": "ready",
+    "error_msg": "",
+    "created_at": "2026-07-01T13:37:01.664Z",
+    "processed_at": "2026-07-01T13:37:01.664Z",
+    "ai_model": "demo-seed",
+    "ai_input_tokens": 0,
+    "ai_output_tokens": 0
+  }
+},
+{
+  "model": "core.quizattempt",
+  "pk": 1,
+  "fields": {
+    "participant": 1,
+    "event": 7,
+    "correct": 2,
+    "total": 5,
+    "total_time_seconds": 100,
+    "answers": [
+      0,
+      2,
+      1,
+      3,
+      0
+    ],
+    "created_at": "2026-06-24T13:31:38.995Z"
+  }
+},
+{
+  "model": "core.quizattempt",
+  "pk": 2,
+  "fields": {
+    "participant": 1,
+    "event": 7,
+    "correct": 4,
+    "total": 5,
+    "total_time_seconds": 100,
+    "answers": [
+      0,
+      1,
+      1,
+      2,
+      1
+    ],
+    "created_at": "2026-06-24T14:33:29.117Z"
+  }
+},
+{
+  "model": "core.evaluation",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-07-05T02:40:32.102Z",
+    "updated_at": "2026-07-05T02:40:32.102Z",
+    "program": 1,
+    "event": null,
+    "title": "Evaluación final del programa",
+    "description": "",
+    "pass_threshold": 70,
+    "max_attempts": 2,
+    "questions_per_attempt": 0,
+    "shuffle_questions": true,
+    "is_active": true,
+    "document": ""
+  }
+},
+{
+  "model": "core.evaluation",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-07-05T03:13:27.790Z",
+    "updated_at": "2026-07-05T03:13:27.790Z",
+    "program": null,
+    "event": 14,
+    "title": "Evaluación · Seminario 1 del prog",
+    "description": "",
+    "pass_threshold": 70,
+    "max_attempts": 2,
+    "questions_per_attempt": 0,
+    "shuffle_questions": true,
+    "is_active": true,
+    "document": ""
+  }
+},
+{
+  "model": "core.evaluation",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-07-05T03:24:26.258Z",
+    "updated_at": "2026-07-05T03:24:40.744Z",
+    "program": null,
+    "event": 15,
+    "title": "Evaluación · SQL",
+    "description": "",
+    "pass_threshold": 70,
+    "max_attempts": 2,
+    "questions_per_attempt": 15,
+    "shuffle_questions": true,
+    "is_active": true,
+    "document": ""
+  }
+},
+{
+  "model": "core.question",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-07-05T03:25:02.335Z",
+    "updated_at": "2026-07-05T03:25:02.335Z",
+    "evaluation": 3,
+    "text": "¿Cuál de las siguientes opciones se utiliza para seleccionar datos de una base de datos en SQL?",
+    "kind": "mcq",
+    "options": [
+      "SELECT",
+      "INSERT",
+      "UPDATE",
+      "DELETE"
+    ],
+    "correct_idx": 0,
+    "explanation": "La instrucción SELECT se utiliza para recuperar datos de una base de datos.",
+    "points": 1,
+    "source": "ai",
+    "order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "core.question",
+  "pk": 2,
+  "fields": {
+    "created_at": "2026-07-05T03:25:02.337Z",
+    "updated_at": "2026-07-05T03:25:02.337Z",
+    "evaluation": 3,
+    "text": "La cláusula WHERE se utiliza para filtrar registros en una consulta SQL.",
+    "kind": "boolean",
+    "options": [
+      "Verdadero",
+      "Falso"
+    ],
+    "correct_idx": 0,
+    "explanation": "La cláusula WHERE permite especificar condiciones para filtrar los resultados de una consulta.",
+    "points": 1,
+    "source": "ai",
+    "order": 1,
+    "is_active": true
+  }
+},
+{
+  "model": "core.question",
+  "pk": 3,
+  "fields": {
+    "created_at": "2026-07-05T03:25:02.338Z",
+    "updated_at": "2026-07-05T03:25:02.338Z",
+    "evaluation": 3,
+    "text": "¿Qué comando se utiliza para agregar nuevos registros a una tabla en SQL?",
+    "kind": "mcq",
+    "options": [
+      "ADD",
+      "INSERT",
+      "CREATE",
+      "UPDATE"
+    ],
+    "correct_idx": 1,
+    "explanation": "El comando INSERT se utiliza para añadir nuevos registros a una tabla.",
+    "points": 1,
+    "source": "ai",
+    "order": 2,
+    "is_active": true
+  }
+},
+{
+  "model": "core.question",
+  "pk": 4,
+  "fields": {
+    "created_at": "2026-07-05T03:25:02.339Z",
+    "updated_at": "2026-07-05T03:25:02.339Z",
+    "evaluation": 3,
+    "text": "El comando DELETE elimina una tabla de la base de datos.",
+    "kind": "boolean",
+    "options": [
+      "Verdadero",
+      "Falso"
+    ],
+    "correct_idx": 1,
+    "explanation": "El comando DELETE se utiliza para eliminar registros, no tablas. Para eliminar tablas se utiliza DROP.",
+    "points": 1,
+    "source": "ai",
+    "order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "core.question",
+  "pk": 5,
+  "fields": {
+    "created_at": "2026-07-05T03:25:02.339Z",
+    "updated_at": "2026-07-05T03:25:02.339Z",
+    "evaluation": 3,
+    "text": "¿Cuál de las siguientes funciones SQL se utiliza para contar el número de filas en un conjunto de resultados?",
+    "kind": "mcq",
+    "options": [
+      "SUM()",
+      "COUNT()",
+      "AVG()",
+      "MAX()"
+    ],
+    "correct_idx": 1,
+    "explanation": "La función COUNT() se utiliza para contar el número de filas que cumplen con una condición.",
+    "points": 1,
+    "source": "ai",
+    "order": 4,
+    "is_active": true
+  }
+},
+{
+  "model": "core.question",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-07-05T03:25:02.340Z",
+    "updated_at": "2026-07-05T03:25:02.340Z",
+    "evaluation": 3,
+    "text": "La instrucción UPDATE se utiliza para modificar registros existentes en una tabla.",
+    "kind": "boolean",
+    "options": [
+      "Verdadero",
+      "Falso"
+    ],
+    "correct_idx": 0,
+    "explanation": "La instrucción UPDATE permite modificar los datos de registros existentes en una tabla.",
+    "points": 1,
+    "source": "ai",
+    "order": 5,
+    "is_active": true
+  }
+},
+{
+  "model": "core.question",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-07-05T03:25:02.341Z",
+    "updated_at": "2026-07-05T03:25:02.341Z",
+    "evaluation": 3,
+    "text": "¿Qué palabra clave se utiliza para ordenar los resultados de una consulta en SQL?",
+    "kind": "mcq",
+    "options": [
+      "ORDER BY",
+      "SORT",
+      "GROUP BY",
+      "FILTER"
+    ],
+    "correct_idx": 0,
+    "explanation": "La cláusula ORDER BY se utiliza para ordenar los resultados de una consulta.",
+    "points": 1,
+    "source": "ai",
+    "order": 6,
+    "is_active": true
+  }
+},
+{
+  "model": "core.question",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-07-05T03:25:02.341Z",
+    "updated_at": "2026-07-05T03:25:02.341Z",
+    "evaluation": 3,
+    "text": "Un índice en SQL mejora el rendimiento de las consultas sobre una tabla.",
+    "kind": "boolean",
+    "options": [
+      "Verdadero",
+      "Falso"
+    ],
+    "correct_idx": 0,
+    "explanation": "Los índices permiten un acceso más rápido a los datos, mejorando el rendimiento de las consultas.",
+    "points": 1,
+    "source": "ai",
+    "order": 7,
+    "is_active": true
+  }
+},
+{
+  "model": "core.question",
+  "pk": 9,
+  "fields": {
+    "created_at": "2026-07-05T03:25:02.342Z",
+    "updated_at": "2026-07-05T03:25:02.342Z",
+    "evaluation": 3,
+    "text": "¿Cuál de las siguientes afirmaciones sobre las claves primarias es correcta?",
+    "kind": "mcq",
+    "options": [
+      "Pueden ser nulas",
+      "Deben ser únicas",
+      "No pueden ser modificadas",
+      "Pueden contener duplicados"
+    ],
+    "correct_idx": 1,
+    "explanation": "Las claves primarias deben ser únicas para identificar de manera única cada registro en una tabla.",
+    "points": 1,
+    "source": "ai",
+    "order": 8,
+    "is_active": true
+  }
+},
+{
+  "model": "core.question",
+  "pk": 10,
+  "fields": {
+    "created_at": "2026-07-05T03:25:02.342Z",
+    "updated_at": "2026-07-05T03:25:02.342Z",
+    "evaluation": 3,
+    "text": "SQL es un lenguaje de programación orientado a objetos.",
+    "kind": "boolean",
+    "options": [
+      "Verdadero",
+      "Falso"
+    ],
+    "correct_idx": 1,
+    "explanation": "SQL es un lenguaje de consulta estructurado, no es orientado a objetos.",
+    "points": 1,
+    "source": "ai",
+    "order": 9,
+    "is_active": true
+  }
+},
+{
+  "model": "core.uidesigntokens",
+  "pk": 1,
+  "fields": {
+    "created_at": "2026-06-03T00:34:47.004Z",
+    "updated_at": "2026-06-03T00:34:47.004Z",
+    "color_brand": "#F58830",
+    "color_brand_dark": "#D97520",
+    "color_accent": "#162054",
+    "color_bg_dark": "#0A1535",
+    "color_bg_light": "#F8FAFC",
+    "color_card_dark": "#152448",
+    "color_card_light": "#FFFFFF",
+    "color_text_dark": "#E2E8F0",
+    "color_text_light": "#0F172A",
+    "color_text_muted_dark": "#94A3B8",
+    "color_text_muted_light": "#64748B",
+    "color_success": "#1E40AF",
+    "color_danger": "#DC2626",
+    "color_warning": "#F58830",
+    "color_info": "#3B82F6",
+    "font_sans": "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+    "font_display": "'Sora', 'Inter', system-ui, sans-serif",
+    "font_mono": "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
+    "radius_sm": "0.5rem",
+    "radius_md": "0.75rem",
+    "radius_lg": "1rem",
+    "radius_xl": "1.5rem",
+    "btn_blur": "40px",
+    "btn_saturate": "180%",
+    "btn_glass_opacity_dark": 0.18,
+    "btn_glass_opacity_light": 0.92,
+    "shadow_card": "0 8px 32px -4px rgba(0,0,0,0.35), 0 2px 8px -2px rgba(0,0,0,0.20)",
+    "shadow_card_light": "0 4px 16px -4px rgba(15,23,42,0.08), 0 1px 4px -1px rgba(15,23,42,0.04)"
+  }
+}
+]
