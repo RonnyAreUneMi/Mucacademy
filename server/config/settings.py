@@ -128,6 +128,11 @@ DATABASES = {
         ssl_require=False,
     )
 }
+# En Railway la red privada tarda unos segundos en estar lista al arrancar.
+# connect_timeout hace que la conexión falle rápido (y el startCommand reintente)
+# en vez de colgarse indefinidamente.
+if 'postgresql' in DATABASES['default'].get('ENGINE', ''):
+    DATABASES['default'].setdefault('OPTIONS', {})['connect_timeout'] = 10
 
 
 # Password validation
