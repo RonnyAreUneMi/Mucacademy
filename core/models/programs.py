@@ -100,6 +100,12 @@ class Program(TimestampedModel):
         """
         if participant is None:
             return False
+        # Evaluación a nivel de programa (un examen único para todo el programa).
+        program_eval = getattr(self, 'evaluation', None)
+        if program_eval is not None and program_eval.is_active:
+            if not program_eval.passed_by(participant):
+                return False
+        # Evaluación por seminario.
         for course in self.active_courses:
             evaluation = getattr(course, 'evaluation', None)
             if evaluation is None or not evaluation.is_active:
