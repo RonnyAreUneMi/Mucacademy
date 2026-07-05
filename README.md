@@ -101,6 +101,8 @@ flowchart TB
   API_ADM & API_PUB --> DB
 ```
 
+![Stack de CertifAI con logos](docs/stack-diagram.png)
+
 ---
 
 ## Backend · módulos
