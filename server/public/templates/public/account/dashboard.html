@@ -1,0 +1,503 @@
+{% extends 'public/account/_base.html' %}
+{% load static %}
+{% block page_title %}Mi cuenta{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ═══════════ Stat tile ═══════════ */
+    .stat-tile {
+        position: relative;
+        padding: 18px 20px;
+        border-radius: 20px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.40));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.7);
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.95),
+            0 8px 22px -6px rgba(15,23,42,0.10);
+        transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .dark .stat-tile {
+        background: linear-gradient(180deg, rgba(22,32,84,0.65), rgba(22,32,84,0.40));
+        border-color: rgba(255,255,255,0.10);
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.10),
+            0 10px 24px -6px rgba(0,0,0,0.45);
+    }
+    .stat-tile:hover { transform: translateY(-2px); }
+    .stat-tile .st-icon {
+        width: 38px; height: 38px;
+        border-radius: 12px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: white; font-size: 14px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 14px -4px rgba(15,23,42,0.30);
+    }
+    .stat-tile .st-num {
+        font-family: 'Sora', sans-serif; font-weight: 900;
+        font-size: 1.8rem; line-height: 1;
+        color: #0f172a;
+        letter-spacing: -0.02em;
+    }
+    .dark .stat-tile .st-num { color: #fff; }
+    .stat-tile .st-lbl { font-size: 0.7rem; font-weight: 800; uppercase: true; letter-spacing: 0.06em; color: #64748b; text-transform: uppercase; }
+    .dark .stat-tile .st-lbl { color: #94a3b8; }
+
+    /* ═══════════ Calendar · iPhone-style ═══════════ */
+    .cal-wrap {
+        background: rgba(255,255,255,0.30);
+        border: 1px solid rgba(15,23,42,0.06);
+        border-radius: 18px;
+        overflow: hidden;
+        backdrop-filter: blur(8px);
+    }
+    .dark .cal-wrap {
+        background: rgba(255,255,255,0.03);
+        border-color: rgba(255,255,255,0.06);
+    }
+    .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+    }
+    .cal-head {
+        font-size: 0.65rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.10em;
+        color: #94a3b8;
+        text-align: center;
+        padding: 10px 0 8px;
+        border-bottom: 1px solid rgba(15,23,42,0.06);
+    }
+    .dark .cal-head { border-bottom-color: rgba(255,255,255,0.06); }
+
+    .cal-day {
+        position: relative;
+        aspect-ratio: 1.05;
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: flex-start;
+        padding-top: 8px;
+        gap: 4px;
+        cursor: default;
+        transition: background .2s;
+        border-top: 1px solid rgba(15,23,42,0.04);
+    }
+    .dark .cal-day { border-top-color: rgba(255,255,255,0.04); }
+    /* sólo las celdas que NO están en la primera semana llevan border-top */
+    .cal-grid > .cal-day:nth-child(-n+7) { border-top: 0; }
+    .cal-day.is-empty { pointer-events: none; }
+    .cal-day:not(.is-empty):not(.is-today):hover { background: rgba(245,136,48,0.06); }
+
+    /* El número del día va en una "burbuja" circular (estilo iOS) */
+    .cal-day .day-num {
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 0.85rem; font-weight: 600;
+        color: #475569;
+        transition: all .2s;
+        line-height: 1;
+    }
+    .dark .cal-day .day-num { color: #cbd5e1; }
+
+    /* Pasados — atenuados pero legibles */
+    .cal-day.is-past .day-num { color: rgba(15,23,42,0.32); }
+    .dark .cal-day.is-past .day-num { color: rgba(255,255,255,0.28); }
+
+    /* Hoy — círculo naranja relleno */
+    .cal-day.is-today .day-num {
+        background: linear-gradient(135deg, var(--ds-brand), var(--ds-brand-dark));
+        color: white !important;
+        font-weight: 800;
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.45),
+            0 6px 14px -3px rgba(245,136,48,0.50);
+    }
+
+    /* Día resaltado por deep-link (?day=YYYY-MM-DD) — pulso atractivo */
+    .cal-day.is-highlight .day-num {
+        background: linear-gradient(135deg, var(--ds-brand), var(--ds-brand-dark));
+        color: white !important;
+        font-weight: 800;
+        animation: highlight-pulse 1.6s ease-out 3;
+    }
+    .cal-day.is-highlight::after {
+        content: '';
+        position: absolute;
+        inset: 4px;
+        border-radius: 14px;
+        border: 2px solid var(--ds-brand);
+        animation: highlight-ring 1.6s ease-out 3;
+        pointer-events: none;
+    }
+    @keyframes highlight-pulse {
+        0%   { transform: scale(1); }
+        50%  { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(245,136,48,0.20); }
+        100% { transform: scale(1); }
+    }
+    @keyframes highlight-ring {
+        0%   { opacity: 1; transform: scale(0.85); }
+        100% { opacity: 0; transform: scale(1.2); }
+    }
+
+    /* Días con eventos (no hoy) — burbuja de marca sutil */
+    .cal-day.has-events:not(.is-today) .day-num {
+        color: var(--ds-brand);
+        font-weight: 700;
+        background: rgba(245,136,48,0.10);
+    }
+    .dark .cal-day.has-events:not(.is-today) .day-num {
+        background: rgba(245,136,48,0.14);
+    }
+    .cal-day:not(.is-today):hover .day-num {
+        background: rgba(245,136,48,0.18);
+        color: var(--ds-brand);
+    }
+
+    /* Dots de eventos — debajo del número */
+    .cal-marks {
+        display: flex; gap: 3px;
+        height: 5px;
+        align-items: center;
+    }
+    .cal-dot {
+        width: 5px; height: 5px; border-radius: 50%;
+    }
+    .cal-dot.d-asisti     { background: #10B981; }
+    .cal-dot.d-inscrito   { background: var(--ds-brand); }
+    .cal-dot.d-disponible { background: #cbd5e1; }
+    .dark .cal-dot.d-disponible { background: #64748b; }
+
+    /* ═══════════ Next event countdown card ═══════════ */
+    .countdown-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+    .cd-cell {
+        text-align: center;
+        padding: 12px 6px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.70);
+        border: 1px solid rgba(255,255,255,0.85);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.95), 0 4px 12px -4px rgba(15,23,42,0.10);
+    }
+    .dark .cd-cell {
+        background: rgba(15,23,42,0.45);
+        border-color: rgba(255,255,255,0.10);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 12px -4px rgba(0,0,0,0.40);
+    }
+    .cd-num {
+        font-family: 'Sora', sans-serif; font-weight: 900;
+        font-size: 1.6rem; line-height: 1;
+        color: var(--ds-brand);
+        letter-spacing: -0.02em;
+    }
+    .cd-lbl { font-size: 0.55rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-top: 4px; }
+    .dark .cd-lbl { color: #94a3b8; }
+
+    /* ═══════════ Activity timeline ═══════════ */
+    .timeline-row {
+        display: grid;
+        grid-template-columns: 36px 1fr auto;
+        align-items: center; gap: 14px;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(15,23,42,0.06);
+    }
+    .dark .timeline-row { border-bottom-color: rgba(255,255,255,0.06); }
+    .timeline-row:last-child { border-bottom: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+
+    <!-- ═══ Hero saludo ═══ -->
+    <section class="lg-card rounded-3xl p-5 sm:p-7 relative overflow-hidden">
+        <div class="relative z-10 flex items-start justify-between flex-wrap gap-4">
+            <div class="flex-1 min-w-[200px]">
+                <p class="text-xs font-bold uppercase tracking-widest text-[var(--ds-brand)]">
+                    <i class="fa-solid fa-sun"></i> {{ today|date:"l, d \d\e F"|capfirst }}
+                </p>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1.5 tracking-tight">
+                    Hola, <span class="brand-ai">{{ p.first_name }}</span>.
+                </h1>
+                <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                    {% if eventos_proximos %}Tienes {{ eventos_proximos|length }} evento{{ eventos_proximos|length|pluralize:"s" }} próximo{{ eventos_proximos|length|pluralize:"s" }}.{% else %}Hoy es un buen día para descubrir un evento nuevo.{% endif %}
+                </p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <a href="{% url 'public:account_escanear' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
+                        bg-white/85 dark:bg-white/10 text-[var(--ds-accent)] dark:text-white
+                        border border-[var(--ds-brand)]/30
+                        shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_4px_12px_-4px_rgba(15,23,42,0.10)]
+                        dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_4px_12px_-4px_rgba(0,0,0,0.30)]
+                        hover:border-[var(--ds-brand)] transition-all">
+                    <i class="fa-solid fa-qrcode text-[var(--ds-brand)]"></i> Escanear QR
+                </a>
+                <a href="{% url 'public:account_eventos' %}?tab=disponibles" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
+                        bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)] text-white
+                        shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_14px_-4px_rgba(245,136,48,0.40)]
+                        hover:brightness-110 transition-all">
+                    <i class="fa-solid fa-compass"></i> Explorar eventos
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ 4 stats ═══ -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="stat-tile flex items-center gap-3">
+            <span class="st-icon" style="background: linear-gradient(135deg, var(--ds-brand), var(--ds-brand-dark));"><i class="fa-solid fa-certificate"></i></span>
+            <div>
+                <p class="st-num tabular-nums">{{ certificados_count }}</p>
+                <p class="st-lbl">Certificados</p>
+            </div>
+        </div>
+        <div class="stat-tile flex items-center gap-3">
+            <span class="st-icon" style="background: linear-gradient(135deg, #A855F7, #7C3AED);"><i class="fa-solid fa-clock"></i></span>
+            <div>
+                <p class="st-num tabular-nums">{{ total_horas }}<span class="text-base font-bold text-slate-400">h</span></p>
+                <p class="st-lbl">Estudiadas</p>
+            </div>
+        </div>
+        <div class="stat-tile flex items-center gap-3">
+            <span class="st-icon" style="background: linear-gradient(135deg, #10B981, #059669);"><i class="fa-solid fa-circle-check"></i></span>
+            <div>
+                <p class="st-num tabular-nums">{{ eventos_asistido_count }}</p>
+                <p class="st-lbl">Asistidos</p>
+            </div>
+        </div>
+        <div class="stat-tile flex items-center gap-3">
+            <span class="st-icon" style="background: linear-gradient(135deg, #3B82F6, #2563EB);"><i class="fa-solid fa-bookmark"></i></span>
+            <div>
+                <p class="st-num tabular-nums">{{ eventos_inscrito_count }}</p>
+                <p class="st-lbl">Inscritos</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ Grid principal: calendario + próximo evento ═══ -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        <!-- Calendario (col-span 2) -->
+        <div class="lg-card rounded-3xl p-5 sm:p-6 lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-[var(--ds-brand)] mb-0.5">
+                        <i class="fa-solid fa-calendar-days"></i> Calendario
+                    </p>
+                    <h2 class="ds-display text-lg font-black text-slate-900 dark:text-white">{{ cal_month_name }} {{ cal_year }}</h2>
+                </div>
+                <div class="flex items-center gap-3 text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                    <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Asistí</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background: var(--ds-brand);"></span> Inscrito</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-slate-400"></span> Disponible</span>
+                </div>
+            </div>
+
+            <!-- Cuadrícula tipo iOS Calendar -->
+            <div class="cal-wrap">
+                <!-- Encabezado días -->
+                <div class="cal-grid">
+                    <div class="cal-head">Lun</div>
+                    <div class="cal-head">Mar</div>
+                    <div class="cal-head">Mié</div>
+                    <div class="cal-head">Jue</div>
+                    <div class="cal-head">Vie</div>
+                    <div class="cal-head">Sáb</div>
+                    <div class="cal-head">Dom</div>
+                </div>
+
+                <!-- Semanas -->
+                <div class="cal-grid">
+                    {% for week in cal_weeks %}
+                    {% for d in week %}
+                    {% if d.day %}
+                    <div id="day-{{ d.day }}"
+                         class="cal-day {% if d.is_today %}is-today{% elif d.is_past %}is-past{% endif %} {% if d.eventos %}has-events{% endif %} {% if highlight_day == d.day %}is-highlight{% endif %}"
+                         {% if d.eventos %}data-tip="{{ d.eventos|length }} evento{{ d.eventos|length|pluralize:'s' }}" data-tip-pos="top"{% endif %}>
+                        <span class="day-num">{{ d.day }}</span>
+                        <span class="cal-marks">
+                            {% if d.has_asisti %}<span class="cal-dot d-asisti"></span>{% endif %}
+                            {% if d.has_inscrito %}<span class="cal-dot d-inscrito"></span>{% endif %}
+                            {% if d.has_disponible %}<span class="cal-dot d-disponible"></span>{% endif %}
+                        </span>
+                    </div>
+                    {% else %}
+                    <div class="cal-day is-empty"></div>
+                    {% endif %}
+                    {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Próximo evento + countdown -->
+        <div class="lg-card rounded-3xl p-5 sm:p-6 relative overflow-hidden">
+            {% if next_event %}
+            <p class="text-[10px] font-black uppercase tracking-widest text-[var(--ds-brand)] mb-1">
+                <i class="fa-solid fa-bolt"></i> Próximo evento
+            </p>
+            <h3 class="ds-display text-lg font-black text-slate-900 dark:text-white leading-tight"
+                style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                {{ next_event.title|default:next_event.day_of_week }}
+            </h3>
+            <div class="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2 text-[12px] text-slate-600 dark:text-slate-300 font-medium">
+                <span><i class="fa-solid fa-calendar-day text-[var(--ds-brand)] mr-1"></i>{{ next_event.date|date:"d M" }}</span>
+                <span class="text-slate-300 dark:text-slate-600">·</span>
+                <span class="ds-mono"><i class="fa-solid fa-clock text-[var(--ds-brand)] mr-1"></i>{{ next_event.start_time|time:"H:i" }}</span>
+            </div>
+
+            <!-- Countdown -->
+            <div class="countdown-grid mt-4" id="countdown" data-target="{{ next_event_dt_iso }}">
+                <div class="cd-cell"><p class="cd-num" data-cd="d">--</p><p class="cd-lbl">Días</p></div>
+                <div class="cd-cell"><p class="cd-num" data-cd="h">--</p><p class="cd-lbl">Horas</p></div>
+                <div class="cd-cell"><p class="cd-num" data-cd="m">--</p><p class="cd-lbl">Min</p></div>
+                <div class="cd-cell"><p class="cd-num" data-cd="s">--</p><p class="cd-lbl">Seg</p></div>
+            </div>
+
+            <!-- CTA -->
+            <div class="mt-4 flex items-center gap-2">
+                {% if next_event.is_virtual and next_event.meeting_url %}
+                <a href="{{ next_event.meeting_url }}" target="_blank" rel="noopener" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold
+                        bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)] text-white
+                        shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_14px_-4px_rgba(245,136,48,0.40)]
+                        hover:brightness-110 transition-all">
+                    <i class="fa-solid fa-video"></i> Entrar al Meet
+                </a>
+                {% else %}
+                <a href="{% url 'public:account_eventos' %}?tab=mios" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold
+                        bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
+                        text-slate-700 dark:text-slate-200 hover:text-[var(--ds-brand)] transition-all">
+                    <i class="fa-solid fa-circle-info"></i> Ver detalles
+                </a>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                <i class="fa-solid fa-calendar-day"></i> Próximo evento
+            </p>
+            <div class="text-center py-6">
+                <i class="fa-solid fa-calendar-plus text-4xl text-slate-300 dark:text-slate-600 mb-2"></i>
+                <p class="text-sm font-bold text-slate-700 dark:text-slate-300">No tienes eventos agendados</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Inscríbete a los disponibles para que aparezcan acá.</p>
+                <a href="{% url 'public:account_eventos' %}?tab=disponibles" class="inline-flex mt-3 items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-[var(--ds-brand)] hover:underline">
+                    <i class="fa-solid fa-compass"></i> Ver disponibles
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- ═══ Programas para ti ═══ -->
+    {% if programas_recomendados %}
+    <section>
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                <i class="fa-solid fa-layer-group text-[var(--ds-accent)]"></i> Programas académicos
+            </h2>
+            <a href="{% url 'public:account_programas' %}" class="text-xs font-bold text-[var(--ds-brand)] hover:underline">Ver todo →</a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {% for item in programas_recomendados %}
+            {% include 'public/account/_program_mini.html' with prog=item.prog course_count=item.course_count total_hours=item.total_hours min_grade=item.min_grade skills=item.skills inscrito=item.inscrito %}
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ═══ Recomendados ═══ -->
+    {% if eventos_recomendados %}
+    <section>
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-[var(--ds-accent)]"></i> Para ti · Eventos disponibles
+            </h2>
+            <a href="{% url 'public:account_eventos' %}?tab=disponibles" class="text-xs font-bold text-[var(--ds-brand)] hover:underline">Ver todo →</a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {% for e in eventos_recomendados|slice:":3" %}
+            {% include 'public/account/_event_mini.html' with e=e show_inscribir=True %}
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ═══ Grid: Actividad reciente + Certificados recientes ═══ -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        <!-- Actividad reciente -->
+        <div class="lg-card rounded-3xl p-5 sm:p-6 lg:col-span-2">
+            <p class="text-[10px] font-black uppercase tracking-widest text-[var(--ds-brand)] mb-1">
+                <i class="fa-solid fa-clock-rotate-left"></i> Actividad reciente
+            </p>
+            <h2 class="ds-display text-lg font-black text-slate-900 dark:text-white mb-3">Tu trayectoria</h2>
+
+            {% if activity %}
+            <div>
+                {% for a in activity %}
+                <div class="timeline-row">
+                    <span class="nm-disc nm-disc--{{ a.color }} nm-disc--sm">
+                        <i class="fa-solid {{ a.icono }}"></i>
+                    </span>
+                    <div>
+                        <p class="text-sm font-bold text-slate-900 dark:text-white truncate">
+                            {% if a.tipo == 'certificado' %}Recibiste el certificado{% elif a.tipo == 'inscrito' %}Te inscribiste a{% else %}Asististe a{% endif %}
+                        </p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ a.titulo }}</p>
+                    </div>
+                    <span class="text-[10px] ds-mono text-slate-400 dark:text-slate-500">{{ a.fecha|date:"d M" }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <i class="fa-solid fa-clock text-3xl text-slate-300 dark:text-slate-600 mb-2"></i>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Tu actividad aparecerá acá cuando empieces a participar.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Certificados recientes -->
+        <div class="lg-card rounded-3xl p-5 sm:p-6">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-[var(--ds-brand)] mb-0.5">
+                        <i class="fa-solid fa-certificate"></i> Certificados
+                    </p>
+                    <h2 class="ds-display text-lg font-black text-slate-900 dark:text-white">Recientes</h2>
+                </div>
+                <a href="{% url 'public:account_certificados' %}" class="text-xs font-bold text-[var(--ds-brand)] hover:underline">Ver todos</a>
+            </div>
+
+            {% if certificados_recientes %}
+            <div class="space-y-2">
+                {% for c in certificados_recientes %}
+                <a href="/api/v1/public/certificates/{{ c.verification_hash }}/download/" target="_blank"
+                   class="flex items-center gap-3 p-2.5 rounded-xl bg-white/50 dark:bg-white/[0.04] border border-white/60 dark:border-white/10
+                          hover:bg-white/80 dark:hover:bg-white/[0.08] transition-all">
+                    <span class="nm-disc nm-disc--brand nm-disc--sm flex-shrink-0">
+                        <i class="fa-solid fa-certificate"></i>
+                    </span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ c.course }}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400">{{ c.course_date|date:"d M Y" }} · {{ c.hours }}h</p>
+                    </div>
+                    <i class="fa-solid fa-arrow-down text-slate-400"></i>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-6">
+                <i class="fa-solid fa-certificate text-3xl text-slate-300 dark:text-slate-600 mb-2"></i>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Cuando termines un evento aparecerán acá.</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/components/countdown.js' %}"></script>
+<script src="{% static 'js/pages/dashboard.js' %}"></script>
+{% endblock %}

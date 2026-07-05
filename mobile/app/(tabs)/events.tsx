@@ -22,6 +22,7 @@ const CARD_W = (SCREEN_W - GRID_PADDING * 2 - GRID_GAP) / 2;
 
 type Status = 'asisti' | 'inscrito' | 'no_asisti' | 'disponible';
 type Event = {
+  kind?: 'evento' | 'programa';
   id: number;
   title: string;
   titulo_display: string;
@@ -38,6 +39,12 @@ type Event = {
   is_active: boolean;
   status: Status;
   has_resumen?: boolean;
+  // Solo cuando kind === 'programa'
+  course_count?: number;
+  total_hours?: number;
+  min_grade?: number | null;
+  skills?: string[];
+  inscrito?: boolean;
 };
 type EventosResponse = {
   tab: 'mios' | 'disponibles';
@@ -114,7 +121,11 @@ export default function EventosScreen() {
           numColumns={2}
           data={data?.results ?? []}
           keyExtractor={(e) => String(e.id)}
-          renderItem={({ item }) => <EventoCard evento={item} />}
+          renderItem={({ item }) =>
+            item.kind === 'programa'
+              ? <ProgramaCard programa={item} />
+              : <EventoCard evento={item} />
+          }
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -282,6 +293,88 @@ function EventoCard({ evento }: { evento: Event }) {
   );
 }
 
+function ProgramaCard({ programa }: { programa: Event }) {
+  const theme = useTheme();
+  const t = themed(theme);
+
+  function onTap() {
+    router.push({ pathname: '/program/[id]', params: { id: String(programa.id) } });
+  }
+
+  // Hero navy→brand para diferenciar del evento.
+  const heroColors: [string, string, string] = ['#162054', '#1E2F6B', brandScale[700]];
+  const seminarios = programa.course_count ?? 0;
+
+  return (
+    <Pressable
+      onPress={onTap}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: t.cardSoft, borderColor: t.border },
+        pressed && { transform: [{ scale: 0.97 }], opacity: 0.92 },
+      ]}
+    >
+      <View style={styles.cardHero}>
+        {programa.banner_url ? (
+          <Image source={{ uri: programa.banner_url }} style={styles.cardBanner} resizeMode="cover" />
+        ) : (
+          <LinearGradient
+            colors={heroColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        )}
+        <View style={styles.cardOverlay} />
+
+        {/* Pill: Programa (diferenciador principal) */}
+        <View style={[styles.cardModPill, { backgroundColor: 'rgba(22,32,84,0.72)' }]}>
+          <Ionicons name="layers" size={9} color="#FFFFFF" />
+          <Text style={styles.cardModText}>Programa</Text>
+        </View>
+
+        {/* Pill: Inscrito */}
+        {programa.inscrito ? (
+          <View style={[
+            styles.cardStatusPill,
+            { backgroundColor: STATUS_BG.asisti, borderColor: STATUS_BORDER.asisti },
+          ]}>
+            <Ionicons name="checkmark-circle" size={9} color="#FFFFFF" />
+            <Text style={[styles.cardStatusText, { color: '#FFFFFF' }]}>Inscrito</Text>
+          </View>
+        ) : null}
+
+        {/* Badge: nº de seminarios */}
+        <View style={[styles.cardDateBlock, styles.cardSeminariosBadge]}>
+          <Ionicons name="book" size={13} color={colors.brand} />
+          <Text style={styles.cardSeminariosText}>{seminarios}</Text>
+        </View>
+      </View>
+
+      <View style={styles.cardBody}>
+        <Text style={[styles.cardTitle, { color: t.text }]} numberOfLines={2}>
+          {programa.titulo_display}
+        </Text>
+        <View style={styles.cardMetaRow}>
+          <Ionicons name="layers" size={11} color={colors.brand} />
+          <Text style={[styles.cardMeta, { color: t.textMuted }]} numberOfLines={1}>
+            {seminarios} seminario{seminarios === 1 ? '' : 's'}
+            {programa.total_hours ? ` · ${programa.total_hours}h` : ''}
+          </Text>
+        </View>
+        {programa.min_grade ? (
+          <View style={styles.cardMetaRow}>
+            <Ionicons name="ribbon" size={11} color={colors.brand} />
+            <Text style={[styles.cardMeta, { color: t.textMuted }]} numberOfLines={1}>
+              Nota mínima {programa.min_grade}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+    </Pressable>
+  );
+}
+
 const STATUS_BG: Record<Status, string> = {
   asisti: 'rgba(16,185,129,0.95)',
   inscrito: 'rgba(245,136,48,0.95)',
@@ -421,6 +514,18 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     letterSpacing: -0.5,
     lineHeight: 19,
+  },
+  cardSeminariosBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minWidth: 0,
+  },
+  cardSeminariosText: {
+    fontSize: 15,
+    fontWeight: typography.black,
+    color: '#0F172A',
+    letterSpacing: -0.5,
   },
   cardDateMonth: {
     fontSize: 9,

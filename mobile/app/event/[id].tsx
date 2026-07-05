@@ -33,6 +33,7 @@ type EventDetail = {
   location: string;
   banner_url: string | null;
   status: Status;
+  has_resumen?: boolean;
   lote_nombre: string | null;
   horas: number | null;
   capacidad: number;
@@ -202,8 +203,8 @@ export default function EventDetailScreen() {
                 </View>
               </View>
 
-              {/* Resumen de Betto — visible para cualquier inscrito (asisti / inscrito / no_asisti) */}
-              {(data.status === 'asisti' || data.status === 'inscrito' || data.status === 'no_asisti') ? (
+              {/* Resumen de Betto — solo si YA existe un resumen listo y el usuario es parte del evento */}
+              {data.has_resumen && (data.status === 'asisti' || data.status === 'inscrito' || data.status === 'no_asisti') ? (
                 <BettoSummaryButton sesionId={data.id} />
               ) : null}
 

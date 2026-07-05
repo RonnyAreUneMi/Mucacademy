@@ -21,3 +21,4 @@ export { BettoLogo } from './BettoLogo';
 export { StepCard } from './StepCard';
 export { BottomSheet } from './BottomSheet';
 export { stripHtml } from './stripHtml';
+export { RichText } from './RichText';

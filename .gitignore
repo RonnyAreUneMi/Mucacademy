@@ -12,18 +12,17 @@ __pycache__/
 *.log
 .env
 staticfiles/
-# Uploaded runtime user files (no commitear)
-media/batches_excel/
-media/event_banners/
+# Uploaded runtime user files (no commitear) — el backend vive en server/
+server/media/batches_excel/
+server/media/event_banners/
 # Celery Beat scheduler (estado regenerable, no commitear)
 celerybeat-schedule
 celerybeat-schedule.*
 celerybeat.pid
 .backup-pre-refactor/
-.backup-pre-refactor/
-media/logos/
-media/program_banners/
-media/certificates_pdf/
+server/media/logos/
+server/media/program_banners/
+server/media/certificates_pdf/
 
 # Media generado (logos de lotes, banners, PDFs, QR)
-media/qr_codes/
+server/media/qr_codes/

@@ -1,11 +1,17 @@
 # Stack completo de desarrollo local · web Django + DB Postgres + Redis (cache + Celery broker)
+# El backend vive en ./server (Dockerfile, código, requirements). Este compose
+# orquesta TODO el stack, por eso vive en la raíz del repo.
+#
 # Uso:
-#   docker compose up         # primer plano
-#   docker compose up -d      # background
+#   docker compose up -d           # background
 #   docker compose logs -f web
 #   docker compose exec web python manage.py migrate
 #
-# El worker de Celery + beat scheduler corren en sus propios containers.
+# Los secretos del backend (SECRET_KEY, GOOGLE_*, EMAIL_*) se inyectan desde
+# ./server/.env vía `env_file`. Las variables de infraestructura (DB/Redis del
+# stack, DEBUG, ALLOWED_HOSTS) se fijan aquí y sobreescriben a las del .env.
+
+name: certifai
 
 services:
   db:
@@ -37,59 +43,54 @@ services:
       retries:  10
 
   web:
-    build: .
+    build: ./server
     restart: unless-stopped
     command: >
       sh -c "python manage.py migrate --noinput &&
              gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60 --access-logfile -"
+    env_file:
+      - ./server/.env
     environment:
       DEBUG:                 "False"
       SECURE_SSL_REDIRECT:   "False"
-      SECRET_KEY:            ${SECRET_KEY:-dev-secret-change-me}
-      ALLOWED_HOSTS:         "localhost,127.0.0.1,web,0.0.0.0"
+      ALLOWED_HOSTS:         "localhost,127.0.0.1,web,0.0.0.0,192.168.0.106"
       DATABASE_URL:          postgres://certifai:certifai@db:5432/certifai
       CELERY_BROKER_URL:     redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
-      # Google OAuth (sobreescribir desde .env)
-      GOOGLE_CLIENT_ID:      ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET:  ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_REDIRECT_URI:   ${GOOGLE_REDIRECT_URI:-http://localhost:8000/panel/google/callback/}
-      GOOGLE_OAUTH_EMAIL:    ${GOOGLE_OAUTH_EMAIL:-}
     volumes:
-      - ./media:/app/media
-      - ./staticfiles:/app/staticfiles
+      - ./server/media:/app/media
+      - ./server/staticfiles:/app/staticfiles
     ports:
-      - "8000:8000"
+      - "8500:8000"
     depends_on:
       db:    { condition: service_healthy }
       redis: { condition: service_healthy }
 
   worker:
-    build: .
+    build: ./server
     restart: unless-stopped
     command: celery -A config worker -l info --concurrency=2
+    env_file:
+      - ./server/.env
     environment:
       DEBUG:                 "False"
-      SECRET_KEY:            ${SECRET_KEY:-dev-secret-change-me}
       DATABASE_URL:          postgres://certifai:certifai@db:5432/certifai
       CELERY_BROKER_URL:     redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
-      GOOGLE_CLIENT_ID:      ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET:  ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_OAUTH_EMAIL:    ${GOOGLE_OAUTH_EMAIL:-}
     volumes:
-      - ./media:/app/media
+      - ./server/media:/app/media
     depends_on:
       db:    { condition: service_healthy }
       redis: { condition: service_healthy }
 
   beat:
-    build: .
+    build: ./server
     restart: unless-stopped
     command: celery -A config beat -l info --schedule=/tmp/celerybeat-schedule
+    env_file:
+      - ./server/.env
     environment:
       DEBUG:                 "False"
-      SECRET_KEY:            ${SECRET_KEY:-dev-secret-change-me}
       DATABASE_URL:          postgres://certifai:certifai@db:5432/certifai
       CELERY_BROKER_URL:     redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
