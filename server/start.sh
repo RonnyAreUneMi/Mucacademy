@@ -8,6 +8,7 @@ until python manage.py migrate --noinput; do
 done
 
 python manage.py import_data || true
+python manage.py ensure_admin || true
 
 exec gunicorn config.wsgi:application \
   --bind "[::]:8000" \
