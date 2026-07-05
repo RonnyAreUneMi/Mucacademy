@@ -36,9 +36,14 @@ RAILWAY_PUBLIC_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN')
 if RAILWAY_PUBLIC_DOMAIN:
     ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
 
+# Aceptar cualquier subdominio de Railway (web-production-*, certifai, custom, etc.)
+ALLOWED_HOSTS.append('.railway.app')
+
 CSRF_TRUSTED_ORIGINS = [
-    f"https://{h}" for h in ALLOWED_HOSTS if h not in ('localhost', '127.0.0.1', '*')
+    f"https://{h}" for h in ALLOWED_HOSTS
+    if h not in ('localhost', '127.0.0.1', '*') and not h.startswith('.')
 ]
+CSRF_TRUSTED_ORIGINS.append('https://*.railway.app')
 
 # Email — usamos la Gmail API de la cuenta institucional (Workspace).
 # Requiere haber autorizado el scope gmail.send en /panel/google/connect/.
