@@ -20,7 +20,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         User = get_user_model()
         username = os.getenv('DJANGO_SUPERUSER_USERNAME', 'admin')
-        password = os.getenv('DJANGO_SUPERUSER_PASSWORD', 'Azvcar3r0')
+        password = os.getenv('DJANGO_SUPERUSER_PASSWORD', 'certifai2026')
         email = os.getenv('DJANGO_SUPERUSER_EMAIL', 'admin@certifai.app')
 
         user = User.objects.filter(username=username).first()
