@@ -65,7 +65,9 @@ def draw_certifai_brand(c, x_start, y_start, max_w, max_h):
         pass
 
     right = x_start + max_w - 0.35 * cm      # pequeño respiro respecto al borde
-    tiger_size = min(max_h, 1.45 * cm)
+    # El tigre escala con la banda para quedar al mismo nivel/tamaño que los
+    # logos (UNEMI, etc.), con topes para no crecer/encoger en exceso.
+    tiger_size = max(1.3 * cm, min(max_h * 0.6, 2.0 * cm))
     tiger_path = os.path.join(settings.BASE_DIR, 'static', 'tiger_chase_loader.png')
 
     # Tigre al extremo derecho
@@ -78,8 +80,8 @@ def draw_certifai_brand(c, x_start, y_start, max_w, max_h):
         except Exception:
             pass
 
-    # Wordmark "CertifAI" a la izquierda del tigre
-    fs = 15
+    # Wordmark "CertifAI" a la izquierda del tigre (escala con el tigre)
+    fs = 15 * (tiger_size / (1.45 * cm))
     w_certif = c.stringWidth('Certif', brand_font, fs)
     w_ai = c.stringWidth('AI', brand_font, fs)
     text_y = y_start + (max_h - fs) / 2 + 3

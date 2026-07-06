@@ -63,8 +63,9 @@ def draw_geometric_wow(c, certificado, width, height, pri, sec, ter, txt):
     logo_h = 3.5*cm
     logo_y = height - 4.8*cm
     draw_smart_logos(c, lote, 3.0*cm, logo_y, width - 6.0*cm, logo_h, align='left')
-    # Marca CertifAI: banda más baja e inset para librar el chevron del ángulo.
-    draw_certifai_brand(c, 3.0*cm, height - 4.7*cm, width - 7.0*cm, 1.5*cm)
+    # Marca CertifAI: MISMA banda que los logos (mismo nivel y tamaño); inset
+    # extra a la derecha para librar el chevron de la esquina.
+    draw_certifai_brand(c, 3.0*cm, logo_y, width - 7.0*cm, logo_h)
 
     # --- 4. CONTENIDO ---
     center_x = width / 2
