@@ -90,13 +90,13 @@ def draw_program_wow(c, certificado, width, height, pri, sec, ter, txt, template
 
     c.setFont(BODY_FONT, 12)
     c.setFillColor(HexColor("#1c1c1cc7"))
-    c.drawCentredString(center_x, main_y - 9*mm, "Se otorga el presente certificado a:")
+    c.drawCentredString(center_x, main_y - 12*mm, "Se otorga el presente certificado a:")
 
     # Nombre (script)
     name_font_size = 42 if SCRIPT_FONT == 'GreatVibes' else 32
     c.setFont(SCRIPT_FONT, name_font_size)
     c.setFillColor(txt)
-    name_y = main_y - 23*mm
+    name_y = main_y - 29*mm
     nombre = f"{certificado.first_name} {certificado.last_name}".title()
     c.drawCentredString(center_x, name_y, nombre)
 
@@ -118,16 +118,16 @@ def draw_program_wow(c, certificado, width, height, pri, sec, ter, txt, template
         )
     c.setFont(BODY_FONT, 12.5)
     c.setFillColor(HexColor("#000000"))
-    y = name_y - 12*mm
+    y = name_y - 16*mm
     for line in simpleSplit(intro, BODY_FONT, 12.5, inner_w - 20*mm):
         c.drawCentredString(center_x, y, line)
-        y -= 6*mm
+        y -= 6.5*mm
 
     # === Tabla de cursos + habilidades ===
     courses = certificado.program_data or []
     left_x = content_left + 14*mm
     text_w = inner_w - 28*mm
-    y -= 4*mm
+    y -= 7*mm
 
     # Espaciado adaptativo: si hay muchos cursos, comprime.
     n = max(1, len(courses))

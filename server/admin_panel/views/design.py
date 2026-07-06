@@ -10,6 +10,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_POST
 
 from core.models import Certificate, Signature, CertificateBatch
+from core.models.catalogs.enums import CertificateKind
 from core.services.pdf_service import generate_certificate_pdf
 from ._shared import superadmin_required, _log_audit
 
@@ -150,11 +151,15 @@ def design_save_firma_pos(request):
 @xframe_options_exempt
 def design_global_preview(request):
     """Preview del diseño global con datos dummy."""
-    # Buscar cualquier lote para asociar el dummy_cert (necesario por FK)
-    lote = CertificateBatch.objects.first()
-    if not lote:
-        # Crear un lote temporal en memoria (no se persiste)
-        return HttpResponse("Crea primero un lote para previsualizar el diseño.", status=400)
+    # Lote en memoria (no se persiste) que HEREDA el Diseño Global.
+    # customize_design=False -> _apply_diseno_global aplica plantilla, colores y
+    # logos del singleton GlobalDesign, en lugar de tomar los de un lote cualquiera.
+    lote = CertificateBatch(
+        name="Vista previa del diseño",
+        customize_design=False,
+        kind=CertificateKind.COURSE,
+    )
+    lote.id = 0
 
     dummy_cert = Certificate(
         batch=lote,
