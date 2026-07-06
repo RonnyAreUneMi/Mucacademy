@@ -180,7 +180,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# En Railway el filesystem del contenedor es EFÍMERO: cada deploy borra lo subido.
+# Para persistir imágenes/logos, montar un Volume de Railway y apuntar MEDIA_ROOT
+# a su ruta (p.ej. MEDIA_ROOT=/data/media). En local queda BASE_DIR/media.
+MEDIA_ROOT = os.getenv('MEDIA_ROOT', str(BASE_DIR / 'media'))
 
 SITE_URL = os.getenv('SITE_URL', 'http://localhost:8001')
 
