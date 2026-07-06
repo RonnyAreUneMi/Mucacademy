@@ -12,17 +12,17 @@ __pycache__/
 *.log
 .env
 staticfiles/
-# Uploaded runtime user files (no commitear) — el backend vive en server/
-server/media/batches_excel/
-server/media/event_banners/
+
+# === MEDIA: archivos subidos en runtime — NUNCA se commitean ===
+# Ignora TODA la carpeta media (raíz y server/), asi ningun logo/banner/PDF/QR
+# entra al repo. La persistencia va por almacenamiento externo (Cloudinary/Volume),
+# no por git.
+media/
+server/media/
+/media/
+
 # Celery Beat scheduler (estado regenerable, no commitear)
 celerybeat-schedule
 celerybeat-schedule.*
 celerybeat.pid
 .backup-pre-refactor/
-server/media/logos/
-server/media/program_banners/
-server/media/certificates_pdf/
-
-# Media generado (logos de lotes, banners, PDFs, QR)
-server/media/qr_codes/

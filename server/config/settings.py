@@ -177,13 +177,34 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 # En Railway el filesystem del contenedor es EFÍMERO: cada deploy borra lo subido.
 # Para persistir imágenes/logos, montar un Volume de Railway y apuntar MEDIA_ROOT
 # a su ruta (p.ej. MEDIA_ROOT=/data/media). En local queda BASE_DIR/media.
 MEDIA_ROOT = os.getenv('MEDIA_ROOT', str(BASE_DIR / 'media'))
+
+# === ALMACENAMIENTO DE ARCHIVOS ===
+# Producción persistente y con CDN: Cloudinary. Se activa SOLO si existe la
+# variable CLOUDINARY_URL (formato: cloudinary://<api_key>:<api_secret>@<cloud>).
+# Sin ella, se usa disco local (dev). Asi las imágenes subidas dejan de
+# perderse en cada deploy y se sirven desde el CDN (no consumen egress de la app).
+_USE_CLOUDINARY = bool(os.getenv('CLOUDINARY_URL'))
+if _USE_CLOUDINARY:
+    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
+
+STORAGES = {
+    'default': {
+        'BACKEND': (
+            'cloudinary_storage.storage.MediaCloudinaryStorage'
+            if _USE_CLOUDINARY
+            else 'django.core.files.storage.FileSystemStorage'
+        ),
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 SITE_URL = os.getenv('SITE_URL', 'http://localhost:8001')
 
