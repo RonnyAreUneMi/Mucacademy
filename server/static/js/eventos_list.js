@@ -69,10 +69,10 @@
     // ── Render de UNA card ──────────────────────────────────────
     function renderCard(s, isPast) {
         const esVirtual = s.modalidad === 'virtual';
-        const titulo = s.titulo || s.dia_semana;
-        const fechaFmt = formatDate(s.fecha);
-        const horaIni = formatTime(s.hora_inicio);
-        const horaFin = formatTime(s.hora_fin);
+        const titulo = s.title || s.day_of_week;
+        const fechaFmt = formatDate(s.date);
+        const horaIni = formatTime(s.start_time);
+        const horaFin = formatTime(s.end_time);
 
         // Imagen / gradiente fallback
         let imageBlock;
@@ -131,7 +131,7 @@
 
         const infoGrid = `
             <div class="grid grid-cols-2 gap-x-4 gap-y-3">
-                ${infoItem('fa-calendar-day', 'Fecha', s.dia_semana + ' ' + fechaFmt)}
+                ${infoItem('fa-calendar-day', 'Fecha', s.day_of_week + ' ' + fechaFmt)}
                 ${infoItem('fa-clock', 'Horario', horaIni + ' – ' + horaFin)}
                 ${ubicacionItem}
                 ${ponentesItem}
@@ -140,14 +140,14 @@
         // Cupos
         let cuposHtml = '';
         if (!isPast) {
-            if (s.capacidad === 0) {
+            if (s.capacity === 0) {
                 cuposHtml = `<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40 text-xs text-emerald-700 dark:text-emerald-400 font-bold"><i class="fa-solid fa-infinity"></i> Cupos ilimitados</div>`;
             } else if (!s.esta_llena) {
-                const pct = Math.min(100, (s.confirmados_count / s.capacidad) * 100);
+                const pct = Math.min(100, (s.confirmados_count / s.capacity) * 100);
                 cuposHtml = `<div class="space-y-1.5">
                     <div class="flex justify-between items-center text-xs">
                         <span class="text-gray-700 dark:text-gray-300 font-bold">${s.cupos_disponibles} cupos disponibles</span>
-                        <span class="text-gray-400 font-mono">${s.confirmados_count}/${s.capacidad}</span>
+                        <span class="text-gray-400 font-mono">${s.confirmados_count}/${s.capacity}</span>
                     </div>
                     <div class="w-full bg-gray-100 dark:bg-[#0F163A]/50 rounded-full h-2 overflow-hidden">
                         <div class="h-full bg-gradient-to-r from-[#F58830] to-[#D97520] rounded-full transition-all" style="width: ${pct}%"></div>
@@ -167,10 +167,10 @@
 
         // Botón principal
         const registerUrl = CONFIG.registerUrlBase.replace('/0/', '/' + s.id + '/');
-        const lleno = !isPast && s.capacidad > 0 && s.esta_llena;
+        const lleno = !isPast && s.capacity > 0 && s.esta_llena;
         const canShowMeetButton = (
             esVirtual && s.enlace_virtual && !isPast &&
-            isUserRegistered(s.id) && isMeetingJoinable(s.fecha, s.hora_inicio, s.hora_fin)
+            isUserRegistered(s.id) && isMeetingJoinable(s.date, s.start_time, s.end_time)
         );
 
         let primaryAction = '';
@@ -204,8 +204,8 @@
             data-sesion-id="${s.id}"
             data-titulo="${esc(titulo)}"
             data-descripcion="${esc(s.descripcion || '')}"
-            data-dia-semana="${esc(s.dia_semana)}"
-            data-fecha-iso="${esc(s.fecha)}"
+            data-dia-semana="${esc(s.day_of_week)}"
+            data-fecha-iso="${esc(s.date)}"
             data-fecha-format="${fechaFmt}"
             data-hora-inicio="${horaIni}"
             data-hora-fin="${horaFin}"
@@ -213,7 +213,7 @@
             data-plataforma="${esc(s.plataforma_display || '')}"
             data-enlace-virtual="${esc(s.enlace_virtual || '')}"
             data-lugar="${esc(s.lugar || '')}"
-            data-capacidad="${s.capacidad}"
+            data-capacidad="${s.capacity}"
             data-confirmados="${s.confirmados_count}"
             data-is-past="${isPast ? 1 : 0}"
             data-ponentes='${esc(JSON.stringify(ponentes))}'

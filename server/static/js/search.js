@@ -43,8 +43,8 @@
         const fac = (cert.lote_facultad || '').toUpperCase();
         const colors = FACULTY_COLORS[fac] || { bar: '#F58830', bg: 'rgba(245, 136, 48, 0.12)', text: '#F58830' };
         const facDisplay = cert.lote_facultad_display || 'General';
-        const fecha = formatDate(cert.fecha_curso || cert.created_at);
-        const hashShort = (cert.hash_verificacion || '').slice(0, 6);
+        const fecha = formatDate(cert.course_date || cert.created_at);
+        const hashShort = (cert.verification_hash || '').slice(0, 6);
 
         return `
         <div class="bg-white dark:bg-[#162054] rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden flex flex-col transition-all hover:-translate-y-1 hover:shadow-2xl hover:border-[#F58830]">
@@ -57,27 +57,27 @@
                     <span class="text-[10px] text-gray-400 font-mono">#${esc(hashShort)}</span>
                 </div>
 
-                <h3 class="font-extrabold text-gray-900 dark:text-white text-base leading-snug line-clamp-2 mb-4" title="${esc(cert.lote_nombre || cert.curso)}">
-                    ${esc(cert.lote_nombre || cert.curso)}
+                <h3 class="font-extrabold text-gray-900 dark:text-white text-base leading-snug line-clamp-2 mb-4" title="${esc(cert.lote_nombre || cert.course)}">
+                    ${esc(cert.lote_nombre || cert.course)}
                 </h3>
 
                 <div class="space-y-2 mb-5 flex-1">
                     <div class="flex items-center text-xs text-gray-600 dark:text-gray-400">
                         <i class="fa-solid fa-user w-4 text-center text-[#F58830] mr-2"></i>
-                        <span class="font-medium truncate">${esc(cert.nombres)} ${esc(cert.apellidos)}</span>
+                        <span class="font-medium truncate">${esc(cert.first_name)} ${esc(cert.last_name)}</span>
                     </div>
                     <div class="flex items-center text-xs text-gray-600 dark:text-gray-400">
                         <i class="fa-regular fa-calendar w-4 text-center text-[#F58830] mr-2"></i>
                         <span>${esc(fecha)}</span>
                     </div>
-                    ${cert.horas ? `
+                    ${cert.hours ? `
                     <div class="flex items-center text-xs text-gray-600 dark:text-gray-400">
                         <i class="fa-regular fa-clock w-4 text-center text-[#F58830] mr-2"></i>
-                        <span>${cert.horas} horas académicas</span>
+                        <span>${cert.hours} horas académicas</span>
                     </div>` : ''}
                 </div>
 
-                <a href="${DOWNLOAD_URL_BASE}/${esc(cert.hash_verificacion)}/download/" target="_blank"
+                <a href="${DOWNLOAD_URL_BASE}/${esc(cert.verification_hash)}/download/" target="_blank"
                     class="w-full bg-[#162054] hover:bg-[#0d1740] dark:bg-[#F58830] dark:hover:bg-[#e07820] text-white text-xs font-bold py-3 px-4 rounded-xl text-center transition-colors flex items-center justify-center gap-2 uppercase tracking-wider shadow-md">
                     <i class="fa-solid fa-download"></i> Descargar PDF
                 </a>
@@ -122,14 +122,12 @@
                 return;
             }
 
-            // Header
+            // Header — resultados de búsqueda (NO es login; se selecciona el certificado)
             header.classList.remove('hidden');
-            const first = results[0];
-            const nombre = `${first.nombres} ${first.apellidos}`.trim();
             document.getElementById('results-title').innerHTML =
-                `Hola,<br><span class="text-[#F58830]">${esc(nombre)}</span>`;
+                `Resultados para<br><span class="text-[#F58830]">"${esc(query)}"</span>`;
             document.getElementById('results-summary').innerHTML =
-                `Encontramos <span class="inline-flex items-center justify-center min-w-[2rem] h-7 px-2 rounded-lg bg-[#F58830]/15 text-[#F58830] font-extrabold mx-1">${total}</span> certificado${total > 1 ? 's' : ''} asociado${total > 1 ? 's' : ''} a tu búsqueda.`;
+                `Encontramos <span class="inline-flex items-center justify-center min-w-[2rem] h-7 px-2 rounded-lg bg-[#F58830]/15 text-[#F58830] font-extrabold mx-1">${total}</span> certificado${total > 1 ? 's' : ''}. Seleccioná el tuyo y descargalo.`;
 
             if (total > 1) {
                 document.getElementById('zip-action').classList.remove('hidden');
