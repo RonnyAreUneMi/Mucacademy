@@ -10,8 +10,7 @@ Args:
     show_banner         (bool) muestra el banner si existe (default True)
 
 Uso:
-    {% include 'public/_partials/_session_summary.html' with
-        sesion=sesion cupos=cupos capacidad_ilimitada=capacidad_ilimitada %}
+    {% include 'public/_partials/_session_summary.html' with sesion=sesion cupos=cupos capacidad_ilimitada=capacidad_ilimitada %}
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}
 {% if sesion.banner_image and show_banner|default:True %}

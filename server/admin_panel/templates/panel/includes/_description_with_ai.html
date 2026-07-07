@@ -2,10 +2,7 @@
 Componente reutilizable: textarea de descripción con CKEditor 5 + asistente Betto (IA).
 
 Uso:
-    {% include 'panel/includes/_description_with_ai.html' with
-        title_input_name='titulo'
-        description_name='descripcion'
-        description_value=sesion.descripcion %}
+    {% include 'panel/includes/_description_with_ai.html' with title_input_name='titulo' description_name='descripcion' description_value=sesion.descripcion %}
 
 Args:
     title_input_name: name del input que tiene el título del evento (default: 'titulo')

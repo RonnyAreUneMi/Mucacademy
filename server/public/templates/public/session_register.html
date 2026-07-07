@@ -10,11 +10,7 @@
     {% if cupos == 0 and not capacidad_ilimitada %}
 
         {# Sin cupos: empty state amigable #}
-        {% include 'public/_components/_empty_state.html' with
-            icon='fa-circle-xmark'
-            title='Sesión sin cupos'
-            text='Lo sentimos, esta sesión ya alcanzó su capacidad máxima. Vuelve a la lista de eventos para ver otros disponibles.'
-            cta_url='/eventos/' cta_label='Ver otros eventos' cta_icon='fa-calendar-days' %}
+        {% include 'public/_components/_empty_state.html' with icon='fa-circle-xmark' title='Sesión sin cupos' text='Lo sentimos, esta sesión ya alcanzó su capacidad máxima. Vuelve a la lista de eventos para ver otros disponibles.' cta_url='/eventos/' cta_label='Ver otros eventos' cta_icon='fa-calendar-days' %}
 
     {% else %}
 
@@ -94,12 +90,7 @@
                         </div>
                     </div>
 
-                    {% include 'public/_components/_button.html' with
-                        id='btn-confirm-existing'
-                        variant='success' icon='fa-check-double'
-                        label='Usar estos datos y registrarme'
-                        full=True extra='mt-3'
-                        onclick='confirmExisting()' %}
+                    {% include 'public/_components/_button.html' with id='btn-confirm-existing' variant='success' icon='fa-check-double' label='Usar estos datos y registrarme' full=True extra='mt-3' onclick='confirmExisting()' %}
                 </div>
             </div>
 

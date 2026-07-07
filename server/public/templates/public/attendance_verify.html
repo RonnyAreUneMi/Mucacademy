@@ -12,20 +12,11 @@
 
     {% if no_query %}
 
-        {% include 'public/_components/_empty_state.html' with
-            icon='fa-magnifying-glass'
-            title='Ingresa un término de búsqueda'
-            text='Por favor, vuelve al buscador e ingresa tu cédula, correo o nombre.'
-            cta_url=request.scheme|add:'://'|add:request.get_host|add:'/attendance/search/'
-            cta_label='Volver al buscador' cta_icon='fa-arrow-left' %}
+        {% include 'public/_components/_empty_state.html' with icon='fa-magnifying-glass' title='Ingresa un término de búsqueda' text='Por favor, vuelve al buscador e ingresa tu cédula, correo o nombre.' cta_url=request.scheme|add:'://'|add:request.get_host|add:'/attendance/search/' cta_label='Volver al buscador' cta_icon='fa-arrow-left' %}
 
     {% elif total_resultados == 0 %}
 
-        {% include 'public/_components/_empty_state.html' with
-            icon='fa-user-xmark'
-            title='No se encontraron resultados'
-            text='Verifica que tu cédula, correo o nombre estén escritos correctamente.'
-            cta_url='/attendance/search/' cta_label='Buscar nuevamente' cta_icon='fa-magnifying-glass' %}
+        {% include 'public/_components/_empty_state.html' with icon='fa-user-xmark' title='No se encontraron resultados' text='Verifica que tu cédula, correo o nombre estén escritos correctamente.' cta_url='/attendance/search/' cta_label='Buscar nuevamente' cta_icon='fa-magnifying-glass' %}
 
     {% elif persona %}
 

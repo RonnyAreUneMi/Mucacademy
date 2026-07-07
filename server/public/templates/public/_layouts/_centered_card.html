@@ -14,10 +14,7 @@ Después del include va el contenido extra como children — pero como Django no
 permite block en includes, dejamos el "trailing" para que el template padre
 abra la card y la cierre. Usar así:
 
-{% include 'public/_layouts/_centered_card.html' with
-    icon='fa-shield-halved' icon_color='danger'
-    title='Acceso denegado'
-    subtitle='No tenés permisos para ver esto.' %}
+{% include 'public/_layouts/_centered_card.html' with icon='fa-shield-halved' icon_color='danger' title='Acceso denegado' subtitle='No tenés permisos para ver esto.' %}
 {# después del include podés agregar más bloques HTML que aparecerán en main #}
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}

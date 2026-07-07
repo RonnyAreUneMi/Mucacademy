@@ -10,8 +10,7 @@ Args:
     text_html (str)     HTML opcional en lugar de text (para usar <strong> etc)
 
 Uso:
-    {% include 'public/_components/_step_card.html' with number=1 color='blue'
-        title='Asiste al seminario' text='Participa activamente en la ponencia.' %}
+    {% include 'public/_components/_step_card.html' with number=1 color='blue' title='Asiste al seminario' text='Participa activamente en la ponencia.' %}
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}
 {% with c=color|default:'primary' %}

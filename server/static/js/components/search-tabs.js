@@ -56,9 +56,75 @@
         });
     }
 
+    // ── Autocomplete de certificados (dropdown de coincidencias) ──────────
+    function initCertAutocomplete() {
+        const input = document.getElementById('qCerts');
+        const box = document.getElementById('certSuggest');
+        const form = document.getElementById('searchCerts');
+        if (!input || !box || !form) return;
+
+        let timer = null, items = [], active = -1;
+
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s == null ? '' : String(s);
+            return d.innerHTML;
+        }
+        function hide() { box.classList.add('hidden'); box.innerHTML = ''; active = -1; }
+        function render(names) {
+            items = names;
+            if (!names.length) { hide(); return; }
+            box.innerHTML = names.map((n, i) =>
+                `<button type="button" role="option" data-i="${i}" class="cert-suggest-item">
+                    <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+                    <span class="truncate">${esc(n)}</span>
+                 </button>`).join('');
+            box.classList.remove('hidden');
+        }
+        function choose(i) {
+            if (i < 0 || i >= items.length) return;
+            input.value = items[i];
+            hide();
+            form.submit();
+        }
+
+        async function fetchSuggest(q) {
+            try {
+                const r = await fetch(`/api/v1/public/certificates/autocomplete/?q=${encodeURIComponent(q)}`);
+                const d = await r.json();
+                render((d.results || []).map(x => x.name).filter(Boolean).slice(0, 8));
+            } catch { hide(); }
+        }
+
+        input.addEventListener('input', () => {
+            const q = input.value.trim();
+            clearTimeout(timer);
+            if (q.length < 2) { hide(); return; }
+            timer = setTimeout(() => fetchSuggest(q), 180);
+        });
+        box.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-i]');
+            if (btn) choose(+btn.dataset.i);
+        });
+        input.addEventListener('keydown', (e) => {
+            if (box.classList.contains('hidden')) return;
+            const opts = Array.from(box.querySelectorAll('[data-i]'));
+            if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, opts.length - 1); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); }
+            else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); choose(active); return; }
+            else if (e.key === 'Escape') { hide(); return; }
+            else return;
+            opts.forEach((o, i) => o.classList.toggle('is-active', i === active));
+            if (opts[active]) opts[active].scrollIntoView({ block: 'nearest' });
+        });
+        document.addEventListener('click', (e) => { if (!form.contains(e.target)) hide(); });
+    }
+
+    function init() { initSearchTabs(); initCertAutocomplete(); }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initSearchTabs);
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        initSearchTabs();
+        init();
     }
 })();

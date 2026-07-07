@@ -4,11 +4,8 @@
 {% block content %}
 <div class="max-w-6xl mx-auto py-8 md:py-12 px-4">
 
-    {# Header — usa el componente reutilizable #}
-    {% include 'public/_components/_section_header.html' with
-        eyebrow='Eventos próximos'
-        title='Eventos disponibles'
-        subtitle='Inscríbete en los próximos seminarios, talleres y capacitaciones de CertifAI.' %}
+    {# Header — usa el componente reutilizable (tag en UNA sola línea: Django no soporta tags multilínea) #}
+    {% include 'public/_components/_section_header.html' with eyebrow='Eventos próximos' title='Eventos disponibles' subtitle='Inscríbete en los próximos seminarios, talleres y capacitaciones de CertifAI.' %}
 
     {# Loader inicial #}
     <div id="loading-state" class="text-center py-12">
@@ -23,10 +20,7 @@
 
     {# Empty state si no hay próximos #}
     <div id="empty-upcoming" class="hidden">
-        {% include 'public/_components/_empty_state.html' with
-            icon='fa-calendar-xmark'
-            title='No hay eventos próximos'
-            text='Vuelve pronto para ver los próximos seminarios, talleres y capacitaciones.' %}
+        {% include 'public/_components/_empty_state.html' with icon='fa-calendar-xmark' title='No hay eventos próximos' text='Vuelve pronto para ver los próximos seminarios, talleres y capacitaciones.' %}
     </div>
 
     {# Eventos pasados #}
@@ -43,11 +37,7 @@
 
     {# Sin nada #}
     <div id="empty-all" class="hidden">
-        {% include 'public/_components/_empty_state.html' with
-            icon='fa-house'
-            title='Aún no hay eventos'
-            text='Volveremos pronto con nuevas oportunidades de capacitación.'
-            cta_url='/' cta_label='Ir al inicio' cta_icon='fa-arrow-left' %}
+        {% include 'public/_components/_empty_state.html' with icon='fa-house' title='Aún no hay eventos' text='Volveremos pronto con nuevas oportunidades de capacitación.' cta_url='/' cta_label='Ir al inicio' cta_icon='fa-arrow-left' %}
     </div>
 </div>
 

@@ -17,8 +17,7 @@ Args:
     id       (str)  id HTML del elemento (útil para hacer toggle desde JS)
 
 Uso:
-    {% include 'public/_components/_button.html' with
-        variant='primary' icon='fa-user-plus' label='Inscribirme' url='/sesion/5/registro/' %}
+    {% include 'public/_components/_button.html' with variant='primary' icon='fa-user-plus' label='Inscribirme' url='/sesion/5/registro/' %}
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}
 {% with v=variant|default:'primary' s=size|default:'md' %}
