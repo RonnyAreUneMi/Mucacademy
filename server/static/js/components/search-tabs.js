@@ -70,7 +70,9 @@
             d.textContent = s == null ? '' : String(s);
             return d.innerHTML;
         }
-        function hide() { box.classList.add('hidden'); box.innerHTML = ''; active = -1; }
+        // Usamos style.display (no clases) para evitar conflictos con utilidades CSS.
+        function hide() { box.style.display = 'none'; box.innerHTML = ''; active = -1; }
+        function isOpen() { return box.style.display === 'block'; }
         function render(names) {
             items = names;
             if (!names.length) { hide(); return; }
@@ -80,12 +82,21 @@
                     <span class="truncate">${esc(n)}</span>
                  </button>`).join('');
             box.classList.remove('hidden');
+            box.style.display = 'block';
         }
         function choose(i) {
             if (i < 0 || i >= items.length) return;
             input.value = items[i];
             hide();
             form.submit();
+        }
+
+        // Privacidad: si es cédula (solo dígitos) se busca SOLO con los 10 dígitos
+        // completos (evita filtrar info por coincidencias parciales de cédula).
+        // Por nombre, basta con 2+ caracteres.
+        function queryReady(q) {
+            if (/^\d+$/.test(q)) return q.length === 10;
+            return q.replace(/\s+/g, '').length >= 2;
         }
 
         async function fetchSuggest(q) {
@@ -99,15 +110,15 @@
         input.addEventListener('input', () => {
             const q = input.value.trim();
             clearTimeout(timer);
-            if (q.length < 2) { hide(); return; }
-            timer = setTimeout(() => fetchSuggest(q), 180);
+            if (!queryReady(q)) { hide(); return; }
+            timer = setTimeout(() => fetchSuggest(q), 160);
         });
-        box.addEventListener('click', (e) => {
+        box.addEventListener('mousedown', (e) => {
             const btn = e.target.closest('[data-i]');
-            if (btn) choose(+btn.dataset.i);
+            if (btn) { e.preventDefault(); choose(+btn.dataset.i); }
         });
         input.addEventListener('keydown', (e) => {
-            if (box.classList.contains('hidden')) return;
+            if (!isOpen()) return;
             const opts = Array.from(box.querySelectorAll('[data-i]'));
             if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, opts.length - 1); }
             else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); }
