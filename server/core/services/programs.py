@@ -71,8 +71,7 @@ def _set_program_header_logo(batch: CertificateBatch) -> None:
     batch.save()
 
 
-# `body_text` se excluye a propósito: el cuerpo del programa usa {programa}/{horas},
-# que no existen en el certificado de seminario. Los seminarios conservan su default.
+# body_text excluido: los seminarios conservan su cuerpo por defecto.
 DESIGN_FIELDS = (
     'customize_design', 'template',
     'color_primary', 'color_secondary', 'color_tertiary', 'color_text',
