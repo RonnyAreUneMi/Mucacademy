@@ -1,0 +1,201 @@
+{% extends 'public/account/_base.html' %}
+{% block page_title %}{{ ev.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-5">
+
+    <!-- Volver -->
+    <a href="{{ back_url }}"
+       class="inline-flex items-center gap-2 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-[var(--ds-brand)] transition-colors">
+        <i class="fa-solid fa-arrow-left"></i> Volver
+    </a>
+
+    <!-- Encabezado -->
+    <div class="lg-card rounded-3xl p-5 sm:p-6">
+        <p class="text-[10px] font-black uppercase tracking-widest text-[var(--ds-brand)] mb-1">
+            <i class="fa-solid fa-clipboard-question"></i> Evaluación
+        </p>
+        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+            {{ ev.title }}
+        </h1>
+        {% if ev.description %}
+        <p class="text-sm text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed">{{ ev.description }}</p>
+        {% endif %}
+        <div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 mt-3">
+            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-award text-[var(--ds-brand)]"></i> Aprobás con {{ ev.pass_threshold }}%</span>
+            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-list-ol"></i> {{ ev.draw_size }} pregunta{{ ev.draw_size|pluralize:'s' }}</span>
+            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-rotate"></i> Intento {{ attempts_used|add:'1' }} de {{ attempts_allowed }}</span>
+        </div>
+    </div>
+
+    {% if mode == 'form' %}
+    <!-- ═══════════ Formulario de preguntas ═══════════ -->
+    <form method="post" action="{% url 'public:account_evaluacion' ev.id %}" class="space-y-4" id="evalForm">
+        {% csrf_token %}
+        <input type="hidden" name="presented" value="{{ presented_ids }}">
+
+        {% for q in questions %}
+        <div class="lg-card rounded-2xl p-5" data-qid="{{ q.id }}">
+            <div class="flex items-start gap-3 mb-3">
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-black flex-shrink-0
+                             bg-[var(--ds-brand)]/12 text-[var(--ds-brand-dark)] dark:text-[var(--ds-brand)]">
+                    {{ forloop.counter }}
+                </span>
+                <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-snug">{{ q.text }}</h3>
+            </div>
+            <div class="space-y-2 pl-10">
+                {% for opt in q.options %}
+                <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer border border-slate-200/70 dark:border-white/10
+                              bg-white/50 dark:bg-white/[0.03] hover:border-[var(--ds-brand)]/60 hover:bg-[var(--ds-brand)]/5
+                              transition-all has-[:checked]:border-[var(--ds-brand)] has-[:checked]:bg-[var(--ds-brand)]/10">
+                    <input type="radio" name="q_{{ q.id }}" value="{{ forloop.counter0 }}" required
+                           class="w-4 h-4 accent-[var(--ds-brand)] flex-shrink-0">
+                    <span class="text-sm text-slate-700 dark:text-slate-200">{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <button type="submit"
+                class="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-black text-white
+                       bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)]
+                       shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_20px_-6px_rgba(245,136,48,0.45)]
+                       hover:brightness-110 transition-all">
+            <i class="fa-solid fa-paper-plane"></i> Enviar respuestas
+        </button>
+        <p class="text-center text-[11px] text-slate-400 dark:text-slate-500">
+            Al enviar se registra un intento. Respondé todas las preguntas antes de enviar.
+        </p>
+    </form>
+
+    {% elif mode == 'result' %}
+    <!-- ═══════════ Resultado ═══════════ -->
+    <div class="lg-card rounded-3xl p-6 text-center overflow-hidden relative">
+        <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center text-3xl mb-3
+                    {% if passed %}bg-emerald-500/15 text-emerald-500{% else %}bg-red-500/15 text-red-500{% endif %}">
+            <i class="fa-solid {% if passed %}fa-circle-check{% else %}fa-circle-xmark{% endif %}"></i>
+        </div>
+        <p class="text-4xl font-black tracking-tight {% if passed %}text-emerald-500{% else %}text-red-500{% endif %}">
+            {{ result.score }}%
+        </p>
+        <p class="text-sm font-bold text-slate-700 dark:text-slate-200 mt-1">
+            {% if passed %}¡Aprobaste! Superaste el {{ ev.pass_threshold }}% requerido.{% else %}No alcanzaste el {{ ev.pass_threshold }}% requerido.{% endif %}
+        </p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Acertaste {{ result.correct }} de {{ result.total }} pregunta{{ result.total|pluralize:'s' }}.
+        </p>
+
+        {% if passed %}
+        <div class="flex items-center justify-center gap-2 rounded-2xl bg-emerald-500/10 ring-1 ring-emerald-500/20 py-3 mt-4 text-xs font-bold text-emerald-600 dark:text-emerald-300">
+            <i class="fa-solid fa-certificate"></i> Tu certificado se emitió automáticamente.
+        </div>
+        {% endif %}
+
+        <div class="flex items-center justify-center gap-2 flex-wrap mt-4">
+            {% if can_retry %}
+            <a href="{% url 'public:account_evaluacion' ev.id %}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
+                      bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
+                      text-slate-700 dark:text-slate-200 hover:text-[var(--ds-brand)] transition-all">
+                <i class="fa-solid fa-rotate-right"></i> Volver a intentar
+            </a>
+            {% endif %}
+            {% if passed %}
+            <a href="{% url 'public:account_certificados' %}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black text-white
+                      bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)] hover:brightness-110 transition-all">
+                <i class="fa-solid fa-certificate"></i> Ver mis certificados
+            </a>
+            {% endif %}
+            <a href="{{ back_url }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
+                      bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
+                      text-slate-700 dark:text-slate-200 hover:text-[var(--ds-brand)] transition-all">
+                <i class="fa-solid fa-layer-group"></i> Volver al programa
+            </a>
+        </div>
+    </div>
+
+    <!-- Revisión por pregunta -->
+    <div class="space-y-3">
+        <h2 class="text-sm font-black uppercase tracking-wide text-slate-500 dark:text-slate-400 px-1">
+            <i class="fa-solid fa-list-check"></i> Revisión
+        </h2>
+        {% for r in review %}
+        <div class="lg-card rounded-2xl p-5">
+            <div class="flex items-start gap-3">
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-[13px] flex-shrink-0
+                             {% if r.is_correct %}bg-emerald-500/15 text-emerald-500{% else %}bg-red-500/15 text-red-500{% endif %}">
+                    <i class="fa-solid {% if r.is_correct %}fa-check{% else %}fa-xmark{% endif %}"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-bold text-sm text-slate-900 dark:text-white leading-snug">{{ r.text }}</h3>
+                    <div class="space-y-1.5 mt-2.5">
+                        {% for opt in r.options %}
+                        {% if forloop.counter0 == r.correct_idx %}
+                        <div class="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-300">
+                            <i class="fa-solid fa-circle-check"></i> {{ opt }}
+                            <span class="text-[10px] font-bold uppercase tracking-wide opacity-70">Correcta</span>
+                        </div>
+                        {% elif forloop.counter0 == r.chosen_idx %}
+                        <div class="flex items-center gap-2 text-xs font-semibold text-red-500 dark:text-red-300">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ opt }}
+                            <span class="text-[10px] font-bold uppercase tracking-wide opacity-70">Tu respuesta</span>
+                        </div>
+                        {% else %}
+                        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                            <i class="fa-regular fa-circle text-[10px]"></i> {{ opt }}
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if r.explanation %}
+                    <div class="flex items-start gap-2 rounded-xl bg-[var(--ds-brand)]/8 ring-1 ring-[var(--ds-brand)]/15 p-2.5 mt-3">
+                        <i class="fa-solid fa-lightbulb text-[var(--ds-brand)] text-xs mt-0.5"></i>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{{ r.explanation }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- ═══════════ Sin intentos disponibles ═══════════ -->
+    <div class="lg-card rounded-3xl p-6 text-center">
+        <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center text-3xl mb-3
+                    {% if passed %}bg-emerald-500/15 text-emerald-500{% else %}bg-slate-400/15 text-slate-400{% endif %}">
+            <i class="fa-solid {% if passed %}fa-circle-check{% else %}fa-ban{% endif %}"></i>
+        </div>
+        {% if passed %}
+        <p class="text-lg font-black text-emerald-500">Ya aprobaste esta evaluación</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">Tu mejor puntaje fue <strong>{{ best_score }}%</strong>. El certificado ya se emitió.</p>
+        {% else %}
+        <p class="text-lg font-black text-slate-700 dark:text-slate-200">Sin intentos disponibles</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
+            Usaste tus {{ attempts_allowed }} intento{{ attempts_allowed|pluralize:'s' }}.
+            {% if best_score is not None %}Tu mejor puntaje fue <strong>{{ best_score }}%</strong>.{% endif %}
+        </p>
+        {% endif %}
+        <div class="flex items-center justify-center gap-2 flex-wrap mt-4">
+            {% if passed %}
+            <a href="{% url 'public:account_certificados' %}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black text-white
+                      bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)] hover:brightness-110 transition-all">
+                <i class="fa-solid fa-certificate"></i> Ver mis certificados
+            </a>
+            {% endif %}
+            <a href="{{ back_url }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
+                      bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
+                      text-slate-700 dark:text-slate-200 hover:text-[var(--ds-brand)] transition-all">
+                <i class="fa-solid fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -23,7 +23,7 @@ from django.utils import timezone
 
 from core.models import (
     Participant, Program, Event, Speaker, Enrollment, Attendance,
-    CertificateBatch, Certificate, Signature,
+    Certificate, Signature,
 )
 from core.models.evaluations import (
     Evaluation, Question, EvaluationAttempt, QuestionKind, QuestionSource,
@@ -391,31 +391,7 @@ class Command(BaseCommand):
         return attempt
 
     def _issue_seminar_certificate(self, ev, participante, program):
-        lote = ev.batch
-        if lote is None:
-            lote = CertificateBatch.objects.create(name=ev.title, faculty=program.faculty)
-            applied = program_service.apply_program_design(program, lote)
-            if not applied:
-                firmas = list(Signature.objects.filter(is_active=True).order_by('sort_order')[:3])
-                for i, firma in enumerate(firmas, start=1):
-                    setattr(lote, f'signature_inst_{i}', firma)
-                lote.save()
-            ev.batch = lote
-            ev.save(update_fields=['batch'])
-
-        Certificate.objects.get_or_create(
-            batch=lote, participant=participante,
-            defaults=dict(
-                national_id=participante.national_id,
-                first_name=participante.first_name,
-                last_name=participante.last_name,
-                email=participante.email,
-                phone=participante.phone,
-                course=(ev.title or lote.name).upper(),
-                course_date=ev.date,
-                hours=ev.hours or 0,
-            ),
-        )
+        program_service.issue_seminar_certificate(ev, participante)
 
     # ───────────────────────────────────────────────────────────────────
     def _reset(self, email):

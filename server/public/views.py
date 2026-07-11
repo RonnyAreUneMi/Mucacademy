@@ -4,11 +4,14 @@ Todo se sirve aquí con templates en `public/account/`. Las acciones que
 mutan estado (registro, certificados, etc.) tienen forms server-rendered
 para evitar la dependencia de JS al inicio.
 """
+import random
+
 from django.conf import settings
 from django.contrib import messages
 from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils.text import slugify
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
@@ -16,6 +19,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from core.models import (
     Certificate,
     Enrollment,
+    Evaluation,
     ProcessingStatus,
     QuizAttempt,
     Participant,
@@ -25,6 +29,7 @@ from core.models import (
     Event,
     Program,
 )
+from core.services import evaluations as eval_service
 from public.services import auth as account_auth
 from public.services import google_auth as gsignin
 from core.services.email import sender as email_sender
@@ -202,18 +207,23 @@ def dashboard(request):
     for s in sesiones_mes:
         d = s.date.day
         slot = cal_days.setdefault(d, {'inscrito': 0, 'disponible': 0, 'asisti': 0, 'eventos': []})
+        if s.id in eventos_asistido_ids:
+            estado, estado_label = 'asisti', 'Asistí'
+        elif s.id in eventos_inscrito_ids:
+            estado, estado_label = 'inscrito', 'Inscrito'
+        else:
+            estado, estado_label = 'disponible', 'Disponible'
         slot['eventos'].append({
             'id': s.id,
             'titulo': s.title or s.day_of_week,
-            'hora': s.start_time.strftime('%H:%M'),
+            'hora': s.start_time.strftime('%H:%M') if s.start_time else '',
+            'hora_fin': s.end_time.strftime('%H:%M') if s.end_time else '',
             'es_virtual': s.is_virtual,
+            'modalidad': 'Virtual' if s.is_virtual else 'Presencial',
+            'estado': estado,
+            'estado_label': estado_label,
         })
-        if s.id in eventos_asistido_ids:
-            slot['asisti'] += 1
-        elif s.id in eventos_inscrito_ids:
-            slot['inscrito'] += 1
-        else:
-            slot['disponible'] += 1
+        slot[estado] += 1
 
     # Build calendar weeks structure for the template
     cal_weeks = []
@@ -234,6 +244,8 @@ def dashboard(request):
                     'eventos': info.get('eventos', []),
                 })
         cal_weeks.append(cal_week)
+
+    cal_events = {str(day): info['eventos'] for day, info in cal_days.items()}
 
     meses_es = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
@@ -288,6 +300,7 @@ def dashboard(request):
         'programas_recomendados': _programs_feed(participant=p, enrolled=False)[:3],
         # Calendar
         'cal_weeks': cal_weeks,
+        'cal_events': cal_events,
         'cal_year': year,
         'cal_month_name': meses_es[month - 1],
         'highlight_day': highlight_day,
@@ -491,16 +504,33 @@ def programa_detalle_view(request, program_id: int):
     if prog is None:
         raise Http404
 
+    enrolled_event_ids = set(
+        Enrollment.objects.filter(participant=p, event__program=prog)
+        .values_list('event_id', flat=True)
+    )
+
     card = _program_card_data(prog)
     seminarios = []
     for c in card['cursos']:
         ev = getattr(c, 'evaluation', None)
         cskills = c.skills or []
-        seminarios.append({
+        ev_active = bool(ev and ev.is_active)
+        enrolled = c.id in enrolled_event_ids
+        item = {
             'e': c,
-            'min_grade': ev.pass_threshold if (ev and ev.is_active) else None,
+            'min_grade': ev.pass_threshold if ev_active else None,
             'skill': cskills[0] if cskills else None,
-        })
+            'ev': ev if ev_active else None,
+            'enrolled': enrolled,
+            'has_eval': ev_active and ev.question_count > 0,
+            'passed': ev_active and ev.passed_by(p),
+            'can_attempt': ev_active and ev.can_attempt(p) and ev.question_count > 0,
+            'attempts_used': ev.attempts_used_by(p) if ev_active else 0,
+            'attempts_allowed': ev.attempts_allowed_for(p) if ev_active else 0,
+        }
+        best = ev.best_attempt_for(p) if ev_active else None
+        item['best_score'] = round(best.score, 1) if best else None
+        seminarios.append(item)
 
     inscrito = Enrollment.objects.filter(participant=p, event__program=prog).exists()
 
@@ -528,6 +558,116 @@ def programa_inscribir(request, program_id: int):
     program_service.enroll_participant_in_program(prog, p)
     messages.success(request, f'Te inscribiste al programa "{prog.name}". Ya estás en todos sus seminarios.')
     return redirect('public:account_programa_detalle', program_id=prog.id)
+
+
+# ════════════════════════════════════════════════════════════════
+# Rendir evaluación (web, server-rendered) — mismo grading que la API
+# ════════════════════════════════════════════════════════════════
+
+def _can_access_eval(participant, ev) -> bool:
+    """Acceso por inscripción: al seminario, o a >=1 seminario del programa."""
+    enrolled_ids = set(
+        Enrollment.objects.filter(participant=participant).values_list('event_id', flat=True)
+    )
+    if ev.event_id:
+        return ev.event_id in enrolled_ids
+    if ev.program_id:
+        course_ids = set(ev.program.active_courses.values_list('id', flat=True))
+        return bool(enrolled_ids & course_ids)
+    return False
+
+
+def _eval_back_url(ev) -> str:
+    if ev.event_id and ev.event.program_id:
+        return reverse('public:account_programa_detalle', args=[ev.event.program_id])
+    if ev.program_id:
+        return reverse('public:account_programa_detalle', args=[ev.program_id])
+    return reverse('public:account_eventos')
+
+
+@account_auth.login_required
+@require_http_methods(['GET', 'POST'])
+def evaluacion_view(request, evaluation_id: int):
+    """Rinde una evaluación desde la web (mismo grading y auto-emisión que la API)."""
+    p: Participant = request.participant
+    ev = (Evaluation.objects
+          .select_related('program', 'event', 'event__program')
+          .filter(pk=evaluation_id, is_active=True)
+          .first())
+    if ev is None:
+        raise Http404
+
+    if not _can_access_eval(p, ev):
+        messages.error(request, 'Necesitás estar inscrito para rendir esta evaluación.')
+        return redirect('public:account_programas')
+
+    back_url = _eval_back_url(ev)
+
+    if request.method == 'POST':
+        if not ev.can_attempt(p):
+            messages.error(request, 'No te quedan intentos disponibles para esta evaluación.')
+            return redirect('public:account_evaluacion', evaluation_id=ev.id)
+
+        presented = [x for x in request.POST.get('presented', '').split(',') if x]
+        answers = {}
+        for qid in presented:
+            try:
+                answers[qid] = int(request.POST.get(f'q_{qid}'))
+            except (TypeError, ValueError):
+                answers[qid] = -1
+
+        result = eval_service.grade_and_record(ev, p, answers)
+        if result is None:
+            messages.error(request, 'No se recibieron respuestas válidas.')
+            return redirect('public:account_evaluacion', evaluation_id=ev.id)
+
+        q_by_id = {q.id: q for q in ev.active_questions}
+        review = []
+        for d in result['detail']:
+            q = q_by_id.get(d['question_id'])
+            if q is None:
+                continue
+            review.append({
+                'text': q.text,
+                'options': q.options or [],
+                'chosen_idx': d['chosen_idx'],
+                'correct_idx': d['correct_idx'],
+                'is_correct': d['is_correct'],
+                'explanation': d['explanation'],
+            })
+
+        return render(request, 'public/account/evaluacion.html', {
+            'p': p, 'ev': ev, 'mode': 'result',
+            'result': result, 'review': review, 'passed': result['passed'],
+            'back_url': back_url,
+            'can_retry': ev.can_attempt(p) and not result['passed'],
+        })
+
+    if not ev.can_attempt(p):
+        best = ev.best_attempt_for(p)
+        return render(request, 'public/account/evaluacion.html', {
+            'p': p, 'ev': ev, 'mode': 'blocked',
+            'passed': ev.passed_by(p),
+            'best_score': round(best.score, 1) if best else None,
+            'attempts_used': ev.attempts_used_by(p),
+            'attempts_allowed': ev.attempts_allowed_for(p),
+            'back_url': back_url,
+        })
+
+    questions = list(ev.active_questions)
+    if ev.shuffle_questions:
+        random.shuffle(questions)
+    if ev.draw_size and ev.draw_size < len(questions):
+        questions = questions[:ev.draw_size]
+
+    return render(request, 'public/account/evaluacion.html', {
+        'p': p, 'ev': ev, 'mode': 'form',
+        'questions': questions,
+        'presented_ids': ','.join(str(q.id) for q in questions),
+        'attempts_used': ev.attempts_used_by(p),
+        'attempts_allowed': ev.attempts_allowed_for(p),
+        'back_url': back_url,
+    })
 
 
 @account_auth.login_required

@@ -165,6 +165,73 @@
     .cal-dot.d-disponible { background: #cbd5e1; }
     .dark .cal-dot.d-disponible { background: #64748b; }
 
+    /* días con eventos son interactivos */
+    .cal-day.has-events { cursor: pointer; }
+    .cal-day.is-selected .day-num {
+        box-shadow: 0 0 0 2px var(--ds-brand);
+    }
+
+    /* ═══════════ Popover de detalle de día ═══════════ */
+    .cal-pop-backdrop {
+        position: fixed; inset: 0; z-index: 60;
+        background: rgba(15,23,42,0.28);
+        backdrop-filter: blur(2px);
+        opacity: 0; pointer-events: none;
+        transition: opacity .2s;
+    }
+    .cal-pop-backdrop.is-open { opacity: 1; pointer-events: auto; }
+    .cal-pop {
+        position: fixed; z-index: 61;
+        width: min(320px, calc(100vw - 24px));
+        max-height: 60vh; overflow-y: auto;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(28px) saturate(180%);
+        -webkit-backdrop-filter: blur(28px) saturate(180%);
+        border: 1px solid rgba(255,255,255,0.7);
+        box-shadow: 0 18px 44px -10px rgba(15,23,42,0.30), inset 0 1px 0 rgba(255,255,255,0.8);
+        padding: 14px;
+        opacity: 0; transform: translateY(6px) scale(0.98);
+        pointer-events: none;
+        transition: opacity .2s, transform .22s cubic-bezier(.34,1.56,.64,1);
+    }
+    .dark .cal-pop {
+        background: rgba(21,36,72,0.94);
+        border-color: rgba(255,255,255,0.10);
+        box-shadow: 0 18px 44px -10px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    .cal-pop.is-open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+    .cal-pop-title {
+        font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+        color: var(--ds-brand); margin-bottom: 10px;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .cal-pop-item {
+        display: flex; align-items: flex-start; gap: 10px;
+        padding: 9px 0;
+        border-top: 1px solid rgba(15,23,42,0.07);
+    }
+    .dark .cal-pop-item { border-top-color: rgba(255,255,255,0.07); }
+    .cal-pop-item:first-of-type { border-top: 0; }
+    .cal-pop-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .cal-pop-dot.s-asisti     { background: #10B981; }
+    .cal-pop-dot.s-inscrito   { background: var(--ds-brand); }
+    .cal-pop-dot.s-disponible { background: #94a3b8; }
+    .cal-pop-name { font-size: 0.8rem; font-weight: 700; color: #0f172a; line-height: 1.3; }
+    .dark .cal-pop-name { color: #fff; }
+    .cal-pop-meta { font-size: 0.68rem; font-weight: 600; color: #64748b; margin-top: 2px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .dark .cal-pop-meta { color: #94a3b8; }
+    .cal-pop-badge {
+        font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+        padding: 2px 7px; border-radius: 999px; margin-top: 3px; display: inline-block;
+    }
+    .cal-pop-badge.s-asisti     { background: rgba(16,185,129,0.15); color: #059669; }
+    .dark .cal-pop-badge.s-asisti { color: #6EE7B7; }
+    .cal-pop-badge.s-inscrito   { background: rgba(245,136,48,0.15); color: var(--ds-brand-dark); }
+    .dark .cal-pop-badge.s-inscrito { color: var(--ds-brand); }
+    .cal-pop-badge.s-disponible { background: rgba(148,163,184,0.18); color: #64748b; }
+    .dark .cal-pop-badge.s-disponible { color: #94a3b8; }
+
     /* ═══════════ Next event countdown card ═══════════ */
     .countdown-grid {
         display: grid;
@@ -313,7 +380,9 @@
                     {% if d.day %}
                     <div id="day-{{ d.day }}"
                          class="cal-day {% if d.is_today %}is-today{% elif d.is_past %}is-past{% endif %} {% if d.eventos %}has-events{% endif %} {% if highlight_day == d.day %}is-highlight{% endif %}"
-                         {% if d.eventos %}data-tip="{{ d.eventos|length }} evento{{ d.eventos|length|pluralize:'s' }}" data-tip-pos="top"{% endif %}>
+                         {% if d.eventos %}data-day="{{ d.day }}" role="button" tabindex="0"
+                         aria-label="{{ d.day }}: {{ d.eventos|length }} evento{{ d.eventos|length|pluralize:'s' }}"
+                         data-tip="{{ d.eventos|length }} evento{{ d.eventos|length|pluralize:'s' }}" data-tip-pos="top"{% endif %}>
                         <span class="day-num">{{ d.day }}</span>
                         <span class="cal-marks">
                             {% if d.has_asisti %}<span class="cal-dot d-asisti"></span>{% endif %}
@@ -495,9 +564,104 @@
     </section>
 
 </div>
+
+<!-- ═══ Datos + popover del calendario ═══ -->
+{{ cal_events|json_script:"calEventsData" }}
+<div class="cal-pop-backdrop" id="calPopBackdrop" aria-hidden="true"></div>
+<div class="cal-pop" id="calPop" role="dialog" aria-modal="false" aria-label="Detalle del día" aria-hidden="true">
+    <p class="cal-pop-title"><i class="fa-solid fa-calendar-day"></i> <span id="calPopTitle">Día</span></p>
+    <div id="calPopBody"></div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script src="{% static 'js/components/countdown.js' %}"></script>
 <script src="{% static 'js/pages/dashboard.js' %}"></script>
+<script>
+(function () {
+    // ── Popover de detalle del día del calendario ──────────────────
+    const dataEl = document.getElementById('calEventsData');
+    let CAL = {};
+    try { CAL = JSON.parse(dataEl.textContent || '{}'); } catch (e) { CAL = {}; }
+
+    const pop = document.getElementById('calPop');
+    const backdrop = document.getElementById('calPopBackdrop');
+    const titleEl = document.getElementById('calPopTitle');
+    const bodyEl = document.getElementById('calPopBody');
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const MES = "{{ cal_month_name }}";
+    let selectedCell = null;
+
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function itemHtml(ev) {
+        const estado = ev.estado || 'disponible';
+        const hora = ev.hora ? (ev.hora_fin ? (ev.hora + '–' + ev.hora_fin) : ev.hora) : 'Sin hora';
+        const modIcon = ev.es_virtual ? 'fa-video' : 'fa-building';
+        return (
+            '<div class="cal-pop-item">' +
+                '<span class="cal-pop-dot s-' + estado + '"></span>' +
+                '<div class="min-w-0 flex-1">' +
+                    '<p class="cal-pop-name">' + esc(ev.titulo) + '</p>' +
+                    '<div class="cal-pop-meta">' +
+                        '<span><i class="fa-solid fa-clock"></i> ' + esc(hora) + '</span>' +
+                        '<span><i class="fa-solid ' + modIcon + '"></i> ' + esc(ev.modalidad) + '</span>' +
+                    '</div>' +
+                    '<span class="cal-pop-badge s-' + estado + '">' + esc(ev.estado_label) + '</span>' +
+                '</div>' +
+            '</div>'
+        );
+    }
+
+    function openPop(cell) {
+        const day = cell.getAttribute('data-day');
+        const eventos = CAL[day] || [];
+        if (!eventos.length) return;
+        titleEl.textContent = day + ' de ' + MES;
+        bodyEl.innerHTML = eventos.map(itemHtml).join('');
+
+        // Posicionar cerca de la celda, sin salir del viewport.
+        pop.style.visibility = 'hidden';
+        pop.classList.add('is-open');
+        const r = cell.getBoundingClientRect();
+        const pw = pop.offsetWidth, ph = pop.offsetHeight;
+        let left = r.left + r.width / 2 - pw / 2;
+        left = Math.max(12, Math.min(left, window.innerWidth - pw - 12));
+        let top = r.bottom + 8;
+        if (top + ph > window.innerHeight - 12) top = Math.max(12, r.top - ph - 8);
+        pop.style.left = left + 'px';
+        pop.style.top = top + 'px';
+        pop.style.visibility = '';
+
+        backdrop.classList.add('is-open');
+        pop.setAttribute('aria-hidden', 'false');
+        if (selectedCell) selectedCell.classList.remove('is-selected');
+        selectedCell = cell;
+        cell.classList.add('is-selected');
+    }
+
+    function closePop() {
+        pop.classList.remove('is-open');
+        backdrop.classList.remove('is-open');
+        pop.setAttribute('aria-hidden', 'true');
+        if (selectedCell) { selectedCell.classList.remove('is-selected'); selectedCell = null; }
+    }
+
+    document.querySelectorAll('.cal-day[data-day]').forEach(function (cell) {
+        cell.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (cell === selectedCell) { closePop(); } else { openPop(cell); }
+        });
+        cell.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPop(cell); }
+        });
+    });
+    backdrop.addEventListener('click', closePop);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePop(); });
+    window.addEventListener('resize', closePop);
+})();
+</script>
 {% endblock %}

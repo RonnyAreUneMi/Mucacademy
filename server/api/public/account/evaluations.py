@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import random
 
-from django.utils import timezone
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import Evaluation, EvaluationAttempt, Attendance
+from core.models import Evaluation, Enrollment
+from core.services import evaluations as eval_service
 from .authentication import ParticipanteTokenAuthentication
 
 
@@ -21,21 +21,17 @@ class _AuthBase(APIView):
 
 
 def _accessible(participant) -> list:
-    """Evaluaciones activas que el participante puede rendir.
-
-    - De programa: si asistió a al menos un seminario del programa.
-    - De seminario: si asistió a ese seminario.
-    """
-    attended_event_ids = set(
-        Attendance.objects.filter(participant=participant).values_list('event_id', flat=True)
+    """Evaluaciones activas que el participante puede rendir (acceso por inscripción)."""
+    enrolled_event_ids = set(
+        Enrollment.objects.filter(participant=participant).values_list('event_id', flat=True)
     )
     out = []
     for ev in Evaluation.objects.select_related('program', 'event').filter(is_active=True):
         if ev.program_id:
             course_ids = set(ev.program.active_courses.values_list('id', flat=True))
-            if attended_event_ids & course_ids:
+            if enrolled_event_ids & course_ids:
                 out.append(ev)
-        elif ev.event_id and ev.event_id in attended_event_ids:
+        elif ev.event_id and ev.event_id in enrolled_event_ids:
             out.append(ev)
     return out
 
@@ -111,59 +107,17 @@ class EvaluationSubmitView(_AuthBase):
         if not isinstance(answers, dict):
             return Response({'error': 'Formato de respuestas inválido.'}, status=400)
 
-        # Calificar contra el banco (fuente de verdad en el servidor).
-        q_map = {str(q.id): q for q in ev.active_questions}
-        # Preguntas evaluadas = las respondidas que existen en el banco.
-        graded_ids = [qid for qid in answers.keys() if qid in q_map]
-        if not graded_ids:
+        result = eval_service.grade_and_record(ev, p, answers)
+        if result is None:
             return Response({'error': 'No se recibieron respuestas válidas.'}, status=400)
 
-        correct = 0
-        detail = []
-        for qid in graded_ids:
-            q = q_map[qid]
-            try:
-                chosen = int(answers[qid])
-            except (TypeError, ValueError):
-                chosen = -1
-            is_ok = (chosen == q.correct_idx)
-            correct += int(is_ok)
-            detail.append({
-                'question_id': q.id,
-                'chosen_idx': chosen,
-                'correct_idx': q.correct_idx,
-                'is_correct': is_ok,
-                'explanation': q.explanation,
-            })
-
-        total = len(graded_ids)
-        score = round(correct / total * 100, 1) if total else 0.0
-        passed = score >= ev.pass_threshold
-
-        attempt_number = ev.attempts_used_by(p) + 1
-        EvaluationAttempt.objects.create(
-            evaluation=ev, participant=p, attempt_number=attempt_number,
-            answers={k: answers[k] for k in graded_ids},
-            question_ids=[int(x) for x in graded_ids],
-            correct=correct, total=total, score=score, passed=passed,
-            submitted_at=timezone.now(),
-        )
-
-        # Si aprobó y es de programa, quizá completó todo → emitir cert programa.
-        if passed and ev.program_id:
-            try:
-                from core.services import programs as program_service
-                program_service.check_and_issue(ev.program, p)
-            except Exception:
-                pass
-
         return Response({
-            'score': score,
-            'correct': correct,
-            'total': total,
-            'passed': passed,
+            'score': result['score'],
+            'correct': result['correct'],
+            'total': result['total'],
+            'passed': result['passed'],
             'pass_threshold': ev.pass_threshold,
             'attempts_used': ev.attempts_used_by(p),
             'attempts_allowed': ev.attempts_allowed_for(p),
-            'detail': detail,
+            'detail': result['detail'],
         })

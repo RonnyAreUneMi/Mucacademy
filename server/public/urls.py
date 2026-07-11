@@ -33,6 +33,8 @@ urlpatterns = [
          account_views.programa_detalle_view, name='account_programa_detalle'),
     path('cuenta/programas/<int:program_id>/inscribir/',
          account_views.programa_inscribir, name='account_programa_inscribir'),
+    path('cuenta/evaluaciones/<int:evaluation_id>/',
+         account_views.evaluacion_view, name='account_evaluacion'),
     path('cuenta/perfil/',        account_views.perfil_view,       name='account_perfil'),
     path('cuenta/eventos/<int:sesion_id>/inscribir/',
          account_views.evento_inscribir, name='account_evento_inscribir'),

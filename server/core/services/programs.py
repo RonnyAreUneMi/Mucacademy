@@ -71,10 +71,12 @@ def _set_program_header_logo(batch: CertificateBatch) -> None:
     batch.save()
 
 
+# `body_text` se excluye a propósito: el cuerpo del programa usa {programa}/{horas},
+# que no existen en el certificado de seminario. Los seminarios conservan su default.
 DESIGN_FIELDS = (
     'customize_design', 'template',
     'color_primary', 'color_secondary', 'color_tertiary', 'color_text',
-    'body_text', 'signatures_position',
+    'signatures_position',
     'signature_inst_1', 'signature_inst_2', 'signature_inst_3', 'signature_inst_4',
     'header_logo_1', 'header_logo_2', 'header_logo_3',
 )
@@ -129,14 +131,46 @@ def participant_attended_all(program: Program, participant) -> bool:
 
 
 def participant_completed_program(program: Program, participant) -> bool:
-    """True if the participant may receive the program certificate.
-
-    Requisitos (decisión del proyecto): asistió a TODOS los seminarios Y aprobó
-    la evaluación de CADA seminario que tenga una activa (regla por-seminario).
-    """
-    if not participant_attended_all(program, participant):
-        return False
+    """True si aprobó la evaluación de cada seminario (acceso por inscripción, sin asistencia)."""
     return program.certificate_unlocked_for(participant)
+
+
+def issue_seminar_certificate(event, participant, *, administrator=None):
+    """Emite (idempotente) el certificado del seminario. Devuelve (certificate, created)."""
+    from core.models import Event
+
+    with transaction.atomic():
+        ev = Event.objects.select_for_update().get(pk=event.pk)
+        batch = ev.batch
+        if batch is None:
+            batch = CertificateBatch.objects.create(
+                name=ev.title or f'Seminario {ev.date} {ev.label}',
+                administrator=administrator,
+                faculty=(ev.program.faculty if ev.program_id else 'FACI'),
+            )
+            applied = apply_program_design(ev.program, batch) if ev.program_id else False
+            if not applied:
+                _attach_batch_defaults(batch)
+            ev.batch = batch
+            ev.save(update_fields=['batch'])
+
+        cert, created = Certificate.objects.get_or_create(
+            batch=batch,
+            participant=participant,
+            defaults=dict(
+                national_id=participant.national_id or f'GEN-{uuid.uuid4().hex[:8].upper()}',
+                first_name=participant.first_name,
+                last_name=participant.last_name,
+                email=participant.email,
+                phone=participant.phone,
+                course=(ev.title or batch.name).upper(),
+                course_date=ev.date,
+                hours=ev.hours or 0,
+            ),
+        )
+    if created:
+        log.info('Seminar certificate issued: event=%s participant=%s', event.id, participant.id)
+    return cert, created
 
 
 def issue_program_certificate(program: Program, participant, *, administrator=None):

@@ -18,13 +18,15 @@ def _attend(event, participant):
 
 @pytest.mark.django_db
 class TestProgramIssuance:
-    def test_not_complete_until_attended_all(self):
+    def test_not_complete_until_evaluations_passed(self):
+        # Con acceso por inscripción, la finalización ya NO exige asistencia:
+        # depende de aprobar la evaluación de cada seminario que tenga una.
         program = Program.objects.create(name='Analítica de Datos')
         p = ParticipantFactory()
         c1 = _course(program, 20, ['SQL joins'])
         _course(program, 16, ['DAX'])
-        _attend(c1, p)  # solo asistió a uno
-        assert program_service.participant_attended_all(program, p) is False
+        Evaluation.objects.create(event=c1, pass_threshold=60)  # sin aprobar
+        assert program_service.participant_completed_program(program, p) is False
         assert program_service.check_and_issue(program, p) is None
 
     def test_complete_when_attended_all_and_no_eval(self):
