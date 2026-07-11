@@ -50,25 +50,25 @@
     }
 
     function showFound(data) {
-        const c = data.certificado || {};
-        const lote = data.lote || {};
+        const c = data.certificate || {};
+        const lote = data.batch || {};
 
         document.getElementById('state-found').classList.remove('hidden');
-        document.getElementById('cert-nombre').textContent = `${c.nombres || ''} ${c.apellidos || ''}`.trim();
+        document.getElementById('cert-nombre').textContent = `${c.first_name || ''} ${c.last_name || ''}`.trim();
 
-        if (c.cedula) {
+        if (c.national_id) {
             document.getElementById('cert-cedula-row').classList.remove('hidden');
-            document.getElementById('cert-cedula').textContent = c.cedula;
+            document.getElementById('cert-cedula').textContent = c.national_id;
         }
-        document.getElementById('cert-curso').textContent = c.curso || '';
-        if (c.horas) {
+        document.getElementById('cert-curso').textContent = c.course || '';
+        if (c.hours) {
             document.getElementById('cert-horas-row').classList.remove('hidden');
-            document.getElementById('cert-horas').textContent = c.horas;
+            document.getElementById('cert-horas').textContent = c.hours;
         }
-        document.getElementById('cert-lote').textContent = lote.nombre || '';
-        if (c.fecha_curso) {
+        document.getElementById('cert-lote').textContent = lote.name || '';
+        if (c.course_date) {
             document.getElementById('cert-fecha-row').classList.remove('hidden');
-            document.getElementById('cert-fecha').textContent = formatDate(c.fecha_curso);
+            document.getElementById('cert-fecha').textContent = formatDate(c.course_date);
         }
         document.getElementById('cert-hash').textContent = data.hash;
     }
