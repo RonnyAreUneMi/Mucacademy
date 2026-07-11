@@ -58,7 +58,7 @@
             <div class="flex items-start gap-3 rounded-2xl bg-[var(--ds-brand)]/8 ring-1 ring-[var(--ds-brand)]/15 p-3.5">
                 <i class="fa-solid fa-award text-[var(--ds-brand)] mt-0.5"></i>
                 <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Para obtener el certificado del programa necesitás aprobar la evaluación de
+                    Para obtener el certificado del programa necesitas aprobar la evaluación de
                     <strong>cada seminario</strong> con al menos <strong>{{ min_grade }}/100</strong>.
                 </p>
             </div>
@@ -75,7 +75,7 @@
             <!-- Habilidades -->
             {% if skills %}
             <div>
-                <p class="text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-2">Habilidades que ganás</p>
+                <p class="text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-2">Habilidades que ganas</p>
                 <div class="flex flex-wrap gap-1.5">
                     {% for s in skills %}
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold
@@ -164,7 +164,7 @@
                         </span>
                         {% if s.min_grade %}
                         <span class="inline-flex items-center gap-1 text-[var(--ds-brand)]">
-                            <i class="fa-solid fa-award"></i> Aprobás con {{ s.min_grade }}
+                            <i class="fa-solid fa-award"></i> Apruebas con {{ s.min_grade }}
                         </span>
                         {% endif %}
                     </div>

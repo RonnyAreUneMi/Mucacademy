@@ -624,7 +624,7 @@ def evaluacion_view(request, evaluation_id: int):
         raise Http404
 
     if not _can_access_eval(p, ev):
-        messages.error(request, 'Necesitás estar inscrito para rendir esta evaluación.')
+        messages.error(request, 'Necesitas estar inscrito para rendir esta evaluación.')
         return redirect('public:account_programas')
 
     back_url = _eval_back_url(ev)
@@ -708,7 +708,7 @@ def evaluacion_resumen_view(request, evaluation_id: int):
         raise Http404
 
     if not _can_access_eval(p, ev):
-        messages.error(request, 'Necesitás estar inscrito para ver esta evaluación.')
+        messages.error(request, 'Necesitas estar inscrito para ver esta evaluación.')
         return redirect('public:account_programas')
 
     attempt = ev.best_attempt_for(p)
@@ -797,7 +797,7 @@ def evento_resumen_view(request, sesion_id: int):
     inscrito = Enrollment.objects.filter(participant=p, event=sesion).exists()
     asistio  = Attendance.objects.filter(participant=p, event=sesion).exists()
     if not (inscrito or asistio):
-        messages.error(request, 'Solo podés ver el resumen si te inscribiste al evento.')
+        messages.error(request, 'Solo puedes ver el resumen si te inscribiste al evento.')
         return redirect('public:account_eventos')
 
     resumen = SessionSummary.objects.filter(event=sesion).first()
@@ -853,7 +853,7 @@ def evento_resumen_pdf_view(request, sesion_id: int):
     inscrito = Enrollment.objects.filter(participant=p, event=sesion).exists()
     asistio  = Attendance.objects.filter(participant=p, event=sesion).exists()
     if not (inscrito or asistio):
-        messages.error(request, 'Solo podés descargar el resumen si te inscribiste al evento.')
+        messages.error(request, 'Solo puedes descargar el resumen si te inscribiste al evento.')
         return redirect('public:account_eventos')
 
     resumen = SessionSummary.objects.filter(event=sesion).first()
@@ -890,7 +890,7 @@ def evento_cuestionario_view(request, sesion_id: int):
     inscrito = Enrollment.objects.filter(participant=p, event=sesion).exists()
     asistio  = Attendance.objects.filter(participant=p, event=sesion).exists()
     if not (inscrito or asistio):
-        messages.error(request, 'Solo podés acceder al cuestionario si te inscribiste al evento.')
+        messages.error(request, 'Solo puedes acceder al cuestionario si te inscribiste al evento.')
         return redirect('public:account_eventos')
 
     if not sesion.quiz_enabled:
@@ -907,7 +907,7 @@ def evento_cuestionario_view(request, sesion_id: int):
         messages.info(
             request,
             f'Ya completaste tus {QuizAttempt.MAX_ATTEMPTS} intentos del cuestionario. '
-            'Mirá tus resultados acá abajo.',
+            'Mira tus resultados aquí abajo.',
         )
         return redirect('public:account_evento_resumen', sesion_id=sesion.id)
 

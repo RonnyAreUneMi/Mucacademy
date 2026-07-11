@@ -13,7 +13,7 @@
             <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
                 {{ total }} certificado{{ total|pluralize:"s" }}
             </h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Descargá, verificá o compartí cualquier certificado.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Descarga, verifica o comparte cualquier certificado.</p>
         </div>
 
         <form method="get" class="relative w-full sm:w-72">
@@ -30,24 +30,29 @@
 
     <!-- Lista -->
     {% if grupos or sueltos %}
+    <style>
+        .cert-fold > summary { list-style: none; }
+        .cert-fold > summary::-webkit-details-marker { display: none; }
+        .cert-fold-chev { transition: transform .2s ease; }
+        .cert-fold[open] .cert-fold-chev { transform: rotate(180deg); }
+    </style>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 
         <!-- ═══════════ Carpetas de programa ═══════════ -->
         {% for g in grupos %}
-        <div class="lg-card rounded-2xl overflow-hidden border-2 border-[var(--ds-accent)]/25">
-            <!-- Cabecera de carpeta -->
-            <div class="relative px-4 py-3.5 bg-gradient-to-br from-[var(--ds-accent)] via-[#1e2f6b] to-[var(--ds-brand-dark)] flex items-center gap-3">
+        <details open class="cert-fold lg-card rounded-2xl overflow-hidden border-2 border-[var(--ds-accent)]/25">
+            <summary class="relative px-4 py-3.5 bg-gradient-to-br from-[var(--ds-accent)] via-[#1e2f6b] to-[var(--ds-brand-dark)] flex items-center gap-3 cursor-pointer">
                 <div class="absolute inset-0 opacity-15" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 18px 18px;"></div>
                 <span class="relative w-10 h-10 rounded-xl bg-white/15 ring-1 ring-white/25 flex items-center justify-center text-white text-lg flex-shrink-0">
                     <i class="fa-solid fa-folder-open"></i>
                 </span>
-                <div class="relative min-w-0">
+                <div class="relative min-w-0 flex-1">
                     <p class="text-[10px] font-black uppercase tracking-widest text-white/70">Programa</p>
                     <h3 class="font-black text-sm text-white leading-snug truncate">{{ g.program.name }}</h3>
                 </div>
-            </div>
+                <i class="cert-fold-chev fa-solid fa-chevron-down relative text-white/85 text-sm"></i>
+            </summary>
 
-            <!-- Certificados del programa -->
             <div class="p-3 space-y-2.5">
                 {% if g.program_cert %}
                 {% include 'public/account/_cert_row.html' with c=g.program_cert badge='Programa' badge_icon='fa-award' accent=True %}
@@ -60,7 +65,7 @@
                 {% endif %}
                 {% endfor %}
             </div>
-        </div>
+        </details>
         {% endfor %}
 
         <!-- ═══════════ Certificados sueltos ═══════════ -->
@@ -135,8 +140,8 @@
         </a>
         {% else %}
         <i class="fa-solid fa-certificate text-5xl text-slate-300 dark:text-slate-600 mb-3"></i>
-        <h3 class="text-lg font-bold text-slate-700 dark:text-slate-300">Aún no tenés certificados</h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Cuando completes un evento, los certificados aparecerán acá.</p>
+        <h3 class="text-lg font-bold text-slate-700 dark:text-slate-300">Aún no tienes certificados</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Cuando completes un evento, los certificados aparecerán aquí.</p>
         <a href="{% url 'public:account_eventos' %}?tab=disponibles" class="inline-flex mt-4 items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold
                 bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)] text-white
                 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_14px_-4px_rgba(245,136,48,0.40)]

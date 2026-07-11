@@ -179,7 +179,7 @@
       // Redirigir al dashboard tras 2 segundos
       setTimeout(() => window.location.href = "{% url 'public:account_dashboard' %}", 2200);
     } catch (err) {
-      showStatus('error', 'Error de red', 'Revisá tu conexión e intentá de nuevo.');
+      showStatus('error', 'Error de red', 'Revisa tu conexión e intenta de nuevo.');
       setTimeout(() => { busy = false; try { scanner.resume(); } catch (_) {} }, 1500);
     }
   }
