@@ -1,0 +1,94 @@
+{% extends 'public/account/_base.html' %}
+{% block page_title %}Resumen · {{ ev.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-5">
+
+    <!-- Volver -->
+    <a href="{{ back_url }}"
+       class="inline-flex items-center gap-2 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-[var(--ds-brand)] transition-colors">
+        <i class="fa-solid fa-arrow-left"></i> Volver
+    </a>
+
+    <!-- Encabezado -->
+    <div class="lg-card rounded-3xl p-5 sm:p-6">
+        <p class="text-[10px] font-black uppercase tracking-widest text-[var(--ds-brand)] mb-1">
+            <i class="fa-solid fa-list-check"></i> Resumen de intento
+        </p>
+        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+            {{ ev.title }}
+        </h1>
+        {% if attempt %}
+        <div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 mt-3">
+            <span class="inline-flex items-center gap-1.5 {% if passed %}text-emerald-500{% else %}text-red-500{% endif %}">
+                <i class="fa-solid {% if passed %}fa-circle-check{% else %}fa-circle-xmark{% endif %}"></i>
+                {{ score }}% {% if passed %}· Aprobado{% else %}· No aprobado{% endif %}
+            </span>
+            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-check-double"></i> {{ attempt.correct }} de {{ attempt.total }} correctas</span>
+            {% if attempt.submitted_at %}
+            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-calendar-day"></i> {{ attempt.submitted_at|date:"d M Y H:i" }}</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if attempt %}
+    <!-- Revisión por pregunta -->
+    <div class="space-y-3">
+        {% for r in review %}
+        <div class="lg-card rounded-2xl p-5">
+            <div class="flex items-start gap-3">
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-[13px] flex-shrink-0
+                             {% if r.is_correct %}bg-emerald-500/15 text-emerald-500{% else %}bg-red-500/15 text-red-500{% endif %}">
+                    <i class="fa-solid {% if r.is_correct %}fa-check{% else %}fa-xmark{% endif %}"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-bold text-sm text-slate-900 dark:text-white leading-snug">{{ r.text }}</h3>
+                    <div class="space-y-1.5 mt-2.5">
+                        {% for opt in r.options %}
+                        {% if forloop.counter0 == r.correct_idx %}
+                        <div class="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-300">
+                            <i class="fa-solid fa-circle-check"></i> {{ opt }}
+                            <span class="text-[10px] font-bold uppercase tracking-wide opacity-70">Correcta{% if forloop.counter0 == r.chosen_idx %} · tu respuesta{% endif %}</span>
+                        </div>
+                        {% elif forloop.counter0 == r.chosen_idx %}
+                        <div class="flex items-center gap-2 text-xs font-semibold text-red-500 dark:text-red-300">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ opt }}
+                            <span class="text-[10px] font-bold uppercase tracking-wide opacity-70">Tu respuesta</span>
+                        </div>
+                        {% else %}
+                        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                            <i class="fa-regular fa-circle text-[10px]"></i> {{ opt }}
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if r.explanation %}
+                    <div class="flex items-start gap-2 rounded-xl bg-[var(--ds-brand)]/8 ring-1 ring-[var(--ds-brand)]/15 p-2.5 mt-3">
+                        <i class="fa-solid fa-lightbulb text-[var(--ds-brand)] text-xs mt-0.5"></i>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{{ r.explanation }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Sin intento -->
+    <div class="lg-card rounded-3xl p-10 text-center">
+        <i class="fa-solid fa-clipboard-question text-5xl text-slate-300 dark:text-slate-600 mb-3"></i>
+        <h3 class="text-lg font-bold text-slate-700 dark:text-slate-300">Todavía no rendiste esta evaluación</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Cuando envíes un intento, acá vas a ver el detalle de cada pregunta.</p>
+        <a href="{% url 'public:account_evaluacion' ev.id %}"
+           class="inline-flex mt-4 items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold
+                  bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)] text-white
+                  shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_14px_-4px_rgba(245,136,48,0.40)]
+                  hover:brightness-110 transition-all">
+            <i class="fa-solid fa-clipboard-question"></i> Rendí la evaluación
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

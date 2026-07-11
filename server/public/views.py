@@ -321,16 +321,41 @@ def certificados_view(request):
     p: Participant = request.participant
     q = request.GET.get('q', '').strip()
 
-    qs = Certificate.objects.filter(
-        Q(national_id=p.national_id) if p.national_id else Q(email__iexact=p.email)
-    ).select_related('batch').order_by('-course_date')
+    qs = (Certificate.objects.filter(
+        Q(national_id=p.national_id) if p.national_id else Q(email__iexact=p.email))
+        .select_related('batch', 'batch__program')
+        .prefetch_related('batch__events__program')
+        .order_by('-course_date'))
 
     if q:
         qs = qs.filter(Q(course__icontains=q) | Q(batch__name__icontains=q))
 
+    grupos = {}
+    sueltos = []
+    for c in qs:
+        program = None
+        if c.is_program:
+            program = c.batch.program
+        else:
+            ev = c.batch.events.first()
+            program = ev.program if ev else None
+        if program is None:
+            sueltos.append(c)
+            continue
+        folder = grupos.setdefault(program.id, {
+            'program': program, 'program_cert': None, 'seminar_certs': [],
+        })
+        if c.is_program:
+            folder['program_cert'] = c
+        else:
+            folder['seminar_certs'].append(c)
+
+    grupos = sorted(grupos.values(), key=lambda g: g['program'].name)
+
     return render(request, 'public/account/certificados.html', {
         'p': p,
-        'certificados': qs,
+        'grupos': grupos,
+        'sueltos': sueltos,
         'total': qs.count(),
         'q': q,
     })
@@ -530,6 +555,7 @@ def programa_detalle_view(request, program_id: int):
         }
         best = ev.best_attempt_for(p) if ev_active else None
         item['best_score'] = round(best.score, 1) if best else None
+        item['has_attempt'] = bool(best)
         seminarios.append(item)
 
     inscrito = Enrollment.objects.filter(participant=p, event__program=prog).exists()
@@ -667,6 +693,54 @@ def evaluacion_view(request, evaluation_id: int):
         'attempts_used': ev.attempts_used_by(p),
         'attempts_allowed': ev.attempts_allowed_for(p),
         'back_url': back_url,
+    })
+
+
+@account_auth.login_required
+def evaluacion_resumen_view(request, evaluation_id: int):
+    """Resumen del mejor intento del participante: respuesta elegida vs correcta."""
+    p: Participant = request.participant
+    ev = (Evaluation.objects
+          .select_related('program', 'event', 'event__program')
+          .filter(pk=evaluation_id, is_active=True)
+          .first())
+    if ev is None:
+        raise Http404
+
+    if not _can_access_eval(p, ev):
+        messages.error(request, 'Necesitás estar inscrito para ver esta evaluación.')
+        return redirect('public:account_programas')
+
+    attempt = ev.best_attempt_for(p)
+    review = []
+    if attempt:
+        q_by_id = {q.id: q for q in ev.questions.all()}
+        answers = attempt.answers or {}
+        qids = attempt.question_ids or list(answers.keys())
+        for qid in qids:
+            q = q_by_id.get(int(qid))
+            if q is None:
+                continue
+            try:
+                chosen = int(answers.get(str(qid), answers.get(qid, -1)))
+            except (TypeError, ValueError):
+                chosen = -1
+            review.append({
+                'text': q.text,
+                'options': q.options or [],
+                'chosen_idx': chosen,
+                'correct_idx': q.correct_idx,
+                'is_correct': chosen == q.correct_idx,
+                'explanation': q.explanation,
+            })
+
+    return render(request, 'public/account/evaluacion_resumen.html', {
+        'p': p, 'ev': ev,
+        'attempt': attempt,
+        'review': review,
+        'score': round(attempt.score, 1) if attempt else None,
+        'passed': attempt.passed if attempt else False,
+        'back_url': _eval_back_url(ev),
     })
 
 

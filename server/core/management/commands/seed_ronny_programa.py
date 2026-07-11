@@ -23,7 +23,7 @@ from django.utils import timezone
 
 from core.models import (
     Participant, Program, Event, Speaker, Enrollment, Attendance,
-    Certificate, Signature,
+    Certificate, Signature, SessionSummary, ProcessingStatus,
 )
 from core.models.evaluations import (
     Evaluation, Question, EvaluationAttempt, QuestionKind, QuestionSource,
@@ -104,6 +104,42 @@ SEMINARS = [
                      explanation='Describe la imagen para lectores de pantalla y buscadores.'),
             ],
         ),
+        summary=dict(
+            summary_md=(
+                'En este seminario se sentaron las **bases del desarrollo web front-end**. '
+                'Se trabajó la estructura semántica con **HTML5**, distinguiendo etiquetas como '
+                '`<main>`, `<section>` y `<article>` para dar significado al contenido y mejorar '
+                'la accesibilidad.\n\n'
+                'En estilos se cubrió **CSS3** con foco en **Flexbox** y el modelo de caja para '
+                'lograr maquetación responsiva. Finalmente se introdujo **JavaScript ES6**: '
+                'declaración de variables con `let`/`const`, funciones flecha y manipulación del DOM '
+                'para dar interactividad a la página.'
+            ),
+            key_points=[
+                'HTML5 semántico da estructura y significado al contenido.',
+                'Flexbox alinea y distribuye elementos en una sola dimensión.',
+                'let y const tienen alcance de bloque, a diferencia de var.',
+                'rem es relativa al font-size del elemento raíz.',
+                'El diseño responsivo adapta la interfaz a cada pantalla.',
+            ],
+            next_steps=[
+                'Practicar maquetación responsiva con Flexbox y Grid.',
+                'Construir una landing page estática con HTML5 semántico.',
+                'Añadir interactividad con eventos del DOM en JavaScript.',
+            ],
+            quiz=[
+                {'type': 'mcq',
+                 'question': '¿Qué etiqueta representa el contenido principal de la página?',
+                 'options': ['<div>', '<main>', '<span>', '<footer>'],
+                 'correct_idx': 1,
+                 'explanation': '<main> identifica el contenido principal y único del documento.'},
+                {'type': 'boolean',
+                 'question': 'const permite reasignar el valor de la variable.',
+                 'options': ['Verdadero', 'Falso'],
+                 'correct_idx': 1,
+                 'explanation': 'const crea una referencia de solo lectura; no se reasigna.'},
+            ],
+        ),
     ),
     dict(
         title='Backend con Python y Django',
@@ -149,6 +185,41 @@ SEMINARS = [
                      text='Un serializer en DRF convierte objetos del modelo a JSON y viceversa.',
                      options=['Verdadero', 'Falso'], correct_idx=0,
                      explanation='Serializa y valida datos entre el modelo y la API.'),
+            ],
+        ),
+        summary=dict(
+            summary_md=(
+                'El seminario abordó la construcción del **lado del servidor con Python y Django**. '
+                'Se explicó el patrón **MVT** (Modelo–Vista–Template) y cómo el **modelo** define la '
+                'estructura de los datos mapeando tablas de la base de datos.\n\n'
+                'Se trabajó el **ORM** de Django para consultar datos sin escribir SQL directamente, '
+                'el flujo de **migraciones** (`makemigrations` y `migrate`) y la exposición de datos '
+                'mediante **APIs REST** con **Django REST Framework**, usando serializers para '
+                'convertir modelos a JSON y validar la entrada.'
+            ),
+            key_points=[
+                'El modelo define la estructura de los datos en Django.',
+                'El ORM traduce operaciones de Python a SQL.',
+                'migrate aplica los cambios de modelos a la base de datos.',
+                'Django REST Framework construye APIs REST sobre Django.',
+                'Los serializers convierten modelos a JSON y validan datos.',
+            ],
+            next_steps=[
+                'Modelar una entidad y generar sus migraciones.',
+                'Exponer un endpoint REST con un serializer de DRF.',
+                'Escribir consultas del ORM con filtros y relaciones.',
+            ],
+            quiz=[
+                {'type': 'mcq',
+                 'question': '¿Qué comando aplica los cambios de modelos a la base de datos?',
+                 'options': ['runserver', 'makemigrations', 'migrate', 'shell'],
+                 'correct_idx': 2,
+                 'explanation': 'migrate ejecuta las migraciones pendientes sobre la base.'},
+                {'type': 'boolean',
+                 'question': 'El ORM permite consultar la base sin escribir SQL directamente.',
+                 'options': ['Verdadero', 'Falso'],
+                 'correct_idx': 0,
+                 'explanation': 'El ORM traduce las operaciones de Python a SQL.'},
             ],
         ),
     ),
@@ -208,6 +279,41 @@ SEMINARS = [
                      explanation='Es un RDBMS de código abierto ampliamente usado.'),
             ],
         ),
+        summary=dict(
+            summary_md=(
+                'El seminario cerró el programa con la **gestión de datos y el despliegue en producción**. '
+                'Se modeló una base **relacional** con tablas, claves primarias y **llaves foráneas** '
+                'que relacionan entidades, y se practicaron consultas **SQL** con `SELECT`, `WHERE` y '
+                '`JOIN` sobre **PostgreSQL**.\n\n'
+                'En la parte de despliegue se empaquetó la aplicación con **Docker** y se introdujo el '
+                'flujo **CI/CD** (Integración y Despliegue Continuos) para automatizar pruebas y '
+                'publicación en la nube.'
+            ),
+            key_points=[
+                'WHERE filtra las filas que devuelve una consulta.',
+                'La llave foránea relaciona una tabla con otra.',
+                'PostgreSQL es un RDBMS relacional de código abierto.',
+                'Docker empaqueta la app y sus dependencias en contenedores.',
+                'CI/CD automatiza la integración y el despliegue del software.',
+            ],
+            next_steps=[
+                'Diseñar el modelo entidad-relación de un proyecto.',
+                'Contenerizar la aplicación con un Dockerfile.',
+                'Configurar un pipeline básico de CI/CD.',
+            ],
+            quiz=[
+                {'type': 'mcq',
+                 'question': '¿Qué cláusula SQL filtra las filas de una consulta?',
+                 'options': ['ORDER BY', 'WHERE', 'GROUP BY', 'LIMIT'],
+                 'correct_idx': 1,
+                 'explanation': 'WHERE aplica condiciones para seleccionar filas.'},
+                {'type': 'boolean',
+                 'question': 'Docker empaqueta la app y sus dependencias en contenedores.',
+                 'options': ['Verdadero', 'Falso'],
+                 'correct_idx': 0,
+                 'explanation': 'Docker aísla la aplicación en contenedores portables.'},
+            ],
+        ),
     ),
 ]
 
@@ -244,6 +350,7 @@ class Command(BaseCommand):
                 evaluation = self._ensure_evaluation(ev, cfg['evaluation'])
                 self._pass_evaluation(evaluation, participante)
                 self._issue_seminar_certificate(ev, participante, program)
+                self._ensure_summary(ev, cfg['summary'])
 
             # Certificado del programa (idempotente).
             program_cert, _ = program_service.issue_program_certificate(program, participante)
@@ -392,6 +499,22 @@ class Command(BaseCommand):
 
     def _issue_seminar_certificate(self, ev, participante, program):
         program_service.issue_seminar_certificate(ev, participante)
+
+    def _ensure_summary(self, ev, cfg):
+        summary, _ = SessionSummary.objects.get_or_create(event=ev)
+        summary.status = ProcessingStatus.READY
+        summary.summary_md = cfg['summary_md']
+        summary.key_points = cfg['key_points']
+        summary.next_steps = cfg['next_steps']
+        summary.quiz = cfg.get('quiz', [])
+        summary.transcript_raw = cfg['summary_md']
+        summary.transcript_chars = len(cfg['summary_md'])
+        summary.duration_minutes = (ev.hours or 0) * 60
+        summary.ai_model = 'demo-seed'
+        summary.processed_at = timezone.now()
+        summary.save()
+        self.stdout.write(f'      Resumen IA (Betto): {len(summary.key_points)} puntos clave')
+        return summary
 
     # ───────────────────────────────────────────────────────────────────
     def _reset(self, email):

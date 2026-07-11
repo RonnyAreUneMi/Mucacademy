@@ -35,6 +35,8 @@ urlpatterns = [
          account_views.programa_inscribir, name='account_programa_inscribir'),
     path('cuenta/evaluaciones/<int:evaluation_id>/',
          account_views.evaluacion_view, name='account_evaluacion'),
+    path('cuenta/evaluaciones/<int:evaluation_id>/resumen/',
+         account_views.evaluacion_resumen_view, name='account_evaluacion_resumen'),
     path('cuenta/perfil/',        account_views.perfil_view,       name='account_perfil'),
     path('cuenta/eventos/<int:sesion_id>/inscribir/',
          account_views.evento_inscribir, name='account_evento_inscribir'),

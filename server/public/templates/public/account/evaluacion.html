@@ -108,6 +108,12 @@
                 <i class="fa-solid fa-certificate"></i> Ver mis certificados
             </a>
             {% endif %}
+            <a href="{% url 'public:account_evaluacion_resumen' ev.id %}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
+                      bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
+                      text-slate-700 dark:text-slate-200 hover:text-[var(--ds-brand)] transition-all">
+                <i class="fa-solid fa-list-check"></i> Ver resumen de intento
+            </a>
             <a href="{{ back_url }}"
                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
                       bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
@@ -187,6 +193,12 @@
                 <i class="fa-solid fa-certificate"></i> Ver mis certificados
             </a>
             {% endif %}
+            <a href="{% url 'public:account_evaluacion_resumen' ev.id %}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
+                      bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
+                      text-slate-700 dark:text-slate-200 hover:text-[var(--ds-brand)] transition-all">
+                <i class="fa-solid fa-list-check"></i> Ver resumen de intento
+            </a>
             <a href="{{ back_url }}"
                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
                       bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10

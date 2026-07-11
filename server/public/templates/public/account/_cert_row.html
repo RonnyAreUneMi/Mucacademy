@@ -1,0 +1,43 @@
+{% comment %}Fila de certificado dentro de una carpeta de programa. Params: c, badge, badge_icon, accent{% endcomment %}
+<div class="flex items-center gap-3 p-3 rounded-xl border {% if accent %}bg-[var(--ds-accent)]/8 border-[var(--ds-accent)]/25{% else %}bg-white/60 dark:bg-white/5 border-slate-200/70 dark:border-white/10{% endif %}">
+    <span class="w-9 h-9 rounded-lg flex items-center justify-center text-sm flex-shrink-0
+                 {% if accent %}bg-[var(--ds-accent)] text-white{% else %}bg-[var(--ds-brand)]/12 text-[var(--ds-brand-dark)] dark:text-[var(--ds-brand)]{% endif %}">
+        <i class="fa-solid {{ badge_icon }}"></i>
+    </span>
+    <div class="flex-1 min-w-0">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wide
+                     {% if accent %}bg-[var(--ds-accent)] text-white{% else %}bg-[var(--ds-brand)]/12 text-[var(--ds-brand-dark)] dark:text-[var(--ds-brand)]{% endif %}">
+            <i class="fa-solid {{ badge_icon }} text-[8px]"></i> {{ badge }}
+        </span>
+        <h4 class="font-bold text-[13px] text-slate-900 dark:text-white leading-snug truncate mt-1">{{ c.course }}</h4>
+        <p class="text-[11px] text-slate-400 dark:text-slate-500">
+            <i class="fa-solid fa-calendar-day mr-0.5"></i>{{ c.course_date|date:"d M Y" }} · {{ c.hours }}h
+        </p>
+    </div>
+    <div class="flex items-center gap-1.5 flex-shrink-0">
+        <a href="/api/v1/public/certificates/{{ c.verification_hash }}/download/" target="_blank"
+           class="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg text-xs font-bold
+                  bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)] text-white
+                  shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_14px_-4px_rgba(245,136,48,0.40)]
+                  hover:brightness-110 transition-all"
+           data-tip="Descargar PDF">
+            <i class="fa-solid fa-download"></i><span class="hidden sm:inline"> Descargá</span>
+        </a>
+        <a href="{% url 'public:verify_certificate' c.verification_hash %}"
+           class="w-9 h-9 inline-flex items-center justify-center rounded-lg text-xs
+                  bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
+                  text-slate-600 dark:text-slate-300
+                  hover:text-[var(--ds-brand)] hover:border-[var(--ds-brand)]/40 transition-all"
+           data-tip="Verificar autenticidad" data-tip-pos="left">
+            <i class="fa-solid fa-shield-halved"></i>
+        </a>
+        <button onclick="navigator.clipboard.writeText(window.location.origin + '{% url 'public:verify_certificate' c.verification_hash %}'); this.querySelector('i').className='fa-solid fa-check'; setTimeout(()=>this.querySelector('i').className='fa-solid fa-share-nodes', 1500)"
+                class="w-9 h-9 inline-flex items-center justify-center rounded-lg text-xs
+                       bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
+                       text-slate-600 dark:text-slate-300
+                       hover:text-[var(--ds-brand)] hover:border-[var(--ds-brand)]/40 transition-all"
+                data-tip="Copiar link público" data-tip-pos="left">
+            <i class="fa-solid fa-share-nodes"></i>
+        </button>
+    </div>
+</div>
