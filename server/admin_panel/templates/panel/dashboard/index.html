@@ -2,77 +2,101 @@
 {% load static %}
 
 {% block content %}
+<style>
+    .light { --nm-bg:#eef1f7; --nm-shadow:#d4dbe8; --nm-hi:#ffffff; }
+    .dark  { --nm-bg:#101d40; --nm-shadow:#070f28; --nm-hi:rgba(255,255,255,0.045); }
+    .nm-panel { background:var(--nm-bg); border-radius:26px;
+        box-shadow:8px 8px 18px var(--nm-shadow), -8px -8px 18px var(--nm-hi); }
+    .nm-raise { background:var(--nm-bg); border-radius:18px;
+        box-shadow:5px 5px 11px var(--nm-shadow), -5px -5px 11px var(--nm-hi); }
+    .nm-inset { background:var(--nm-bg); border-radius:20px;
+        box-shadow:inset 5px 5px 11px var(--nm-shadow), inset -5px -5px 11px var(--nm-hi); }
+    .nm-tile { background:var(--nm-bg); border-radius:18px; padding:0.9rem 1rem;
+        display:flex; align-items:center; gap:0.75rem;
+        box-shadow:inset 4px 4px 9px var(--nm-shadow), inset -4px -4px 9px var(--nm-hi); }
+    .nm-ico { width:2.6rem; height:2.6rem; border-radius:14px; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; font-size:1.05rem;
+        background:var(--nm-bg); box-shadow:4px 4px 8px var(--nm-shadow), -4px -4px 8px var(--nm-hi); }
+    .nm-btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.7rem 1.15rem;
+        border-radius:15px; font-weight:800; font-size:0.875rem; color:#475569;
+        background:var(--nm-bg); box-shadow:4px 4px 9px var(--nm-shadow), -4px -4px 9px var(--nm-hi);
+        transition:box-shadow .15s; }
+    .dark .nm-btn { color:#cbd5e1; }
+    .nm-btn:hover { box-shadow:inset 3px 3px 7px var(--nm-shadow), inset -3px -3px 7px var(--nm-hi); }
+    .nm-btn-primary { display:inline-flex; align-items:center; gap:0.5rem; padding:0.7rem 1.15rem;
+        border-radius:15px; font-weight:800; font-size:0.875rem; color:#fff; background:#F58830;
+        box-shadow:4px 4px 11px rgba(245,136,48,0.30), -3px -3px 9px var(--nm-hi); transition:filter .15s; }
+    .nm-btn-primary:hover { filter:brightness(1.06); }
+</style>
 <div class="animate__animated animate__fadeIn space-y-5">
 
     <!-- ═══════════ HERO + QUICK ACTIONS combinados ═══════════ -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-        <!-- Hero (col-span-8) — Liquid Glass clear -->
-        <div class="lg:col-span-8 lg-card relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col">
-            <div class="relative z-10">
-                <!-- Top: Saludo + CTAs -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-6">
-                    <div class="flex items-center gap-4">
-                        <img src="{% static 'tiger_chase_loader.png' %}" alt="UNEMI" class="w-20 h-20 md:w-24 md:h-24 rounded-2xl shadow-xl ring-2 ring-white/60 dark:ring-white/15 bg-white/40 dark:bg-white/5">
-                        <div>
-                            <p id="greeting" class="text-sm md:text-base font-medium text-gray-500 dark:text-slate-300 mb-1">¡Hola!</p>
-                            <h1 class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white leading-tight tracking-tight">Hola, <span class="bg-gradient-to-r from-[#F58830] via-pink-500 to-purple-500 bg-clip-text text-transparent">{{ user.first_name|default:user.username }}</span></h1>
-                            <p class="text-gray-500 dark:text-slate-400 text-sm mt-1"><i class="fa-regular fa-calendar text-[#F58830] mr-1"></i><span id="today-label">—</span></p>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <a href="{% url 'panel:session_create' %}" class="lg-btn lg-btn-prominent">
-                            <i class="fa-solid fa-plus"></i> Nuevo evento
-                        </a>
-                        <a href="{% url 'panel:batch_create' %}" class="lg-btn">
-                            <i class="fa-solid fa-upload"></i> Subir lote
-                        </a>
+        <!-- Hero (col-span-8) — Neumorfismo limpio -->
+        <div class="lg:col-span-8 nm-panel p-6 md:p-8 flex flex-col">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-6">
+                <div class="flex items-center gap-4">
+                    <span class="nm-inset w-20 h-20 md:w-24 md:h-24 flex items-center justify-center flex-shrink-0">
+                        <img src="{% static 'tiger_chase_loader.png' %}" alt="CertifAI" class="w-14 h-14 md:w-16 md:h-16 object-contain">
+                    </span>
+                    <div>
+                        <p id="greeting" class="text-sm md:text-base font-semibold text-gray-500 dark:text-slate-400 mb-1">¡Hola!</p>
+                        <h1 class="text-3xl md:text-4xl font-black text-gray-800 dark:text-white leading-tight tracking-tight">Hola, <span class="text-[#F58830]">{{ user.first_name|default:user.username }}</span></h1>
+                        <p class="text-gray-400 dark:text-slate-500 text-sm mt-1 font-medium"><i class="fa-regular fa-calendar mr-1"></i><span id="today-label">—</span></p>
                     </div>
                 </div>
+                <div class="flex flex-wrap gap-2.5">
+                    <a href="{% url 'panel:session_create' %}" class="nm-btn-primary">
+                        <i class="fa-solid fa-plus"></i> Nuevo evento
+                    </a>
+                    <a href="{% url 'panel:batch_create' %}" class="nm-btn">
+                        <i class="fa-solid fa-upload"></i> Subir lote
+                    </a>
+                </div>
+            </div>
 
-                <!-- Bottom: Resumen del día -->
-                <div class="mt-auto">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-slate-400 mb-3"><i class="fa-solid fa-circle-info text-[#F58830] mr-1"></i> Tu día de un vistazo</p>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/50 dark:bg-white/5 ring-1 ring-inset ring-white/70 dark:ring-white/10 backdrop-blur-xl">
-                            <i class="fa-solid fa-calendar-day text-2xl text-[#F58830]"></i>
-                            <div>
-                                <p class="text-xl font-black text-gray-900 dark:text-white leading-none" id="hero-events-today">—</p>
-                                <p class="text-[10px] font-medium text-gray-500 dark:text-slate-400 mt-0.5">eventos hoy</p>
-                            </div>
+            <div class="mt-auto">
+                <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-3">Tu día de un vistazo</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                    <div class="nm-tile">
+                        <span class="nm-ico text-[#F58830]"><i class="fa-solid fa-calendar-day"></i></span>
+                        <div>
+                            <p class="text-2xl font-black text-gray-800 dark:text-white leading-none" id="hero-events-today">—</p>
+                            <p class="text-[10px] font-semibold text-gray-400 dark:text-slate-500 mt-1">eventos hoy</p>
                         </div>
-                        <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/50 dark:bg-white/5 ring-1 ring-inset ring-white/70 dark:ring-white/10 backdrop-blur-xl">
-                            <i class="fa-solid fa-user-check text-2xl text-emerald-600 dark:text-emerald-400"></i>
-                            <div>
-                                <p class="text-xl font-black text-gray-900 dark:text-white leading-none" id="hero-inscritos-week">—</p>
-                                <p class="text-[10px] font-medium text-gray-500 dark:text-slate-400 mt-0.5">inscritos esta semana</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/50 dark:bg-white/5 ring-1 ring-inset ring-white/70 dark:ring-white/10 backdrop-blur-xl">
-                            <i class="fa-solid fa-certificate text-2xl text-blue-600 dark:text-blue-400"></i>
-                            <div>
-                                <p class="text-xl font-black text-gray-900 dark:text-white leading-none" id="hero-certs-week">—</p>
-                                <p class="text-[10px] font-medium text-gray-500 dark:text-slate-400 mt-0.5">emitidos esta semana</p>
-                            </div>
-                        </div>
-                        {% if pendientes_count > 0 %}
-                        <a href="{% url 'panel:solicitudes_pendientes' %}" class="flex items-center gap-3 p-3 rounded-2xl bg-red-500/15 ring-1 ring-inset ring-red-500/40 backdrop-blur-xl hover:bg-red-500/25 transition-colors animate-pulse">
-                            <i class="fa-solid fa-bell text-2xl text-red-600 dark:text-red-300"></i>
-                            <div>
-                                <p class="text-xl font-black text-gray-900 dark:text-white leading-none">{{ pendientes_count }}</p>
-                                <p class="text-[10px] font-medium text-red-700 dark:text-red-200 mt-0.5">solicitud{{ pendientes_count|pluralize:"es" }} pendiente{{ pendientes_count|pluralize:"s" }}</p>
-                            </div>
-                        </a>
-                        {% else %}
-                        <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/50 dark:bg-white/5 ring-1 ring-inset ring-white/70 dark:ring-white/10 backdrop-blur-xl">
-                            <i class="fa-solid fa-microphone-lines text-2xl text-purple-600 dark:text-purple-400"></i>
-                            <div>
-                                <p class="text-xl font-black text-gray-900 dark:text-white leading-none" id="hero-ponentes">—</p>
-                                <p class="text-[10px] font-medium text-gray-500 dark:text-slate-400 mt-0.5">ponentes próx.</p>
-                            </div>
-                        </div>
-                        {% endif %}
                     </div>
+                    <div class="nm-tile">
+                        <span class="nm-ico text-emerald-500"><i class="fa-solid fa-user-check"></i></span>
+                        <div>
+                            <p class="text-2xl font-black text-gray-800 dark:text-white leading-none" id="hero-inscritos-week">—</p>
+                            <p class="text-[10px] font-semibold text-gray-400 dark:text-slate-500 mt-1">inscritos esta semana</p>
+                        </div>
+                    </div>
+                    <div class="nm-tile">
+                        <span class="nm-ico text-blue-500"><i class="fa-solid fa-certificate"></i></span>
+                        <div>
+                            <p class="text-2xl font-black text-gray-800 dark:text-white leading-none" id="hero-certs-week">—</p>
+                            <p class="text-[10px] font-semibold text-gray-400 dark:text-slate-500 mt-1">emitidos esta semana</p>
+                        </div>
+                    </div>
+                    {% if pendientes_count > 0 %}
+                    <a href="{% url 'panel:solicitudes_pendientes' %}" class="nm-tile hover:brightness-105 transition-all">
+                        <span class="nm-ico text-red-500"><i class="fa-solid fa-bell"></i></span>
+                        <div>
+                            <p class="text-2xl font-black text-red-500 leading-none">{{ pendientes_count }}</p>
+                            <p class="text-[10px] font-semibold text-gray-400 dark:text-slate-500 mt-1">solicitud{{ pendientes_count|pluralize:"es" }} pendiente{{ pendientes_count|pluralize:"s" }}</p>
+                        </div>
+                    </a>
+                    {% else %}
+                    <div class="nm-tile">
+                        <span class="nm-ico text-purple-500"><i class="fa-solid fa-microphone-lines"></i></span>
+                        <div>
+                            <p class="text-2xl font-black text-gray-800 dark:text-white leading-none" id="hero-ponentes">—</p>
+                            <p class="text-[10px] font-semibold text-gray-400 dark:text-slate-500 mt-1">ponentes próx.</p>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
