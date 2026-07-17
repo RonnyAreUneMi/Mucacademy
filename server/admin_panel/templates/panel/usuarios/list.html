@@ -55,14 +55,24 @@ function renderRow(u, i) {
     const badge = ROLE_BADGE[u.role] || ROLE_BADGE.professor;
     const [c1, c2] = AVATAR_GRAD[i % AVATAR_GRAD.length];
     const isSelf = u.id === CURRENT_USER_ID;
-    const roleSelect = `
-        <select onchange="setRole(${u.id}, this.value)" ${isSelf ? 'disabled' : ''}
-            class="text-xs font-bold rounded-xl px-2.5 py-2 bg-gray-50 dark:bg-[#0F163A]/60 border border-gray-200 dark:border-blue-900/30 text-gray-700 dark:text-gray-200 focus:outline-none focus:border-[#F58830] ${isSelf ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}"
-            title="${isSelf ? 'No puedes cambiar tu propio rol' : 'Cambiar rol'}">
-            <option value="superadmin" ${u.role==='superadmin'?'selected':''}>Superadmin</option>
-            <option value="professor" ${u.role==='professor'?'selected':''}>Profesor</option>
-            ${u.role==='admin' ? '<option value=\"admin\" selected>Administrador</option>' : ''}
-        </select>`;
+    const curLabel = ROLE_LABEL[u.role] || u.role;
+    const roleOpts = [{ v: 'superadmin', l: 'Superadmin' }, { v: 'professor', l: 'Profesor' }];
+    if (u.role === 'admin') roleOpts.push({ v: 'admin', l: 'Administrador' });
+    const roleSelect = isSelf ? `
+        <span class="text-xs font-bold rounded-xl px-3 py-2.5 bg-gray-50 dark:bg-[#0F163A]/60 border border-gray-200 dark:border-blue-900/30 text-gray-400 cursor-not-allowed" title="No puedes cambiar tu propio rol">${esc(curLabel)}</span>` : `
+        <div class="ds-select relative" data-uid="${u.id}">
+            <button type="button" class="ds-select-btn inline-flex items-center gap-2 text-xs font-bold rounded-xl px-3 py-2.5 bg-gray-50 dark:bg-[#0F163A]/60 border border-gray-200 dark:border-blue-900/30 text-gray-700 dark:text-gray-200 hover:border-[#F58830] focus:outline-none focus:border-[#F58830] transition-colors cursor-pointer" title="Cambiar rol">
+                <span class="ds-select-val">${esc(curLabel)}</span>
+                <i class="fa-solid fa-chevron-down text-[9px] opacity-70"></i>
+            </button>
+            <div class="ds-select-menu hidden absolute right-0 z-40 mt-1.5 min-w-[10rem] rounded-xl bg-white dark:bg-[#162054] border border-gray-100 dark:border-blue-900/40 shadow-xl overflow-hidden py-1">
+                ${roleOpts.map(o => `<button type="button" data-val="${o.v}" class="ds-select-opt w-full text-left px-3 py-2 text-xs font-bold transition-colors ${o.v === u.role ? 'text-[#F58830] bg-[#F58830]/10' : 'text-gray-700 dark:text-gray-200 hover:bg-[#F58830]/10 hover:text-[#F58830]'}">${o.l}</button>`).join('')}
+            </div>
+        </div>`;
+    const impersonateBtn = isSelf ? '' : `
+        <a href="/panel/impersonar/usuario/${u.id}/" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-600 dark:text-violet-300 font-bold text-sm transition-all" title="Ver el panel como este usuario">
+            <i class="fa-solid fa-user-secret"></i><span class="hidden lg:inline">Impersonar</span>
+        </a>`;
     return `
     <div class="lg-card rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 hover:-translate-y-0.5 transition-all">
         <div class="flex items-center gap-4 flex-1 min-w-0">
@@ -77,6 +87,7 @@ function renderRow(u, i) {
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
             ${roleSelect}
+            ${impersonateBtn}
             <button onclick="confirmReset(${u.id}, '${esc(fullName).replace(/'/g, '&apos;')}')"
                 class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#F58830]/10 hover:bg-[#F58830]/20 text-[#F58830] font-bold text-sm transition-all" title="Recuperar clave">
                 <i class="fa-solid fa-key"></i><span class="hidden lg:inline">Recuperar clave</span>
@@ -146,6 +157,20 @@ function confirmReset(userId, name) {
         resetPassword(userId).then(ok => (typeof showToast === 'function') && showToast(ok ? 'Clave reseteada' : 'Error', ok ? 'success' : 'error'));
     }
 }
+
+document.addEventListener('click', e => {
+    const btn = e.target.closest('.ds-select-btn');
+    const opt = e.target.closest('.ds-select-opt');
+    const targetMenu = btn ? btn.nextElementSibling : null;
+    document.querySelectorAll('.ds-select-menu').forEach(m => { if (m !== targetMenu) m.classList.add('hidden'); });
+    if (btn) { targetMenu.classList.toggle('hidden'); return; }
+    if (opt) {
+        const wrap = opt.closest('.ds-select');
+        wrap.querySelector('.ds-select-val').textContent = opt.textContent;
+        wrap.querySelector('.ds-select-menu').classList.add('hidden');
+        setRole(parseInt(wrap.dataset.uid, 10), opt.dataset.val);
+    }
+});
 
 let searchTimer;
 document.getElementById('search-input').addEventListener('input', e => {

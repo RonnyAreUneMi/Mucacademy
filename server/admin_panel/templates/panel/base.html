@@ -864,6 +864,17 @@
 
     <!-- Main Content -->
     <main class="w-full {% block main_width %}max-w-7xl{% endblock %} mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+        {% if request.session.impersonator_id %}
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-violet-600 text-white px-4 py-3 shadow-lg">
+            <p class="text-sm font-bold flex items-center gap-2">
+                <i class="fa-solid fa-user-secret"></i>
+                Estás viendo el panel como <strong>{{ user.get_full_name|default:user.username }}</strong> ({{ user.get_role_display }})
+            </p>
+            <a href="{% url 'panel:stop_user_impersonation' %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-sm font-bold transition-colors whitespace-nowrap">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Volver a mi cuenta
+            </a>
+        </div>
+        {% endif %}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{% block page_title %}{% endblock %}</h1>
             <div class="flex items-center gap-3">{% block page_actions %}{% endblock %}</div>

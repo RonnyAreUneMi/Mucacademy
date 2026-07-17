@@ -47,4 +47,7 @@ from .session import (  # noqa: F401
     session_qr_display,
 )
 from .program import program_list, program_create, program_detail, program_certificate_design  # noqa: F401
-from .impersonate import impersonate_participant, stop_impersonation  # noqa: F401
+from .impersonate import (  # noqa: F401
+    impersonate_participant, stop_impersonation,
+    impersonate_user, stop_user_impersonation,
+)

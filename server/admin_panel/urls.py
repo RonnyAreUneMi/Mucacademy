@@ -26,6 +26,7 @@ from .views import (
     program_list, program_create, program_detail, program_certificate_design,
     # impersonate
     impersonate_participant, stop_impersonation,
+    impersonate_user, stop_user_impersonation,
     # design
     design_global, design_global_preview, design_save_firma_pos,
     # design system (UI tokens)
@@ -157,6 +158,8 @@ urlpatterns = [
     path('participantes/', admin_page('panel/participantes/list.html'), name='participantes_list'),
     path('impersonar/participante/<int:id>/', impersonate_participant, name='impersonate_participant'),
     path('impersonar/salir/', stop_impersonation, name='stop_impersonation'),
+    path('impersonar/usuario/<int:id>/', impersonate_user, name='impersonate_user'),
+    path('impersonar/usuario/salir/', stop_user_impersonation, name='stop_user_impersonation'),
     path('participantes/<int:id>/delete/',
          RedirectView.as_view(url='/api/v1/admin/participants/%(id)s/', permanent=False),
          name='participante_delete'),
