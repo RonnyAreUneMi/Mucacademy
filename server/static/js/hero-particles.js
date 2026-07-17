@@ -15,6 +15,9 @@
     var hosts = doc.querySelectorAll('#hero-fx, .fx-header');
     if (!hosts.length) return;
 
+    var scriptTag = doc.querySelector('script[data-tiger]');
+    var TIGER_URL = scriptTag ? scriptTag.getAttribute('data-tiger') : '';
+
     var reduce = window.matchMedia &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -52,13 +55,16 @@
         this.shapeIsLogo = false;
         this.mouse = { x: -9999, y: -9999, on: false };
         this.HERO_TEXT = (host.getAttribute('data-hero-text') || 'CertifAI').trim();
-        this.LOGO_URL = host.getAttribute('data-logo') || '';
+        this.LOGO_URL = host.getAttribute('data-logo') || (this.ambientOnly ? TIGER_URL : '');
         this.textPts = null;
         this.logoPts = null;
         this.hoverText = false;
         this.glyphIndex = 0;
         this.lastSwitch = 0;
         this.REPEL = 82; this.MAXPUSH = 15;
+        this.active = false;   // hover en headers ambient
+        this.progress = 0;     // 0 = disperso/limpio, 1 = tigre formado
+        this.cleared = true;
 
         this.GLYPHS = ['', '', '', '', '', ''];
         this.SWITCH_MS = 4800;
@@ -79,15 +85,20 @@
         }
 
         var self = this;
-        host.addEventListener('mousemove', function (e) {
-            var rect = host.getBoundingClientRect();
-            self.mouse.x = e.clientX - rect.left;
-            self.mouse.y = e.clientY - rect.top;
-            self.mouse.on = true;
-        });
-        host.addEventListener('mouseleave', function () {
-            self.mouse.on = false; self.mouse.x = self.mouse.y = -9999;
-        });
+        if (this.ambientOnly) {
+            host.addEventListener('mouseenter', function () { self.active = true; self.cleared = false; });
+            host.addEventListener('mouseleave', function () { self.active = false; });
+        } else {
+            host.addEventListener('mousemove', function (e) {
+                var rect = host.getBoundingClientRect();
+                self.mouse.x = e.clientX - rect.left;
+                self.mouse.y = e.clientY - rect.top;
+                self.mouse.on = true;
+            });
+            host.addEventListener('mouseleave', function () {
+                self.mouse.on = false; self.mouse.x = self.mouse.y = -9999;
+            });
+        }
     }
 
     Instance.prototype.styleFor = function (p, base) {
@@ -176,7 +187,9 @@
             }
             if (pts.length >= 40) {
                 self.logoPts = pts;
-                if (!reduce) {
+                if (self.ambientOnly) {
+                    self.buildTigerTargets();
+                } else if (!reduce) {
                     self.glyphIndex = self.GLYPHS.length;
                     self.applyShapeAt(self.glyphIndex);
                     self.lastSwitch = 0;
@@ -184,6 +197,33 @@
             }
         };
         img.src = url;
+    };
+
+    // Header ambient: puntos que forman SOLO el tigre, a la derecha (fuera del
+    // título), con sus colores reales. Cada punto tiene su destino (tx,ty) y una
+    // posición dispersa (sx,sy) en la mitad derecha para el efecto entrar/dispersar.
+    Instance.prototype.buildTigerTargets = function () {
+        var pts = this.logoPts;
+        if (!pts || pts.length < 40) return;
+        var W = this.W, H = this.H, S = this.SAMPLE;
+        var size = Math.min(H * 0.92, W * 0.42);
+        var scale = size / S;
+        var cx = W * (W < 760 ? 0.78 : 0.84);
+        var cy = H * 0.5;
+        var target = Math.min(pts.length, W < 760 ? 420 : 720);
+        var stride = pts.length / target;
+        this.shapeP.length = 0;
+        for (var i = 0; i < target; i++) {
+            var pt = pts[Math.floor(i * stride)];
+            this.shapeP.push({
+                tx: cx + (pt[0] - S / 2) * scale,
+                ty: cy + (pt[1] - S / 2) * scale,
+                sx: W * (0.55 + Math.random() * 0.43),
+                sy: Math.random() * H,
+                rgb: (pt.length > 2 ? [pt[2], pt[3], pt[4]] : null),
+                t: pt[0] / S
+            });
+        }
     };
 
     Instance.prototype.buildAmbient = function () {
@@ -206,8 +246,12 @@
         this.canvas.width = this.W * dpr; this.canvas.height = this.H * dpr;
         this.canvas.style.width = this.W + 'px'; this.canvas.style.height = this.H + 'px';
         this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        this.buildAmbient();
-        if (!this.ambientOnly) this.applyShapeAt(this.glyphIndex);
+        if (this.ambientOnly) {
+            if (this.logoPts) this.buildTigerTargets();
+        } else {
+            this.buildAmbient();
+            this.applyShapeAt(this.glyphIndex);
+        }
     };
 
     Instance.prototype.repel = function (px, py) {
@@ -272,18 +316,45 @@
         return true;
     };
 
-    Instance.prototype.frame = function (ts) {
-        var ctx = this.ctx;
-        if (!this.ambientOnly) {
-            if (this.mouse.on) {
-                if (!this.hoverText) this.hoverText = this.applyText();
+    // Header: limpio en idle; al hover los puntos entran y forman el tigre;
+    // al salir se dispersan y el canvas queda limpio otra vez.
+    Instance.prototype.frameAmbient = function () {
+        var ctx = this.ctx, W = this.W, H = this.H;
+        var goal = this.active ? 1 : 0;
+        this.progress += (goal - this.progress) * 0.08;
+        if (!this.active && this.progress < 0.012) {
+            this.progress = 0;
+            if (!this.cleared) { ctx.clearRect(0, 0, W, H); this.cleared = true; }
+            return;
+        }
+        this.cleared = false;
+        ctx.clearRect(0, 0, W, H);
+        var pr = this.progress;
+        var aBase = isDark ? 0.95 : 0.9;
+        for (var i = 0; i < this.shapeP.length; i++) {
+            var p = this.shapeP[i];
+            var x = p.sx + (p.tx - p.sx) * pr;
+            var y = p.sy + (p.ty - p.sy) * pr;
+            if (p.rgb) {
+                ctx.fillStyle = 'rgba(' + p.rgb[0] + ',' + p.rgb[1] + ',' + p.rgb[2] + ',' + (aBase * pr) + ')';
             } else {
-                if (this.hoverText) { this.hoverText = false; this.applyShapeAt(this.glyphIndex); this.lastSwitch = ts; }
-                if (!this.lastSwitch) this.lastSwitch = ts;
-                if (ts - this.lastSwitch > this.SWITCH_MS) {
-                    this.glyphIndex = (this.glyphIndex + 1) % this.totalShapes();
-                    this.lastSwitch = this.applyShapeAt(this.glyphIndex) ? ts : (ts - this.SWITCH_MS + 500);
-                }
+                ctx.fillStyle = colorFor(p.t, pr * (isDark ? 0.85 : 0.9));
+            }
+            ctx.fillRect(x, y, 1.8, 1.8);
+        }
+    };
+
+    Instance.prototype.frame = function (ts) {
+        if (this.ambientOnly) { this.frameAmbient(); return; }
+        var ctx = this.ctx;
+        if (this.mouse.on) {
+            if (!this.hoverText) this.hoverText = this.applyText();
+        } else {
+            if (this.hoverText) { this.hoverText = false; this.applyShapeAt(this.glyphIndex); this.lastSwitch = ts; }
+            if (!this.lastSwitch) this.lastSwitch = ts;
+            if (ts - this.lastSwitch > this.SWITCH_MS) {
+                this.glyphIndex = (this.glyphIndex + 1) % this.totalShapes();
+                this.lastSwitch = this.applyShapeAt(this.glyphIndex) ? ts : (ts - this.SWITCH_MS + 500);
             }
         }
         ctx.clearRect(0, 0, this.W, this.H);
@@ -297,8 +368,6 @@
             ctx.fillStyle = colorFor(a.t, isDark ? 0.55 : 0.6);
             ctx.beginPath(); ctx.arc(r[0], r[1], 1.7, 0, 6.2832); ctx.fill();
         }
-
-        if (this.ambientOnly) return;
 
         for (var j = 0; j < this.shapeP.length; j++) {
             var p = this.shapeP[j];
@@ -315,13 +384,13 @@
     };
 
     Instance.prototype.drawStatic = function () {
+        if (this.ambientOnly) return;   // headers: sin animación => limpio
         var ctx = this.ctx;
         ctx.clearRect(0, 0, this.W, this.H);
         for (var i = 0; i < this.ambient.length; i++) {
             ctx.fillStyle = colorFor(this.ambient[i].t, isDark ? 0.55 : 0.6);
             ctx.beginPath(); ctx.arc(this.ambient[i].x, this.ambient[i].y, 1.7, 0, 6.2832); ctx.fill();
         }
-        if (this.ambientOnly) return;
         for (var j = 0; j < this.shapeP.length; j++) {
             ctx.fillStyle = this.styleFor(this.shapeP[j], 0.95);
             if (this.shapeIsLogo) { ctx.fillRect(this.shapeP[j].tx, this.shapeP[j].ty, 1.8, 1.8); }
@@ -346,7 +415,8 @@
 
     function startInstance(inst) {
         inst.size();
-        if (!inst.ambientOnly) inst.loadLogo(inst.LOGO_URL);
+        // headers ambient no animan bajo reduced-motion => sin logo ni dibujo
+        if (inst.LOGO_URL && !(inst.ambientOnly && reduce)) inst.loadLogo(inst.LOGO_URL);
         if (reduce) inst.drawStatic();
     }
 
