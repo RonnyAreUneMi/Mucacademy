@@ -232,65 +232,87 @@
     }
     .dark .timeline-row { border-bottom-color: rgba(255,255,255,0.06); }
     .timeline-row:last-child { border-bottom: 0; }
+
+    /* ═══════════ Entrada + hover vivos ═══════════ */
+    @keyframes nm-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    .nm-rise { animation: nm-rise .55s cubic-bezier(.22,1,.36,1) both; }
+    .nm-rise-1 { animation-delay: .06s; }
+    .nm-rise-2 { animation-delay: .12s; }
+    .nm-rise-3 { animation-delay: .18s; }
+    .nm-rise-4 { animation-delay: .24s; }
+    .nm-lift { transition: transform .2s ease, box-shadow .2s ease; }
+    .nm-lift:hover { transform: translateY(-2px); }
+
+    /* El hero recorta el canvas de partículas a sus esquinas redondeadas */
+    #hero-fx { position: relative; overflow: hidden; }
+    #hero-fx > .hero-body { position: relative; z-index: 1; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .nm-rise { animation: none; }
+        .nm-lift:hover { transform: none; }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="space-y-5">
 
-    <!-- ═══ Hero saludo + resumen ═══ -->
-    <section class="nm-card p-5 sm:p-7 flex flex-col">
-        <div class="flex items-start justify-between flex-wrap gap-4 mb-6">
-            <div class="flex-1 min-w-[200px]">
-                <p class="text-xs font-bold uppercase tracking-widest text-[var(--ds-brand)]">
-                    <i class="fa-solid fa-sun"></i> {{ today|date:"l, d \d\e F"|capfirst }}
-                </p>
-                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1.5 tracking-tight">
-                    Hola, <span class="brand-ai">{{ p.first_name }}</span>.
-                </h1>
-                <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                    {% if eventos_proximos %}Tienes {{ eventos_proximos|length }} evento{{ eventos_proximos|length|pluralize:"s" }} próximo{{ eventos_proximos|length|pluralize:"s" }}.{% else %}Hoy es un buen día para descubrir un evento nuevo.{% endif %}
-                </p>
+    <!-- ═══ Hero saludo + resumen (fondo de partículas) ═══ -->
+    <section id="hero-fx" data-hero-text="CertifAI" data-logo="{% static 'tiger_chase_loader.png' %}"
+             class="nm-card p-5 sm:p-7 flex flex-col nm-rise">
+        <div class="hero-body flex flex-col flex-1">
+            <div class="flex items-start justify-between flex-wrap gap-4 mb-6">
+                <div class="flex-1 min-w-[200px]">
+                    <p class="text-xs font-bold uppercase tracking-widest text-[var(--ds-brand)]">
+                        <i class="fa-solid fa-sun"></i> {{ today|date:"l, d \d\e F"|capfirst }}
+                    </p>
+                    <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1.5 tracking-tight">
+                        Hola, <span class="brand-ai">{{ p.first_name }}</span>.
+                    </h1>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                        {% if eventos_proximos %}Tienes {{ eventos_proximos|length }} evento{{ eventos_proximos|length|pluralize:"s" }} próximo{{ eventos_proximos|length|pluralize:"s" }}.{% else %}Hoy es un buen día para descubrir un evento nuevo.{% endif %}
+                    </p>
+                </div>
+                <div class="flex items-center gap-2.5 flex-wrap">
+                    <a href="{% url 'public:account_escanear' %}" class="nm-btn">
+                        <i class="fa-solid fa-qrcode text-[var(--ds-brand)]"></i> Escanear QR
+                    </a>
+                    <a href="{% url 'public:account_eventos' %}?tab=disponibles" class="nm-btn-primary">
+                        <i class="fa-solid fa-compass"></i> Explorar eventos
+                    </a>
+                </div>
             </div>
-            <div class="flex items-center gap-2.5 flex-wrap">
-                <a href="{% url 'public:account_escanear' %}" class="nm-btn">
-                    <i class="fa-solid fa-qrcode text-[var(--ds-brand)]"></i> Escanear QR
-                </a>
-                <a href="{% url 'public:account_eventos' %}?tab=disponibles" class="nm-btn-primary">
-                    <i class="fa-solid fa-compass"></i> Explorar eventos
-                </a>
-            </div>
-        </div>
 
-        <div class="mt-auto">
-            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">Tu resumen</p>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                <div class="nm-tile">
-                    <span class="nm-ico text-[#F58830]"><i class="fa-solid fa-certificate"></i></span>
-                    <div>
-                        <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums">{{ certificados_count }}</p>
-                        <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Certificados</p>
+            <div class="mt-auto">
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">Tu resumen</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                    <div class="nm-tile nm-lift">
+                        <span class="nm-ico text-[#F58830]"><i class="fa-solid fa-certificate"></i></span>
+                        <div>
+                            <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums" data-count>{{ certificados_count }}</p>
+                            <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Certificados</p>
+                        </div>
                     </div>
-                </div>
-                <div class="nm-tile">
-                    <span class="nm-ico text-purple-500"><i class="fa-solid fa-clock"></i></span>
-                    <div>
-                        <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums">{{ total_horas }}<span class="text-base font-bold text-slate-400">h</span></p>
-                        <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Estudiadas</p>
+                    <div class="nm-tile nm-lift">
+                        <span class="nm-ico text-purple-500"><i class="fa-solid fa-clock"></i></span>
+                        <div>
+                            <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums"><span data-count>{{ total_horas }}</span><span class="text-base font-bold text-slate-400">h</span></p>
+                            <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Estudiadas</p>
+                        </div>
                     </div>
-                </div>
-                <div class="nm-tile">
-                    <span class="nm-ico text-emerald-500"><i class="fa-solid fa-circle-check"></i></span>
-                    <div>
-                        <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums">{{ eventos_asistido_count }}</p>
-                        <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Asistidos</p>
+                    <div class="nm-tile nm-lift">
+                        <span class="nm-ico text-emerald-500"><i class="fa-solid fa-circle-check"></i></span>
+                        <div>
+                            <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums" data-count>{{ eventos_asistido_count }}</p>
+                            <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Asistidos</p>
+                        </div>
                     </div>
-                </div>
-                <div class="nm-tile">
-                    <span class="nm-ico text-blue-500"><i class="fa-solid fa-bookmark"></i></span>
-                    <div>
-                        <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums">{{ eventos_inscrito_count }}</p>
-                        <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Inscritos</p>
+                    <div class="nm-tile nm-lift">
+                        <span class="nm-ico text-blue-500"><i class="fa-solid fa-bookmark"></i></span>
+                        <div>
+                            <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums" data-count>{{ eventos_inscrito_count }}</p>
+                            <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Inscritos</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -301,7 +323,7 @@
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         <!-- Calendario (col-span 2) -->
-        <div class="lg-card rounded-3xl p-5 sm:p-6 lg:col-span-2">
+        <div class="nm-card p-5 sm:p-6 lg:col-span-2 nm-rise nm-rise-1">
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <p class="text-[10px] font-black uppercase tracking-widest text-[var(--ds-brand)] mb-0.5">
@@ -356,7 +378,7 @@
         </div>
 
         <!-- Próximo evento + countdown -->
-        <div class="lg-card rounded-3xl p-5 sm:p-6 relative overflow-hidden">
+        <div class="nm-card p-5 sm:p-6 relative overflow-hidden nm-rise nm-rise-2">
             {% if next_event %}
             <p class="text-[10px] font-black uppercase tracking-widest text-[var(--ds-brand)] mb-1">
                 <i class="fa-solid fa-bolt"></i> Próximo evento
@@ -414,8 +436,8 @@
 
     <!-- ═══ Programas para ti ═══ -->
     {% if programas_recomendados %}
-    <section>
-        <div class="flex items-center justify-between mb-3">
+    <section class="nm-card p-5 sm:p-6 nm-rise nm-rise-3">
+        <div class="flex items-center justify-between mb-4">
             <h2 class="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-2">
                 <i class="fa-solid fa-layer-group text-[var(--ds-accent)]"></i> Programas académicos
             </h2>
@@ -431,8 +453,8 @@
 
     <!-- ═══ Recomendados ═══ -->
     {% if eventos_recomendados %}
-    <section>
-        <div class="flex items-center justify-between mb-3">
+    <section class="nm-card p-5 sm:p-6 nm-rise nm-rise-3">
+        <div class="flex items-center justify-between mb-4">
             <h2 class="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-2">
                 <i class="fa-solid fa-wand-magic-sparkles text-[var(--ds-accent)]"></i> Para ti · Eventos disponibles
             </h2>
@@ -450,7 +472,7 @@
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         <!-- Actividad reciente -->
-        <div class="lg-card rounded-3xl p-5 sm:p-6 lg:col-span-2">
+        <div class="nm-card p-5 sm:p-6 lg:col-span-2 nm-rise nm-rise-4">
             <p class="text-[10px] font-black uppercase tracking-widest text-[var(--ds-brand)] mb-1">
                 <i class="fa-solid fa-clock-rotate-left"></i> Actividad reciente
             </p>
@@ -482,7 +504,7 @@
         </div>
 
         <!-- Certificados recientes -->
-        <div class="lg-card rounded-3xl p-5 sm:p-6">
+        <div class="nm-card p-5 sm:p-6 nm-rise nm-rise-4">
             <div class="flex items-center justify-between mb-3">
                 <div>
                     <p class="text-[10px] font-black uppercase tracking-widest text-[var(--ds-brand)] mb-0.5">
@@ -531,8 +553,27 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="{% static 'js/hero-particles.js' %}" defer></script>
 <script src="{% static 'js/components/countdown.js' %}"></script>
 <script src="{% static 'js/pages/dashboard.js' %}"></script>
+<script>
+(function () {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+    document.querySelectorAll('[data-count]').forEach(function (el) {
+        var target = parseInt((el.textContent || '').replace(/\D/g, ''), 10);
+        if (isNaN(target) || target <= 0) return;
+        var dur = 900, t0 = null;
+        function step(ts) {
+            if (t0 === null) t0 = ts;
+            var p = Math.min((ts - t0) / dur, 1);
+            el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+            if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    });
+})();
+</script>
 <script>
 (function () {
     // ── Popover de detalle del día del calendario ──────────────────
