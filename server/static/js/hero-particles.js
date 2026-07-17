@@ -78,11 +78,9 @@
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
 
-        if (!this.ambientOnly) {
-            this.off = doc.createElement('canvas');
-            this.off.width = this.SAMPLE; this.off.height = this.SAMPLE;
-            this.octx = this.off.getContext('2d');
-        }
+        this.off = doc.createElement('canvas');
+        this.off.width = this.SAMPLE; this.off.height = this.SAMPLE;
+        this.octx = this.off.getContext('2d');
 
         var self = this;
         if (this.ambientOnly) {
