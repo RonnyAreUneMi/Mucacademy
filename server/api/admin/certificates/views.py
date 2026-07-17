@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from api.admin.permissions import IsPanelAdmin
 
 from core.models import Certificate
 from api.common.viewsets import AuditedModelViewSet
@@ -13,7 +14,7 @@ from .serializers import (
 class CertificadoViewSet(AuditedModelViewSet):
     """CRUD admin de certificados. La parte pública está en api/public/."""
     queryset = Certificate.objects.with_relations()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsPanelAdmin]
     filterset_fields = ['batch', 'participant']
     search_fields = ['national_id', 'email', 'first_name', 'last_name', 'course', 'verification_hash']
     ordering_fields = ['created_at', 'download_count']

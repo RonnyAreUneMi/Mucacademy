@@ -1,4 +1,5 @@
 from rest_framework import serializers, permissions
+from api.admin.permissions import IsPanelAdmin
 
 from core.models import Signature
 from api.common.viewsets import AuditedModelViewSet
@@ -14,7 +15,7 @@ class FirmaSerializer(serializers.ModelSerializer):
 class FirmaViewSet(AuditedModelViewSet):
     queryset = Signature.objects.all()
     serializer_class = FirmaSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsPanelAdmin]
     search_fields = ['name', 'role']
     ordering_fields = ['sort_order', 'name']
     ordering = ['sort_order', 'name']

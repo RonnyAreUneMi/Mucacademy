@@ -1,4 +1,5 @@
 from rest_framework import serializers, permissions
+from api.admin.permissions import IsPanelAdmin
 
 from core.models import AuditLog
 from api.common.viewsets import AuditedReadOnlyModelViewSet
@@ -22,7 +23,7 @@ class AuditoriaViewSet(AuditedReadOnlyModelViewSet):
     """Logs de auditoría (solo lectura, solo staff)."""
     queryset = AuditLog.objects.select_related('user')
     serializer_class = AuditoriaSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsPanelAdmin]
     filterset_fields = ['action', 'user']
     search_fields = ['action', 'details', 'user__username']
     ordering_fields = ['created_at']

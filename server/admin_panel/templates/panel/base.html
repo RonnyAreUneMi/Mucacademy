@@ -756,12 +756,11 @@
                 <!-- Brand + Menu -->
                 <div class="flex items-center gap-2 lg:gap-6">
                     <a href="{% url 'panel:dashboard' %}" class="flex items-center gap-2.5 group">
-                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#F58830] to-[#D97520] flex items-center justify-center shadow-lg shadow-[#F58830]/20 group-hover:scale-110 group-hover:rotate-6 transition-transform">
-                            <i class="fa-solid fa-shield-halved text-white text-sm"></i>
-                        </div>
+                        <img src="{% static 'tiger_chase_loader.png' %}" alt="CertifAI"
+                             class="w-10 h-10 object-contain group-hover:scale-110 group-hover:rotate-6 transition-transform">
                         <div class="leading-none">
                             <div class="flex items-baseline gap-1">
-                                <span class="brand-certif text-lg text-slate-900 dark:text-white">certif</span><span class="brand-ai text-lg">ai</span>
+                                <span class="brand-certif text-lg text-slate-900 dark:text-white">Certif</span><span class="brand-ai text-lg">AI</span>
                             </div>
                             <span class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Admin</span>
                         </div>

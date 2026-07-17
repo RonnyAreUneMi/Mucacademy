@@ -1,5 +1,6 @@
 from django.db.models import Count
 from rest_framework import permissions
+from api.admin.permissions import IsPanelAdmin
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -16,7 +17,7 @@ from .serializers import (
 
 class ParticipanteViewSet(AuditedModelViewSet):
     queryset = Participant.objects.annotate(certificados_count=Count('certificates'))
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsPanelAdmin]
     filterset_fields = ['is_leader']
     search_fields = ['national_id', 'email', 'first_name', 'last_name']
     ordering_fields = ['created_at', 'first_name', 'last_name']

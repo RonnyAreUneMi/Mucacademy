@@ -81,6 +81,7 @@ def nav_menu(request):
         {
             'label': 'Certificados',
             'icon': 'fa-certificate',
+            'color': '#F58830',
             'match_keywords': ['batch'],
             'visible': True,
             'items': [
@@ -91,6 +92,7 @@ def nav_menu(request):
         {
             'label': 'Gestión',
             'icon': 'fa-users-gear',
+            'color': '#0EA5E9',
             'match_keywords': ['session', 'participantes', 'program'],
             'visible': True,
             'items': [
@@ -103,6 +105,7 @@ def nav_menu(request):
         {
             'label': 'Admin',
             'icon': 'fa-gears',
+            'color': '#8B5CF6',
             'match_keywords': ['solicitudes', 'firma', 'design', 'ai_config', 'usuarios', 'titulos', 'google', 'modelado'],
             'visible': is_superadmin,
             'sections': [

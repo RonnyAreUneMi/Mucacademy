@@ -9,6 +9,7 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import permissions, status
+from api.admin.permissions import IsPanelAdmin
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -33,7 +34,7 @@ from .serializers import (
 class SesionViewSet(AuditedModelViewSet):
     """CRUD admin de sesiones/eventos."""
     queryset = Event.objects.all()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsPanelAdmin]
     filterset_fields = ['is_active', 'modality', 'leaders_only', 'date', 'batch']
     search_fields = ['title', 'description', 'location']
     ordering_fields = ['date', 'start_time', 'created_at']
