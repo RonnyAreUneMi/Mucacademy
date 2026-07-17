@@ -206,11 +206,11 @@
         var pts = this.logoPts;
         if (!pts || pts.length < 40) return;
         var W = this.W, H = this.H, S = this.SAMPLE;
-        var size = Math.min(H * 0.92, W * 0.42);
+        var size = Math.min(H * 1.05, W * 0.5);
         var scale = size / S;
-        var cx = W * (W < 760 ? 0.78 : 0.84);
+        var cx = W * (W < 760 ? 0.5 : 0.62);
         var cy = H * 0.5;
-        var target = Math.min(pts.length, W < 760 ? 420 : 720);
+        var target = Math.min(pts.length, W < 760 ? 520 : 900);
         var stride = pts.length / target;
         this.shapeP.length = 0;
         for (var i = 0; i < target; i++) {
@@ -218,7 +218,7 @@
             this.shapeP.push({
                 tx: cx + (pt[0] - S / 2) * scale,
                 ty: cy + (pt[1] - S / 2) * scale,
-                sx: W * (0.55 + Math.random() * 0.43),
+                sx: W * (0.2 + Math.random() * 0.6),
                 sy: Math.random() * H,
                 rgb: (pt.length > 2 ? [pt[2], pt[3], pt[4]] : null),
                 t: pt[0] / S
