@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/nm.css' %}">
 
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Outfit', 'sans-serif'] } } } };
@@ -363,6 +364,18 @@
     </div>
     {% endfor %}
 </div>
+<script>
+(function () {
+    document.querySelectorAll('.fixed.top-20 .lg-card').forEach(function (toast) {
+        setTimeout(function () {
+            toast.style.transition = 'opacity .4s, transform .4s';
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(24px)';
+            setTimeout(function () { toast.remove(); }, 400);
+        }, 4500);
+    });
+})();
+</script>
 {% endif %}
 
 <!-- ═══════════════════════ MAIN ═══════════════════════ -->

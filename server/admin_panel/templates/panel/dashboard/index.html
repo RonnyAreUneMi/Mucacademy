@@ -2,39 +2,13 @@
 {% load static %}
 
 {% block content %}
-<style>
-    .light { --nm-bg:#eef1f7; --nm-shadow:#d4dbe8; --nm-hi:#ffffff; }
-    .dark  { --nm-bg:#101d40; --nm-shadow:#070f28; --nm-hi:rgba(255,255,255,0.045); }
-    .nm-panel { background:var(--nm-bg); border-radius:26px;
-        box-shadow:8px 8px 18px var(--nm-shadow), -8px -8px 18px var(--nm-hi); }
-    .nm-raise { background:var(--nm-bg); border-radius:18px;
-        box-shadow:5px 5px 11px var(--nm-shadow), -5px -5px 11px var(--nm-hi); }
-    .nm-inset { background:var(--nm-bg); border-radius:20px;
-        box-shadow:inset 5px 5px 11px var(--nm-shadow), inset -5px -5px 11px var(--nm-hi); }
-    .nm-tile { background:var(--nm-bg); border-radius:18px; padding:0.9rem 1rem;
-        display:flex; align-items:center; gap:0.75rem;
-        box-shadow:inset 4px 4px 9px var(--nm-shadow), inset -4px -4px 9px var(--nm-hi); }
-    .nm-ico { width:2.6rem; height:2.6rem; border-radius:14px; flex-shrink:0;
-        display:flex; align-items:center; justify-content:center; font-size:1.05rem;
-        background:var(--nm-bg); box-shadow:4px 4px 8px var(--nm-shadow), -4px -4px 8px var(--nm-hi); }
-    .nm-btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.7rem 1.15rem;
-        border-radius:15px; font-weight:800; font-size:0.875rem; color:#475569;
-        background:var(--nm-bg); box-shadow:4px 4px 9px var(--nm-shadow), -4px -4px 9px var(--nm-hi);
-        transition:box-shadow .15s; }
-    .dark .nm-btn { color:#cbd5e1; }
-    .nm-btn:hover { box-shadow:inset 3px 3px 7px var(--nm-shadow), inset -3px -3px 7px var(--nm-hi); }
-    .nm-btn-primary { display:inline-flex; align-items:center; gap:0.5rem; padding:0.7rem 1.15rem;
-        border-radius:15px; font-weight:800; font-size:0.875rem; color:#fff; background:#F58830;
-        box-shadow:4px 4px 11px rgba(245,136,48,0.30), -3px -3px 9px var(--nm-hi); transition:filter .15s; }
-    .nm-btn-primary:hover { filter:brightness(1.06); }
-</style>
 <div class="animate__animated animate__fadeIn space-y-5">
 
     <!-- ═══════════ HERO + QUICK ACTIONS combinados ═══════════ -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
         <!-- Hero (col-span-8) — Neumorfismo limpio -->
-        <div class="lg:col-span-8 nm-panel p-6 md:p-8 flex flex-col">
+        <div class="lg:col-span-8 nm-card p-6 md:p-8 flex flex-col">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-6">
                 <div class="flex items-center gap-4">
                     <span class="nm-inset w-20 h-20 md:w-24 md:h-24 flex items-center justify-center flex-shrink-0">
@@ -102,7 +76,7 @@
         </div>
 
         <!-- Quick actions verticales (col-span-4) — Liquid Glass -->
-        <div class="lg:col-span-4 lg-card relative overflow-hidden rounded-3xl p-5">
+        <div class="lg:col-span-4 nm-card relative overflow-hidden p-5">
             <div class="relative z-10">
             <p class="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5"><i class="fa-solid fa-bolt text-[#F58830]"></i> Acciones rápidas</p>
             <div class="grid grid-cols-3 gap-3">
@@ -126,19 +100,19 @@
     <div>
         <p class="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-slate-400 mb-3 flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Necesita tu atención</p>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="lg-card rounded-2xl p-4 flex items-center gap-3 border-l-4 border-rose-500">
+            <div class="nm-card p-4 flex items-center gap-3 border-l-4 border-rose-500">
                 <div class="w-11 h-11 rounded-xl bg-rose-500/15 text-rose-500 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-user-xmark"></i></div>
                 <div class="min-w-0"><p class="text-2xl font-black text-gray-900 dark:text-white leading-none" id="dec-no-shows">—</p><p class="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">inscritos no asistieron</p></div>
             </div>
-            <a href="{% url 'panel:session_list' %}" class="lg-card rounded-2xl p-4 flex items-center gap-3 border-l-4 border-amber-500 hover:-translate-y-0.5 transition-all">
+            <a href="{% url 'panel:session_list' %}" class="nm-card p-4 flex items-center gap-3 border-l-4 border-amber-500 hover:-translate-y-0.5 transition-all">
                 <div class="w-11 h-11 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-certificate"></i></div>
                 <div class="min-w-0"><p class="text-2xl font-black text-gray-900 dark:text-white leading-none" id="dec-need-certs">—</p><p class="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">eventos sin certificados</p></div>
             </a>
-            <div class="lg-card rounded-2xl p-4 flex items-center gap-3 border-l-4 border-blue-500">
+            <div class="nm-card p-4 flex items-center gap-3 border-l-4 border-blue-500">
                 <div class="w-11 h-11 rounded-xl bg-blue-500/15 text-blue-500 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-download"></i></div>
                 <div class="min-w-0"><p class="text-2xl font-black text-gray-900 dark:text-white leading-none" id="dec-not-downloaded">—</p><p class="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">certificados sin descargar</p></div>
             </div>
-            <a href="{% url 'panel:solicitudes_pendientes' %}" class="lg-card rounded-2xl p-4 flex items-center gap-3 border-l-4 border-violet-500 hover:-translate-y-0.5 transition-all">
+            <a href="{% url 'panel:solicitudes_pendientes' %}" class="nm-card p-4 flex items-center gap-3 border-l-4 border-violet-500 hover:-translate-y-0.5 transition-all">
                 <div class="w-11 h-11 rounded-xl bg-violet-500/15 text-violet-500 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-user-clock"></i></div>
                 <div class="min-w-0"><p class="text-2xl font-black text-gray-900 dark:text-white leading-none" id="dec-solicitudes">—</p><p class="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">solicitudes pendientes</p></div>
             </a>

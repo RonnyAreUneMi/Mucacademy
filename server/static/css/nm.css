@@ -1,0 +1,43 @@
+:root {
+  --nm-surface:#eef1f7; --nm-tile:#e4e9f2; --nm-border:rgba(15,23,42,0.07);
+  --nm-hi:#ffffff; --nm-drop:rgba(15,23,42,0.12);
+  --nm-in-d:#cfd6e4; --nm-in-l:#ffffff;
+}
+.dark {
+  --nm-surface:#131f45; --nm-tile:#0f1a3c; --nm-border:rgba(255,255,255,0.08);
+  --nm-hi:rgba(255,255,255,0.04); --nm-drop:rgba(0,0,0,0.45);
+  --nm-in-d:#080f26; --nm-in-l:rgba(255,255,255,0.04);
+}
+.nm-card {
+  background:var(--nm-surface); border:1px solid var(--nm-border); border-radius:24px;
+  box-shadow:8px 8px 22px var(--nm-drop), -6px -6px 16px var(--nm-hi);
+}
+.nm-tile {
+  background:var(--nm-tile); border:1px solid var(--nm-border); border-radius:16px;
+  padding:0.9rem 1rem; display:flex; align-items:center; gap:0.75rem;
+  box-shadow:inset 3px 3px 7px var(--nm-in-d), inset -3px -3px 7px var(--nm-in-l);
+}
+.nm-inset {
+  background:var(--nm-tile); border:1px solid var(--nm-border); border-radius:20px;
+  box-shadow:inset 4px 4px 9px var(--nm-in-d), inset -4px -4px 9px var(--nm-in-l);
+}
+.nm-ico {
+  width:2.6rem; height:2.6rem; border-radius:13px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:1.05rem;
+  background:var(--nm-surface); box-shadow:3px 3px 7px var(--nm-in-d), -3px -3px 7px var(--nm-hi);
+}
+.nm-btn {
+  display:inline-flex; align-items:center; gap:0.5rem; padding:0.7rem 1.15rem;
+  border-radius:14px; font-weight:800; font-size:0.875rem; color:#475569;
+  background:var(--nm-surface); border:1px solid var(--nm-border);
+  box-shadow:3px 3px 8px var(--nm-drop), -3px -3px 8px var(--nm-hi);
+  transition:box-shadow .15s;
+}
+.dark .nm-btn { color:#cbd5e1; }
+.nm-btn:hover { box-shadow:inset 3px 3px 7px var(--nm-in-d), inset -3px -3px 7px var(--nm-in-l); }
+.nm-btn-primary {
+  display:inline-flex; align-items:center; gap:0.5rem; padding:0.7rem 1.15rem;
+  border-radius:14px; font-weight:800; font-size:0.875rem; color:#fff; background:#F58830;
+  box-shadow:4px 4px 12px rgba(245,136,48,0.30); transition:filter .15s;
+}
+.nm-btn-primary:hover { filter:brightness(1.06); }

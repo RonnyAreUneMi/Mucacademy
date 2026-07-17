@@ -4,44 +4,6 @@
 
 {% block extra_head %}
 <style>
-    /* ═══════════ Stat tile ═══════════ */
-    .stat-tile {
-        position: relative;
-        padding: 18px 20px;
-        border-radius: 20px;
-        background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.40));
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.7);
-        box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.95),
-            0 8px 22px -6px rgba(15,23,42,0.10);
-        transition: transform .3s cubic-bezier(.34,1.56,.64,1);
-    }
-    .dark .stat-tile {
-        background: linear-gradient(180deg, rgba(22,32,84,0.65), rgba(22,32,84,0.40));
-        border-color: rgba(255,255,255,0.10);
-        box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.10),
-            0 10px 24px -6px rgba(0,0,0,0.45);
-    }
-    .stat-tile:hover { transform: translateY(-2px); }
-    .stat-tile .st-icon {
-        width: 38px; height: 38px;
-        border-radius: 12px;
-        display: inline-flex; align-items: center; justify-content: center;
-        color: white; font-size: 14px;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 14px -4px rgba(15,23,42,0.30);
-    }
-    .stat-tile .st-num {
-        font-family: 'Sora', sans-serif; font-weight: 900;
-        font-size: 1.8rem; line-height: 1;
-        color: #0f172a;
-        letter-spacing: -0.02em;
-    }
-    .dark .stat-tile .st-num { color: #fff; }
-    .stat-tile .st-lbl { font-size: 0.7rem; font-weight: 800; uppercase: true; letter-spacing: 0.06em; color: #64748b; text-transform: uppercase; }
-    .dark .stat-tile .st-lbl { color: #94a3b8; }
-
     /* ═══════════ Calendar · iPhone-style ═══════════ */
     .cal-wrap {
         background: rgba(255,255,255,0.30);
@@ -276,9 +238,9 @@
 {% block content %}
 <div class="space-y-5">
 
-    <!-- ═══ Hero saludo ═══ -->
-    <section class="lg-card rounded-3xl p-5 sm:p-7 relative overflow-hidden">
-        <div class="relative z-10 flex items-start justify-between flex-wrap gap-4">
+    <!-- ═══ Hero saludo + resumen ═══ -->
+    <section class="nm-card p-5 sm:p-7 flex flex-col">
+        <div class="flex items-start justify-between flex-wrap gap-4 mb-6">
             <div class="flex-1 min-w-[200px]">
                 <p class="text-xs font-bold uppercase tracking-widest text-[var(--ds-brand)]">
                     <i class="fa-solid fa-sun"></i> {{ today|date:"l, d \d\e F"|capfirst }}
@@ -290,53 +252,47 @@
                     {% if eventos_proximos %}Tienes {{ eventos_proximos|length }} evento{{ eventos_proximos|length|pluralize:"s" }} próximo{{ eventos_proximos|length|pluralize:"s" }}.{% else %}Hoy es un buen día para descubrir un evento nuevo.{% endif %}
                 </p>
             </div>
-            <div class="flex items-center gap-2 flex-wrap">
-                <a href="{% url 'public:account_escanear' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
-                        bg-white/85 dark:bg-white/10 text-[var(--ds-accent)] dark:text-white
-                        border border-[var(--ds-brand)]/30
-                        shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_4px_12px_-4px_rgba(15,23,42,0.10)]
-                        dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_4px_12px_-4px_rgba(0,0,0,0.30)]
-                        hover:border-[var(--ds-brand)] transition-all">
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <a href="{% url 'public:account_escanear' %}" class="nm-btn">
                     <i class="fa-solid fa-qrcode text-[var(--ds-brand)]"></i> Escanear QR
                 </a>
-                <a href="{% url 'public:account_eventos' %}?tab=disponibles" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
-                        bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)] text-white
-                        shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_14px_-4px_rgba(245,136,48,0.40)]
-                        hover:brightness-110 transition-all">
+                <a href="{% url 'public:account_eventos' %}?tab=disponibles" class="nm-btn-primary">
                     <i class="fa-solid fa-compass"></i> Explorar eventos
                 </a>
             </div>
         </div>
-    </section>
 
-    <!-- ═══ 4 stats ═══ -->
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="stat-tile flex items-center gap-3">
-            <span class="st-icon" style="background: linear-gradient(135deg, var(--ds-brand), var(--ds-brand-dark));"><i class="fa-solid fa-certificate"></i></span>
-            <div>
-                <p class="st-num tabular-nums">{{ certificados_count }}</p>
-                <p class="st-lbl">Certificados</p>
-            </div>
-        </div>
-        <div class="stat-tile flex items-center gap-3">
-            <span class="st-icon" style="background: linear-gradient(135deg, #A855F7, #7C3AED);"><i class="fa-solid fa-clock"></i></span>
-            <div>
-                <p class="st-num tabular-nums">{{ total_horas }}<span class="text-base font-bold text-slate-400">h</span></p>
-                <p class="st-lbl">Estudiadas</p>
-            </div>
-        </div>
-        <div class="stat-tile flex items-center gap-3">
-            <span class="st-icon" style="background: linear-gradient(135deg, #10B981, #059669);"><i class="fa-solid fa-circle-check"></i></span>
-            <div>
-                <p class="st-num tabular-nums">{{ eventos_asistido_count }}</p>
-                <p class="st-lbl">Asistidos</p>
-            </div>
-        </div>
-        <div class="stat-tile flex items-center gap-3">
-            <span class="st-icon" style="background: linear-gradient(135deg, #3B82F6, #2563EB);"><i class="fa-solid fa-bookmark"></i></span>
-            <div>
-                <p class="st-num tabular-nums">{{ eventos_inscrito_count }}</p>
-                <p class="st-lbl">Inscritos</p>
+        <div class="mt-auto">
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">Tu resumen</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                <div class="nm-tile">
+                    <span class="nm-ico text-[#F58830]"><i class="fa-solid fa-certificate"></i></span>
+                    <div>
+                        <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums">{{ certificados_count }}</p>
+                        <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Certificados</p>
+                    </div>
+                </div>
+                <div class="nm-tile">
+                    <span class="nm-ico text-purple-500"><i class="fa-solid fa-clock"></i></span>
+                    <div>
+                        <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums">{{ total_horas }}<span class="text-base font-bold text-slate-400">h</span></p>
+                        <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Estudiadas</p>
+                    </div>
+                </div>
+                <div class="nm-tile">
+                    <span class="nm-ico text-emerald-500"><i class="fa-solid fa-circle-check"></i></span>
+                    <div>
+                        <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums">{{ eventos_asistido_count }}</p>
+                        <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Asistidos</p>
+                    </div>
+                </div>
+                <div class="nm-tile">
+                    <span class="nm-ico text-blue-500"><i class="fa-solid fa-bookmark"></i></span>
+                    <div>
+                        <p class="text-2xl font-black text-slate-900 dark:text-white leading-none tabular-nums">{{ eventos_inscrito_count }}</p>
+                        <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Inscritos</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
