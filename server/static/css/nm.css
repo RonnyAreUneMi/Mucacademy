@@ -41,3 +41,15 @@
   box-shadow:4px 4px 12px rgba(245,136,48,0.30); transition:filter .15s;
 }
 .nm-btn-primary:hover { filter:brightness(1.06); }
+
+/* Cabecera con partículas ambientales (modo ligero). El scrim usa el color del
+   fondo de la página para que el título quede siempre legible: opaco a la
+   izquierda (donde va el texto) y transparente a la derecha (deja ver los puntos). */
+:root { --fx-scrim:var(--ds-bg-light,#F8FAFC); }
+.dark  { --fx-scrim:var(--ds-bg-dark,#0A1535); }
+.fx-header { position:relative; overflow:hidden; border-radius:var(--ds-radius-xl,1.5rem); }
+.fx-header > :not(canvas) { position:relative; z-index:2; }
+.fx-header::before {
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(90deg, var(--fx-scrim) 0%, var(--fx-scrim) 34%, transparent 82%);
+}
