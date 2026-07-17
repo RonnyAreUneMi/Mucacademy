@@ -43,6 +43,12 @@
         return 'rgba(' + Math.round(c[0] * 0.82) + ',' + Math.round(c[1] * 0.72) +
             ',' + Math.round(c[2] * 0.86) + ',' + (alpha != null ? alpha : 0.95) + ')';
     }
+    function rgbThemed(t) {
+        var c = rgbAt(t);
+        return isDark
+            ? [Math.min(255, c[0] + 26), Math.min(255, c[1] + 26), Math.min(255, c[2] + 20)]
+            : [Math.round(c[0] * 0.82), Math.round(c[1] * 0.72), Math.round(c[2] * 0.86)];
+    }
 
     // ─────────────────────────── instancia por host ───────────────────────────
     function Instance(host, mode) {
@@ -63,8 +69,7 @@
         this.lastSwitch = 0;
         this.REPEL = 82; this.MAXPUSH = 15;
         this.active = false;   // hover en headers ambient
-        this.progress = 0;     // 0 = disperso/limpio, 1 = tigre formado
-        this.cleared = true;
+        this.morph = 0;        // 0 = texto CertifAI, 1 = tigre
 
         this.GLYPHS = ['', '', '', '', '', ''];
         this.SWITCH_MS = 4800;
@@ -186,7 +191,7 @@
             if (pts.length >= 40) {
                 self.logoPts = pts;
                 if (self.ambientOnly) {
-                    self.buildTigerTargets();
+                    self.buildAmbientTargets();
                 } else if (!reduce) {
                     self.glyphIndex = self.GLYPHS.length;
                     self.applyShapeAt(self.glyphIndex);
@@ -197,30 +202,32 @@
         img.src = url;
     };
 
-    // Header ambient: puntos que forman SOLO el tigre, a la derecha (fuera del
-    // título), con sus colores reales. Cada punto tiene su destino (tx,ty) y una
-    // posición dispersa (sx,sy) en la mitad derecha para el efecto entrar/dispersar.
-    Instance.prototype.buildTigerTargets = function () {
-        var pts = this.logoPts;
-        if (!pts || pts.length < 40) return;
+    // Header: los puntos forman "CertifAI" (idle) y el tigre (hover); cada punto
+    // tiene su destino de texto (tX,tY) y de tigre (gX,gY) y se interpola entre
+    // ambos. Ambas figuras van en la zona derecha del header (fuera del título).
+    Instance.prototype.buildAmbientTargets = function () {
+        if (!this.textPts) this.buildTextPts();
+        if (!this.textPts) return;
         var W = this.W, H = this.H, S = this.SAMPLE;
-        var size = Math.min(H * 1.05, W * 0.5);
-        var scale = size / S;
-        var cx = W * (W < 760 ? 0.5 : 0.62);
-        var cy = H * 0.5;
-        var target = Math.min(pts.length, W < 760 ? 520 : 900);
-        var stride = pts.length / target;
+        var count = W < 760 ? 320 : 560;
+        var cx = W * (W < 760 ? 0.5 : 0.62), cy = H * 0.5;
+        var aspect = this.TXT_W / this.TXT_H;
+        var tW = Math.min(W * 0.42, H * 0.7 * aspect), tH = tW / aspect;
+        var gSize = Math.min(H * 1.0, W * 0.38), gScale = gSize / S;
+        var strideT = this.textPts.length / count;
+        var lp = this.logoPts, strideG = lp ? lp.length / count : 0;
         this.shapeP.length = 0;
-        for (var i = 0; i < target; i++) {
-            var pt = pts[Math.floor(i * stride)];
-            this.shapeP.push({
-                tx: cx + (pt[0] - S / 2) * scale,
-                ty: cy + (pt[1] - S / 2) * scale,
-                sx: W * (0.2 + Math.random() * 0.6),
-                sy: Math.random() * H,
-                rgb: (pt.length > 2 ? [pt[2], pt[3], pt[4]] : null),
-                t: pt[0] / S
-            });
+        for (var i = 0; i < count; i++) {
+            var tp = this.textPts[Math.floor(i * strideT) % this.textPts.length];
+            var tX = cx + (tp[0] - 0.5) * tW, tY = cy + (tp[1] - 0.5) * tH;
+            var gX = tX, gY = tY, grgb = null;
+            if (lp) {
+                var gp = lp[Math.floor(i * strideG) % lp.length];
+                gX = cx + (gp[0] - S / 2) * gScale;
+                gY = cy + (gp[1] - S / 2) * gScale;
+                grgb = [gp[2], gp[3], gp[4]];
+            }
+            this.shapeP.push({ tX: tX, tY: tY, gX: gX, gY: gY, tcol: tp[0], grgb: grgb });
         }
     };
 
@@ -245,7 +252,7 @@
         this.canvas.style.width = this.W + 'px'; this.canvas.style.height = this.H + 'px';
         this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         if (this.ambientOnly) {
-            if (this.logoPts) this.buildTigerTargets();
+            this.buildAmbientTargets();
         } else {
             this.buildAmbient();
             this.applyShapeAt(this.glyphIndex);
@@ -314,30 +321,25 @@
         return true;
     };
 
-    // Header: limpio en idle; al hover los puntos entran y forman el tigre;
-    // al salir se dispersan y el canvas queda limpio otra vez.
+    // Header: siempre visible. Idle = "CertifAI"; al hover = tigre. Interpola
+    // posición y color entre ambos según `morph`.
     Instance.prototype.frameAmbient = function () {
         var ctx = this.ctx, W = this.W, H = this.H;
+        if (!this.shapeP.length) return;
         var goal = this.active ? 1 : 0;
-        this.progress += (goal - this.progress) * 0.08;
-        if (!this.active && this.progress < 0.012) {
-            this.progress = 0;
-            if (!this.cleared) { ctx.clearRect(0, 0, W, H); this.cleared = true; }
-            return;
-        }
-        this.cleared = false;
+        this.morph += (goal - this.morph) * 0.09;
+        var m = this.morph, aBase = isDark ? 0.92 : 0.9;
         ctx.clearRect(0, 0, W, H);
-        var pr = this.progress;
-        var aBase = isDark ? 0.95 : 0.9;
         for (var i = 0; i < this.shapeP.length; i++) {
             var p = this.shapeP[i];
-            var x = p.sx + (p.tx - p.sx) * pr;
-            var y = p.sy + (p.ty - p.sy) * pr;
-            if (p.rgb) {
-                ctx.fillStyle = 'rgba(' + p.rgb[0] + ',' + p.rgb[1] + ',' + p.rgb[2] + ',' + (aBase * pr) + ')';
-            } else {
-                ctx.fillStyle = colorFor(p.t, pr * (isDark ? 0.85 : 0.9));
+            var x = p.tX + (p.gX - p.tX) * m, y = p.tY + (p.gY - p.tY) * m;
+            var tc = rgbThemed(p.tcol), r = tc[0], g = tc[1], b = tc[2];
+            if (p.grgb) {
+                r = Math.round(r + (p.grgb[0] - r) * m);
+                g = Math.round(g + (p.grgb[1] - g) * m);
+                b = Math.round(b + (p.grgb[2] - b) * m);
             }
+            ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + aBase + ')';
             ctx.fillRect(x, y, 1.8, 1.8);
         }
     };
@@ -382,8 +384,17 @@
     };
 
     Instance.prototype.drawStatic = function () {
-        if (this.ambientOnly) return;   // headers: sin animación => limpio
         var ctx = this.ctx;
+        if (this.ambientOnly) {
+            ctx.clearRect(0, 0, this.W, this.H);
+            var ab = isDark ? 0.92 : 0.9;
+            for (var s = 0; s < this.shapeP.length; s++) {
+                var q = this.shapeP[s], qc = rgbThemed(q.tcol);
+                ctx.fillStyle = 'rgba(' + qc[0] + ',' + qc[1] + ',' + qc[2] + ',' + ab + ')';
+                ctx.fillRect(q.tX, q.tY, 1.8, 1.8);
+            }
+            return;
+        }
         ctx.clearRect(0, 0, this.W, this.H);
         for (var i = 0; i < this.ambient.length; i++) {
             ctx.fillStyle = colorFor(this.ambient[i].t, isDark ? 0.55 : 0.6);
