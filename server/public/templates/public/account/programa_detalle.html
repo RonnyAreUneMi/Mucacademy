@@ -2,7 +2,11 @@
 {% block page_title %}{{ prog.name }}{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-5">
+<style>
+    /* Rompe el límite de 1280px del layout para aprovechar monitores anchos */
+    .prog-wide { width: min(1560px, calc(100vw - 3rem)); margin-left: 50%; transform: translateX(-50%); }
+</style>
+<div class="prog-wide space-y-5">
 
     <!-- Volver -->
     <a href="{% url 'public:account_programas' %}"
@@ -10,29 +14,32 @@
         <i class="fa-solid fa-arrow-left"></i> Programas
     </a>
 
-    <!-- Card principal -->
-    <div class="lg-card rounded-3xl overflow-hidden">
-        <!-- Hero (imagen clara, altura contenida) -->
-        <div class="relative h-48 sm:h-56 overflow-hidden">
-            {% if prog.banner_image %}
-            <img src="{{ prog.banner_image.url }}" alt="" class="w-full h-full object-cover">
-            {% else %}
-            <div class="w-full h-full bg-gradient-to-br from-[var(--ds-accent)] via-[#1e2f6b] to-[var(--ds-brand-dark)] flex items-center justify-center">
-                <i class="fa-solid fa-layer-group text-white/30 text-7xl"></i>
-            </div>
-            {% endif %}
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
-            <div class="absolute bottom-4 left-5 right-5">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur-md
-                             bg-[var(--ds-accent)]/90 text-white ring-1 ring-white/25 mb-2">
-                    <i class="fa-solid fa-layer-group text-[9px]"></i> Programa académico
-                </span>
-                <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow">
-                    {{ prog.name }}
-                </h1>
-            </div>
+    <!-- HERO: una sola imagen a todo el ancho, arriba -->
+    <div class="relative h-52 sm:h-64 rounded-3xl overflow-hidden shadow-xl ring-1 ring-black/5 dark:ring-white/10 group">
+        {% if prog.banner_image %}
+        <img src="{{ prog.banner_image.url }}" alt="" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+        {% else %}
+        <div class="w-full h-full bg-gradient-to-br from-[var(--ds-accent)] via-[#1e2f6b] to-[var(--ds-brand-dark)] flex items-center justify-center">
+            <i class="fa-solid fa-layer-group text-white/30 text-8xl"></i>
         </div>
+        {% endif %}
+        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
+        <div class="absolute bottom-5 left-6 right-6">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold backdrop-blur-md
+                         bg-[var(--ds-accent)]/90 text-white ring-1 ring-white/25 mb-2.5">
+                <i class="fa-solid fa-layer-group text-[9px]"></i> Programa académico
+            </span>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight drop-shadow-lg">
+                {{ prog.name }}
+            </h1>
+        </div>
+    </div>
 
+    <!-- Grid: información del programa (izq) + seminarios (der) -->
+    <div class="grid lg:grid-cols-[1.7fr,1fr] gap-5 items-start">
+
+    <!-- Card principal (izquierda) -->
+    <div class="lg-card rounded-3xl overflow-hidden">
         <!-- Cuerpo -->
         <div class="p-5 sm:p-6 space-y-5">
             <!-- Stats rápidos -->
@@ -66,10 +73,89 @@
 
             <!-- Descripción -->
             {% if prog.description %}
-            <div class="prose-sm">
-                <p class="text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1.5">Sobre el programa</p>
-                <div class="rich-desc text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{{ prog.description|safe }}</div>
+            <style>
+                .prog-info { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+                @media (min-width: 768px) { .prog-info { grid-template-columns: 1fr 1fr; } }
+                .prog-card {
+                    background: rgba(148,163,184,.06);
+                    border: 1px solid rgba(148,163,184,.18);
+                    border-radius: 1rem;
+                    padding: 1.25rem 1.4rem;
+                }
+                .dark .prog-card { background: rgba(255,255,255,.035); border-color: rgba(255,255,255,.09); }
+                /* La intro ocupa todo el ancho, con acento a la izquierda */
+                .prog-card.prog-lead {
+                    grid-column: 1 / -1;
+                    border-left: 3px solid var(--ds-brand);
+                    background: linear-gradient(90deg, rgba(245,136,48,.07), rgba(148,163,184,.04));
+                }
+                .prog-card-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .85rem; }
+                .prog-ico {
+                    width: 2.1rem; height: 2.1rem; border-radius: .65rem; flex: none;
+                    display: grid; place-items: center;
+                    background: rgba(245,136,48,.14); color: var(--ds-brand-dark);
+                }
+                .dark .prog-ico { color: var(--ds-brand); }
+                .prog-card-head h3 { margin: 0; font-weight: 800; font-size: 1rem; color: #1e293b; letter-spacing: -.01em; }
+                .dark .prog-card-head h3 { color: #fff; }
+                .prog-body { font-size: .875rem; line-height: 1.65; color: #475569; }
+                .dark .prog-body { color: #cbd5e1; }
+                .prog-body p { margin: 0 0 .55rem; }
+                .prog-body p:last-child { margin-bottom: 0; }
+                .prog-body strong { color: #0f172a; }
+                .dark .prog-body strong { color: #fff; }
+                .prog-body ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+                .prog-body li { position: relative; padding-left: 1.6rem; }
+                .prog-body li::before {
+                    content: "\f00c"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+                    position: absolute; left: 0; top: .05rem; font-size: .7rem; color: var(--ds-brand);
+                }
+            </style>
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-2.5">Sobre el programa</p>
+                <div class="prog-desc-src" hidden>{{ prog.description|safe }}</div>
+                <div class="prog-info" id="progInfo"></div>
             </div>
+            <script>
+            (function () {
+                var src = document.querySelector('.prog-desc-src');
+                var out = document.getElementById('progInfo');
+                if (!src || !out) return;
+
+                function iconFor(t) {
+                    t = (t || '').toLowerCase();
+                    if (t.indexOf('aprender') > -1 || t.indexOf('conten') > -1) return 'fa-graduation-cap';
+                    if (t.indexOf('quién') > -1 || t.indexOf('quien') > -1 || t.indexOf('dirigid') > -1) return 'fa-users';
+                    if (t.indexOf('requisit') > -1 || t.indexOf('necesit') > -1) return 'fa-list-check';
+                    if (t.indexOf('certific') > -1 || t.indexOf('logr') > -1) return 'fa-award';
+                    if (t.indexOf('metodolog') > -1 || t.indexOf('cómo') > -1) return 'fa-diagram-project';
+                    return 'fa-circle-info';
+                }
+
+                var nodes = Array.prototype.slice.call(src.children);
+                var groups = [], cur = { title: null, body: [] };
+                nodes.forEach(function (n) {
+                    if (/^H[1-6]$/.test(n.tagName)) {
+                        if (cur.title !== null || cur.body.length) groups.push(cur);
+                        cur = { title: n.textContent.trim(), body: [] };
+                    } else {
+                        cur.body.push(n.outerHTML);
+                    }
+                });
+                if (cur.title !== null || cur.body.length) groups.push(cur);
+
+                groups.forEach(function (g) {
+                    var lead = g.title === null;
+                    var card = document.createElement('div');
+                    card.className = 'prog-card' + (lead ? ' prog-lead' : '');
+                    var head = lead ? '' :
+                        '<div class="prog-card-head"><span class="prog-ico"><i class="fa-solid ' +
+                        iconFor(g.title) + '"></i></span><h3>' + g.title + '</h3></div>';
+                    card.innerHTML = head + '<div class="prog-body">' + g.body.join('') + '</div>';
+                    out.appendChild(card);
+                });
+            })();
+            </script>
             {% endif %}
 
             <!-- Habilidades -->
@@ -107,16 +193,29 @@
         </div>
     </div>
 
-    <!-- Seminarios -->
-    <div>
+    <!-- Seminarios (columna derecha) -->
+    <div class="lg:sticky lg:top-6">
         <h2 class="text-sm font-black uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-3 px-1">
             <i class="fa-solid fa-book"></i> Seminarios del programa
         </h2>
+        <style>
+            .sem-tile { display:flex; align-items:center; gap:.6rem; padding:.75rem .85rem; border-radius:.8rem; background:rgba(148,163,184,.08); }
+            .dark .sem-tile { background:rgba(255,255,255,.05); }
+            .sem-tile > i { font-size:1rem; color:var(--ds-brand-dark); width:1.1rem; text-align:center; }
+            .dark .sem-tile > i { color:var(--ds-brand); }
+            .sem-tile b { display:block; font-size:.9rem; font-weight:800; color:#0f172a; line-height:1.1; }
+            .dark .sem-tile b { color:#fff; }
+            .sem-tile small { font-size:.62rem; text-transform:uppercase; letter-spacing:.04em; color:#94a3b8; font-weight:700; }
+            #semModal { display:none; }
+            #semModal.open { display:flex; }
+            .sem-card { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+            .sem-card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px -12px rgba(245,136,48,.35); }
+        </style>
         <div class="space-y-3">
             {% for s in seminarios %}
-            <div class="lg-card rounded-2xl overflow-hidden flex flex-col sm:flex-row">
-                <!-- Imagen clara y contenida -->
-                <div class="relative sm:w-44 h-36 sm:h-auto flex-shrink-0 overflow-hidden">
+            <div class="lg-card sem-card rounded-2xl overflow-hidden flex flex-col">
+                <!-- Miniatura -->
+                <div class="relative h-28 overflow-hidden">
                     {% if s.e.banner_image %}
                     <img src="{{ s.e.banner_image.url }}" alt="" class="w-full h-full object-cover">
                     {% else %}
@@ -125,84 +224,70 @@
                     </div>
                     {% endif %}
                     <span class="absolute top-2 left-2 inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-black
-                                 bg-white/90 dark:bg-black/60 text-[var(--ds-brand)] ring-1 ring-white/50 dark:ring-white/15">
-                        {{ forloop.counter }}
+                                 bg-white/90 dark:bg-black/60 text-[var(--ds-brand)] ring-1 ring-white/50 dark:ring-white/15">{{ forloop.counter }}</span>
+                    <span class="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold backdrop-blur bg-black/45 text-white">
+                        <i class="fa-solid {% if s.e.is_virtual %}fa-video{% else %}fa-building{% endif %} text-[8px]"></i> {{ s.e.is_virtual|yesno:'Virtual,Presencial' }}
                     </span>
                 </div>
-                <!-- Info -->
-                <div class="p-4 flex-1 min-w-0">
-                    <div class="flex items-start justify-between gap-2">
-                        <h3 class="font-black text-sm text-slate-900 dark:text-white leading-snug">
-                            {{ s.e.title|default:s.e.day_of_week }}
-                        </h3>
-                        {% if s.skill %}
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold flex-shrink-0
-                                     bg-[var(--ds-brand)]/10 text-[var(--ds-brand-dark)] dark:text-[var(--ds-brand)]">
-                            <i class="fa-solid fa-bolt text-[8px]"></i> {{ s.skill }}
-                        </span>
-                        {% endif %}
-                    </div>
-                    {% if s.e.description %}
-                    <div class="rich-desc text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1.5"
-                         style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
-                        {{ s.e.description|safe }}
-                    </div>
+                <!-- Cuerpo compacto -->
+                <div class="p-4 flex flex-col flex-1">
+                    <h3 class="font-black text-sm text-slate-900 dark:text-white leading-snug line-clamp-2">{{ s.e.title|default:s.e.day_of_week }}</h3>
+                    {% if s.skill %}
+                    <span class="mt-1.5 self-start inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold
+                                 bg-[var(--ds-brand)]/10 text-[var(--ds-brand-dark)] dark:text-[var(--ds-brand)]">
+                        <i class="fa-solid fa-bolt text-[8px]"></i> {{ s.skill }}
+                    </span>
                     {% endif %}
                     <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-2.5">
-                        {% if s.e.date %}
-                        <span class="inline-flex items-center gap-1">
-                            <i class="fa-solid fa-calendar-day"></i>
-                            {{ s.e.date|date:"d/m/Y" }}{% if s.e.start_time %} · {{ s.e.start_time|time:"H:i" }}{% if s.e.end_time %}–{{ s.e.end_time|time:"H:i" }}{% endif %}{% endif %}
-                        </span>
-                        {% endif %}
-                        {% if s.e.hours %}
-                        <span class="inline-flex items-center gap-1"><i class="fa-solid fa-clock"></i> {{ s.e.hours }}h</span>
-                        {% endif %}
-                        <span class="inline-flex items-center gap-1">
-                            <i class="fa-solid {% if s.e.is_virtual %}fa-video{% else %}fa-building{% endif %}"></i>
-                            {{ s.e.is_virtual|yesno:'Virtual,Presencial' }}
-                        </span>
-                        {% if s.min_grade %}
-                        <span class="inline-flex items-center gap-1 text-[var(--ds-brand)]">
-                            <i class="fa-solid fa-award"></i> Apruebas con {{ s.min_grade }}
-                        </span>
-                        {% endif %}
+                        {% if s.e.date %}<span class="inline-flex items-center gap-1"><i class="fa-solid fa-calendar-day"></i> {{ s.e.date|date:"d/m/Y" }}</span>{% endif %}
+                        {% if s.e.hours %}<span class="inline-flex items-center gap-1"><i class="fa-solid fa-clock"></i> {{ s.e.hours }}h</span>{% endif %}
+                        {% if s.passed %}<span class="inline-flex items-center gap-1 text-emerald-500"><i class="fa-solid fa-circle-check"></i> {{ s.best_score }}%</span>{% endif %}
                     </div>
-
-                    <!-- CTA evaluación (solo si está inscrito y el seminario tiene evaluación) -->
+                    <button type="button" class="sem-open mt-auto pt-3 w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-[12px] font-black text-white
+                                   bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)]
+                                   shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_14px_-6px_rgba(245,136,48,0.45)] hover:brightness-110 transition-all"
+                            data-title="{{ s.e.title|default:s.e.day_of_week }}">
+                        <i class="fa-solid fa-circle-info"></i> Ver detalles
+                    </button>
+                </div>
+                <!-- Detalle completo (se inyecta en el modal) -->
+                <template class="sem-full">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+                        <div class="sem-tile"><i class="fa-solid fa-calendar-day"></i><div><b>{% if s.e.date %}{{ s.e.date|date:"d/m/Y" }}{% else %}—{% endif %}</b><small>{% if s.e.start_time %}{{ s.e.start_time|time:"H:i" }}{% if s.e.end_time %}–{{ s.e.end_time|time:"H:i" }}{% endif %}{% else %}Fecha{% endif %}</small></div></div>
+                        <div class="sem-tile"><i class="fa-solid fa-clock"></i><div><b>{{ s.e.hours|default:0 }}h</b><small>Duración</small></div></div>
+                        <div class="sem-tile"><i class="fa-solid {% if s.e.is_virtual %}fa-video{% else %}fa-building{% endif %}"></i><div><b>{{ s.e.is_virtual|yesno:'Virtual,Presencial' }}</b><small>Modalidad</small></div></div>
+                        <div class="sem-tile"><i class="fa-solid fa-award" style="color:var(--ds-brand)"></i><div><b>{% if s.min_grade %}{{ s.min_grade }}/100{% else %}—{% endif %}</b><small>Nota mínima</small></div></div>
+                    </div>
+                    {% if s.e.description %}
+                    <div class="rich-desc text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-5">{{ s.e.description|safe }}</div>
+                    {% endif %}
                     {% if s.enrolled and s.has_eval %}
-                    <div class="mt-3 flex items-center flex-wrap gap-2">
+                    <div class="flex items-center flex-wrap gap-2 pt-1 border-t border-slate-200/60 dark:border-white/10 mt-1 pt-4">
                         {% if s.passed %}
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black
-                                     bg-emerald-500/12 text-emerald-600 dark:text-emerald-300 ring-1 ring-emerald-500/20">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12px] font-black bg-emerald-500/12 text-emerald-600 dark:text-emerald-300 ring-1 ring-emerald-500/20">
                             <i class="fa-solid fa-circle-check"></i> Aprobado · {{ s.best_score }}%
                         </span>
                         {% elif s.can_attempt %}
                         <a href="{% url 'public:account_evaluacion' s.ev.id %}"
-                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-black text-white
-                                  bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)]
-                                  shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_14px_-6px_rgba(245,136,48,0.45)]
-                                  hover:brightness-110 transition-all">
-                            <i class="fa-solid fa-clipboard-question"></i>
-                            {% if s.attempts_used %}Reintentar evaluación{% else %}Rendir evaluación{% endif %}
+                           class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[13px] font-black text-white bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)]
+                                  shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_14px_-6px_rgba(245,136,48,0.45)] hover:brightness-110 transition-all">
+                            <i class="fa-solid fa-clipboard-question"></i> {% if s.attempts_used %}Reintentar evaluación{% else %}Rendir evaluación{% endif %}
                         </a>
                         {% else %}
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold
-                                     bg-slate-400/12 text-slate-500 dark:text-slate-400 ring-1 ring-slate-400/20">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12px] font-bold bg-slate-400/12 text-slate-500 dark:text-slate-400 ring-1 ring-slate-400/20">
                             <i class="fa-solid fa-ban"></i> Sin intentos{% if s.best_score is not None %} · mejor {{ s.best_score }}%{% endif %}
                         </span>
                         {% endif %}
                         {% if s.has_attempt %}
                         <a href="{% url 'public:account_evaluacion_resumen' s.ev.id %}"
-                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold
-                                  bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12px] font-bold bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10
                                   text-slate-600 dark:text-slate-300 hover:text-[var(--ds-brand)] hover:border-[var(--ds-brand)]/40 transition-all">
                             <i class="fa-solid fa-list-check"></i> Ver resumen de intento
                         </a>
                         {% endif %}
                     </div>
                     {% endif %}
-                </div>
+                </template>
             </div>
             {% empty %}
             <div class="lg-card rounded-2xl p-8 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -211,6 +296,47 @@
             {% endfor %}
         </div>
     </div>
+    </div>
 
 </div>
+
+<!-- Modal FUERA de .prog-wide: un transform en un ancestro rompe position:fixed -->
+<div id="semModal" class="fixed inset-0 z-[100] items-center justify-center p-4">
+    <div class="sem-backdrop absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="relative lg-card rounded-2xl w-full max-w-2xl max-h-[86vh] overflow-hidden flex flex-col shadow-2xl">
+        <div class="flex items-center justify-between gap-3 p-4 border-b border-slate-200 dark:border-white/10 flex-shrink-0">
+            <h3 id="semModalTitle" class="font-black text-base text-slate-900 dark:text-white truncate"></h3>
+            <button type="button" class="sem-close w-9 h-9 rounded-xl grid place-items-center text-slate-500 hover:text-white hover:bg-[var(--ds-brand)] transition-all flex-shrink-0">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="semModalBody" class="p-5 overflow-y-auto"></div>
+    </div>
+</div>
+<script>
+(function () {
+    var modal = document.getElementById('semModal');
+    if (!modal) return;
+    var body = document.getElementById('semModalBody');
+    var titleEl = document.getElementById('semModalTitle');
+    function open(card, title) {
+        var tpl = card.querySelector('.sem-full');
+        body.innerHTML = tpl ? tpl.innerHTML : '';
+        titleEl.textContent = title || '';
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function close() {
+        modal.classList.remove('open');
+        body.innerHTML = '';
+        document.body.style.overflow = '';
+    }
+    document.querySelectorAll('.sem-open').forEach(function (btn) {
+        btn.addEventListener('click', function () { open(btn.closest('.sem-card'), btn.dataset.title); });
+    });
+    modal.querySelector('.sem-backdrop').addEventListener('click', close);
+    modal.querySelector('.sem-close').addEventListener('click', close);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+</script>
 {% endblock %}

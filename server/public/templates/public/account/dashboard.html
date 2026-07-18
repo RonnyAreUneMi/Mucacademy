@@ -632,7 +632,6 @@
         pop.style.top = top + 'px';
         pop.style.visibility = '';
 
-        backdrop.classList.add('is-open');
         pop.setAttribute('aria-hidden', 'false');
         if (selectedCell) selectedCell.classList.remove('is-selected');
         selectedCell = cell;
@@ -646,16 +645,23 @@
         if (selectedCell) { selectedCell.classList.remove('is-selected'); selectedCell = null; }
     }
 
+    let hideTimer = null;
     document.querySelectorAll('.cal-day[data-day]').forEach(function (cell) {
-        cell.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (cell === selectedCell) { closePop(); } else { openPop(cell); }
+        // Mostrar el detalle al pasar el mouse (sin clic)
+        cell.addEventListener('mouseenter', function () {
+            clearTimeout(hideTimer);
+            openPop(cell);
         });
-        cell.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPop(cell); }
+        cell.addEventListener('mouseleave', function () {
+            hideTimer = setTimeout(closePop, 120);
         });
+        // Accesibilidad: también con teclado
+        cell.addEventListener('focus', function () { clearTimeout(hideTimer); openPop(cell); });
+        cell.addEventListener('blur', function () { hideTimer = setTimeout(closePop, 120); });
     });
-    backdrop.addEventListener('click', closePop);
+    // Mantener abierto si el mouse pasa del día al popover
+    pop.addEventListener('mouseenter', function () { clearTimeout(hideTimer); });
+    pop.addEventListener('mouseleave', function () { hideTimer = setTimeout(closePop, 120); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePop(); });
     window.addEventListener('resize', closePop);
 })();

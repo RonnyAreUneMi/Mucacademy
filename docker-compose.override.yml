@@ -1,0 +1,13 @@
+# Modo DESARROLLO — se carga automáticamente junto a docker-compose.yml.
+# Monta el código en vivo y usa runserver (autoreload + sin caché de plantillas),
+# así los cambios en plantillas/Python se ven al instante sin rebuild ni reinicio.
+# No afecta a producción (Railway usa su propia config).
+services:
+  web:
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DEBUG: "True"
+    volumes:
+      - ./server:/app

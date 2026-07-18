@@ -53,7 +53,7 @@ services:
     environment:
       DEBUG:                 "False"
       SECURE_SSL_REDIRECT:   "False"
-      ALLOWED_HOSTS:         "localhost,127.0.0.1,web,0.0.0.0,192.168.0.106"
+      ALLOWED_HOSTS:         "*"
       DATABASE_URL:          postgres://certifai:certifai@db:5432/certifai
       CELERY_BROKER_URL:     redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1

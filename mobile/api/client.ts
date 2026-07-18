@@ -1,8 +1,11 @@
 /**
  * Cliente API minimalista para el backend Django/DRF.
  *
- * Lee la base URL desde app.json (`extra.apiBaseUrl`) y agrega automáticamente
- * el header `Authorization: Token <key>` si hay sesión activa.
+ * Resuelve la URL base SIN depender de una IP fija: usa la IP del servidor de
+ * desarrollo de Expo (la misma con la que el teléfono cargó la app) y le pega
+ * el puerto del backend. Así funciona en CUALQUIER red sin editar app.json.
+ * Si no hay dev-server (build nativo), cae a `extra.apiBaseUrl` y por último a
+ * localhost. Agrega automáticamente el header `Authorization: Token <key>`.
  *
  * Uso:
  *   import { api } from '@/api/client';
@@ -14,8 +17,34 @@ import * as SecureStore from 'expo-secure-store';
 
 const TOKEN_KEY = 'certifai.token';
 
-const BASE_URL =
-  (Constants.expoConfig?.extra as any)?.apiBaseUrl ?? 'http://localhost:8500';
+const CONFIGURED_URL = (Constants.expoConfig?.extra as any)?.apiBaseUrl as
+  | string
+  | undefined;
+
+/**
+ * Deriva la URL del backend a partir del host del servidor de Expo (Metro),
+ * que es la IP LAN de la máquina de desarrollo. Funciona en cualquier WiFi.
+ */
+function resolveBaseUrl(): string {
+  // Puerto del backend: del apiBaseUrl configurado, o 8500 por defecto.
+  const portMatch = CONFIGURED_URL?.match(/:(\d+)(?:\/|$)/);
+  const port = portMatch ? portMatch[1] : '8500';
+
+  // IP del host de desarrollo (ej. '192.168.0.107:8081').
+  const hostUri =
+    Constants.expoConfig?.hostUri ??
+    (Constants as any).expoGoConfig?.debuggerHost ??
+    (Constants as any).manifest2?.extra?.expoGo?.debuggerHost ??
+    (Constants as any).manifest?.debuggerHost;
+
+  const host = hostUri ? String(hostUri).split(':')[0] : '';
+  if (host && host !== 'localhost' && host !== '127.0.0.1') {
+    return `http://${host}:${port}`;
+  }
+  return CONFIGURED_URL ?? 'http://localhost:8500';
+}
+
+const BASE_URL = resolveBaseUrl();
 
 /**
  * URL pública HTTPS del backend, usada solo para flujos OAuth (Google) porque
