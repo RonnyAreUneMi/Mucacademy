@@ -233,11 +233,31 @@
                         <div class="space-y-2">
                             <input type="text" placeholder="Campo de texto"
                                    class="w-full text-sm rounded-xl px-3 py-2 bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/25 transition">
-                            <select class="w-full text-sm rounded-xl px-3 py-2 bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/25 transition">
-                                <option>Seleccioná una opción</option>
-                                <option>Programa</option>
-                                <option>Seminario</option>
-                            </select>
+                            <!-- Select custom (no nativo) -->
+                            <div class="ds-select relative">
+                                <button type="button"
+                                        class="ds-select-trigger w-full flex items-center justify-between gap-2 text-sm rounded-xl px-3 py-2
+                                               bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100
+                                               hover:border-[var(--ds-brand)]/50 focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/25 transition">
+                                    <span class="ds-select-value truncate text-slate-500 dark:text-slate-400">Seleccioná una opción</span>
+                                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+                                </button>
+                                <div class="ds-select-menu hidden absolute z-30 left-0 right-0 mt-1 p-1 rounded-xl
+                                            bg-white dark:bg-[#0f1836] border border-slate-200 dark:border-white/10 shadow-xl">
+                                    <button type="button" class="ds-select-opt w-full text-left text-sm px-2.5 py-2 rounded-lg flex items-center gap-2
+                                            text-slate-700 dark:text-slate-200 hover:bg-[var(--ds-brand)]/10 hover:text-[var(--ds-brand-dark)] dark:hover:text-[var(--ds-brand)] transition">
+                                        <i class="fa-solid fa-check text-[10px] text-[var(--ds-brand)] opacity-0"></i> Programa
+                                    </button>
+                                    <button type="button" class="ds-select-opt w-full text-left text-sm px-2.5 py-2 rounded-lg flex items-center gap-2
+                                            text-slate-700 dark:text-slate-200 hover:bg-[var(--ds-brand)]/10 hover:text-[var(--ds-brand-dark)] dark:hover:text-[var(--ds-brand)] transition">
+                                        <i class="fa-solid fa-check text-[10px] text-[var(--ds-brand)] opacity-0"></i> Seminario
+                                    </button>
+                                    <button type="button" class="ds-select-opt w-full text-left text-sm px-2.5 py-2 rounded-lg flex items-center gap-2
+                                            text-slate-700 dark:text-slate-200 hover:bg-[var(--ds-brand)]/10 hover:text-[var(--ds-brand-dark)] dark:hover:text-[var(--ds-brand)] transition">
+                                        <i class="fa-solid fa-check text-[10px] text-[var(--ds-brand)] opacity-0"></i> Taller
+                                    </button>
+                                </div>
+                            </div>
                             <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1">
                                 <input type="checkbox" checked class="w-4 h-4 rounded accent-[var(--ds-brand)]"> Opción marcada
                             </label>
@@ -318,6 +338,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Componente Select custom (no nativo)
+    function closeAllSelects() {
+        document.querySelectorAll('.ds-select-menu').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('.ds-select .fa-chevron-down').forEach(c => c.style.transform = '');
+    }
+    document.querySelectorAll('.ds-select').forEach(sel => {
+        const trigger = sel.querySelector('.ds-select-trigger');
+        const menu = sel.querySelector('.ds-select-menu');
+        const valueEl = sel.querySelector('.ds-select-value');
+        const chevron = trigger.querySelector('.fa-chevron-down');
+        trigger.addEventListener('click', e => {
+            e.stopPropagation();
+            const isOpen = !menu.classList.contains('hidden');
+            closeAllSelects();
+            if (!isOpen) { menu.classList.remove('hidden'); chevron.style.transform = 'rotate(180deg)'; }
+        });
+        sel.querySelectorAll('.ds-select-opt').forEach(opt => {
+            opt.addEventListener('click', () => {
+                valueEl.textContent = opt.textContent.trim();
+                valueEl.classList.remove('text-slate-500', 'dark:text-slate-400');
+                sel.querySelectorAll('.ds-select-opt .fa-check').forEach(c => c.style.opacity = '0');
+                const chk = opt.querySelector('.fa-check');
+                if (chk) chk.style.opacity = '1';
+                closeAllSelects();
+            });
+        });
+    });
+    document.addEventListener('click', closeAllSelects);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAllSelects(); });
 });
 </script>
 {% endblock %}
