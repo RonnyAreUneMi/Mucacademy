@@ -287,6 +287,27 @@
         </div>
         {% endfor %}
     </div>
+
+    <!-- Skeleton (flash al paginar) -->
+    <style>
+        .pg-btn { min-width:2rem; height:2rem; padding:0 .5rem; border-radius:.6rem; font-size:.8rem; font-weight:700; display:inline-grid; place-items:center; background: rgba(148,163,184,.12); color:#64748b; transition:.15s; }
+        .dark .pg-btn { color:#94a3b8; }
+        .pg-btn:hover:not([disabled]) { background: rgba(245,136,48,.15); color: var(--ds-brand); }
+        .pg-btn[disabled] { opacity:.4; cursor:not-allowed; }
+        .pg-active { background: var(--ds-brand) !important; color:#fff !important; box-shadow:0 4px 10px -4px rgba(245,136,48,.5); }
+    </style>
+    <div id="events-skeleton" class="hidden lg-card rounded-3xl overflow-hidden">
+        <div class="flex items-center gap-4 p-4 md:px-5 border-b border-gray-100 dark:border-white/5"><div class="w-16 h-16 rounded-2xl skeleton flex-shrink-0"></div><div class="flex-1 space-y-2"><div class="h-4 skeleton" style="width:38%"></div><div class="h-3 skeleton" style="width:55%"></div></div><div class="h-9 w-24 rounded-xl skeleton hidden md:block"></div></div>
+        <div class="flex items-center gap-4 p-4 md:px-5 border-b border-gray-100 dark:border-white/5"><div class="w-16 h-16 rounded-2xl skeleton flex-shrink-0"></div><div class="flex-1 space-y-2"><div class="h-4 skeleton" style="width:46%"></div><div class="h-3 skeleton" style="width:50%"></div></div><div class="h-9 w-24 rounded-xl skeleton hidden md:block"></div></div>
+        <div class="flex items-center gap-4 p-4 md:px-5 border-b border-gray-100 dark:border-white/5"><div class="w-16 h-16 rounded-2xl skeleton flex-shrink-0"></div><div class="flex-1 space-y-2"><div class="h-4 skeleton" style="width:32%"></div><div class="h-3 skeleton" style="width:60%"></div></div><div class="h-9 w-24 rounded-xl skeleton hidden md:block"></div></div>
+        <div class="flex items-center gap-4 p-4 md:px-5"><div class="w-16 h-16 rounded-2xl skeleton flex-shrink-0"></div><div class="flex-1 space-y-2"><div class="h-4 skeleton" style="width:42%"></div><div class="h-3 skeleton" style="width:52%"></div></div><div class="h-9 w-24 rounded-xl skeleton hidden md:block"></div></div>
+    </div>
+
+    <!-- Paginador -->
+    <div id="events-pager" class="hidden items-center justify-between gap-3 mt-4 flex-wrap">
+        <p class="text-xs text-gray-400 dark:text-gray-500 font-medium" id="pager-info"></p>
+        <div class="flex items-center gap-1.5" id="pager-controls"></div>
+    </div>
     {% else %}
     <div class="lg-card rounded-3xl text-center py-20">
         <div class="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl text-gray-300">
@@ -313,6 +334,58 @@
         let saved = 'list';
         try { saved = localStorage.getItem(KEY) || 'list'; } catch (e) {}
         apply(saved);
+    })();
+
+    // Paginación client-side (20 por página) + skeleton al cambiar de página
+    (function () {
+        const PER = 20;
+        const rows = Array.from(document.querySelectorAll('#view-list > .event-row'));
+        const cards = Array.from(document.querySelectorAll('#view-cards > .lg-card'));
+        const total = rows.length;
+        if (!total) return;
+        const pages = Math.ceil(total / PER);
+        const pager = document.getElementById('events-pager');
+        const info = document.getElementById('pager-info');
+        const controls = document.getElementById('pager-controls');
+        const skel = document.getElementById('events-skeleton');
+        const viewList = document.getElementById('view-list');
+        const viewCards = document.getElementById('view-cards');
+        let current = 1;
+
+        function renderControls() {
+            let html = `<button class="pg-btn" data-pg="prev" ${current === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>`;
+            for (let p = 1; p <= pages; p++) html += `<button class="pg-btn ${p === current ? 'pg-active' : ''}" data-pg="${p}">${p}</button>`;
+            html += `<button class="pg-btn" data-pg="next" ${current === pages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>`;
+            controls.innerHTML = html;
+            controls.querySelectorAll('.pg-btn[data-pg]').forEach(b => b.addEventListener('click', () => {
+                const v = b.dataset.pg;
+                go(v === 'prev' ? current - 1 : v === 'next' ? current + 1 : parseInt(v, 10));
+            }));
+        }
+        function paint() {
+            const start = (current - 1) * PER, end = start + PER;
+            rows.forEach((el, i) => el.style.display = (i >= start && i < end) ? '' : 'none');
+            cards.forEach((el, i) => el.style.display = (i >= start && i < end) ? '' : 'none');
+            info.textContent = `Mostrando ${start + 1}–${Math.min(end, total)} de ${total}`;
+            renderControls();
+        }
+        function go(p) {
+            if (p < 1 || p > pages || p === current) return;
+            current = p;
+            const listVisible = !viewList.classList.contains('hidden');
+            const activeView = listVisible ? viewList : viewCards;
+            skel.classList.remove('hidden');
+            activeView.classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+                skel.classList.add('hidden');
+                activeView.classList.remove('hidden');
+                paint();
+            }, 350);
+        }
+        pager.classList.remove('hidden');
+        pager.classList.add('flex');
+        paint();
     })();
     </script>
 </div>
