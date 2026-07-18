@@ -113,8 +113,21 @@ async function setRole(userId, role) {
     }
 }
 
+function skeletonRows(n = 4) {
+    const row = `<div class="lg-card rounded-2xl p-4 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-full skeleton"></div>
+        <div class="flex-1 space-y-2">
+            <div class="h-3.5 skeleton" style="width:32%"></div>
+            <div class="h-2.5 skeleton" style="width:48%"></div>
+        </div>
+        <div class="h-9 w-32 rounded-xl skeleton"></div>
+    </div>`;
+    return Array(n).fill(row).join('');
+}
+
 async function loadUsers(query = '') {
     const box = document.getElementById('users-list');
+    box.innerHTML = skeletonRows();   // muestra skeleton mientras carga
     try {
         const url = '/api/v1/admin/users/' + (query ? `?search=${encodeURIComponent(query)}` : '');
         const res = await fetch(url, { credentials: 'same-origin' });

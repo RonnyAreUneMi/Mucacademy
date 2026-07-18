@@ -73,9 +73,23 @@
 const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
 const FACULTY_LABEL = {FACI:'Ingeniería',FACS:'Salud',FACE:'Educación',FACSECYD:'Ciencias Sociales',POSGRADO:'Posgrado',COMUNIDAD:'Comunidad'};
 
+function programSkeleton(n = 6) {
+    const card = `<div class="bg-white dark:bg-[#162054] rounded-3xl overflow-hidden">
+        <div class="h-32 skeleton"></div>
+        <div class="p-5 space-y-3">
+            <div class="h-4 skeleton" style="width:70%"></div>
+            <div class="h-3 skeleton" style="width:92%"></div>
+            <div class="h-3 skeleton" style="width:48%"></div>
+        </div>
+    </div>`;
+    return Array(n).fill(card).join('');
+}
+
 async function loadPrograms() {
     const grid = document.getElementById('prog-grid');
     const empty = document.getElementById('prog-empty');
+    grid.classList.remove('hidden'); empty.classList.add('hidden');
+    grid.innerHTML = programSkeleton();   // skeleton mientras carga
     try {
         const res = await fetch('/api/v1/admin/programs/', { credentials: 'same-origin' });
         const data = await res.json();
