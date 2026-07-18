@@ -4,33 +4,32 @@
 
 {% block content %}
 <style>
+    /* Estados */
     .st-badge { display:inline-flex; align-items:center; gap:.4rem; padding:.28rem .7rem; border-radius:999px; font-size:.72rem; font-weight:800; white-space:nowrap; }
-    .st-done  { background: rgba(16,185,129,.14);  color:#059669; }
-    .dark .st-done  { color:#6EE7B7; }
-    .st-prog  { background: rgba(245,136,48,.16);  color: var(--ds-brand-dark); }
-    .dark .st-prog  { color: var(--ds-brand); }
-    .st-todo  { background: rgba(148,163,184,.16); color:#64748b; }
-    .dark .st-todo  { color:#94a3b8; }
-    .st-select { position:relative; }
-    .st-trigger { cursor:pointer; transition:.15s; }
-    .st-trigger:hover { filter:brightness(1.05); }
-    .st-menu { position:absolute; right:0; margin-top:.35rem; z-index:30; width:11rem; padding:.25rem; border-radius:.75rem;
-               background:#fff; border:1px solid rgba(226,232,240,1); box-shadow:0 10px 30px -10px rgba(0,0,0,.35); }
+    .st-done { background: rgba(16,185,129,.14); color:#059669; } .dark .st-done { color:#6EE7B7; }
+    .st-prog { background: rgba(245,136,48,.16); color: var(--ds-brand-dark); } .dark .st-prog { color: var(--ds-brand); }
+    .st-todo { background: rgba(148,163,184,.16); color:#64748b; } .dark .st-todo { color:#94a3b8; }
+    .st-select { position:relative; } .st-trigger { cursor:pointer; transition:.15s; } .st-trigger:hover { filter:brightness(1.05); }
+    .st-menu { position:absolute; right:0; margin-top:.35rem; z-index:30; width:11rem; padding:.25rem; border-radius:.75rem; background:#fff; border:1px solid rgba(226,232,240,1); box-shadow:0 10px 30px -10px rgba(0,0,0,.35); }
     .dark .st-menu { background:#0f1836; border-color: rgba(255,255,255,.1); }
-    .st-opt { width:100%; display:flex; align-items:center; gap:.5rem; padding:.4rem .6rem; border-radius:.5rem; font-size:.78rem; font-weight:700; color:#475569; transition:.12s; }
-    .dark .st-opt { color:#cbd5e1; }
+    .st-opt { width:100%; display:flex; align-items:center; gap:.5rem; padding:.4rem .6rem; border-radius:.5rem; font-size:.78rem; font-weight:700; color:#475569; transition:.12s; } .dark .st-opt { color:#cbd5e1; }
     .st-opt:hover { background: rgba(245,136,48,.1); }
-    .task-row { transition: background .15s; }
-    .task-row:hover { background: rgba(148,163,184,.06); }
-    .dark .task-row:hover { background: rgba(255,255,255,.03); }
+    .task-row { transition: background .15s; } .task-row:hover { background: rgba(148,163,184,.06); } .dark .task-row:hover { background: rgba(255,255,255,.03); }
     .bl-chip { padding:.35rem .8rem; border-radius:.7rem; font-size:.78rem; font-weight:800; cursor:pointer; transition:.15s; }
     .bl-chip.active { background: var(--ds-brand); color:#fff; }
-    .bl-chip:not(.active) { background: rgba(148,163,184,.12); color:#64748b; }
-    .dark .bl-chip:not(.active) { color:#94a3b8; }
+    .bl-chip:not(.active) { background: rgba(148,163,184,.12); color:#64748b; } .dark .bl-chip:not(.active) { color:#94a3b8; }
+    /* Tabs */
+    .bl-tab { display:inline-flex; align-items:center; gap:.5rem; padding:.65rem 1.1rem; border-radius:1rem; font-size:.9rem; font-weight:800; color:#64748b; cursor:pointer; transition:.18s; white-space:nowrap; }
+    .dark .bl-tab { color:#94a3b8; }
+    .bl-tab:hover { color: var(--ds-brand-dark); } .dark .bl-tab:hover { color: var(--ds-brand); }
+    .bl-tab.active { background: linear-gradient(180deg, var(--ds-brand), var(--ds-brand-dark)); color:#fff; box-shadow:0 8px 18px -8px rgba(245,136,48,.6); }
+    /* Scrum cards */
+    .scrum-card { border-radius:1.25rem; padding:1.25rem; border:1px solid rgba(148,163,184,.18); background: rgba(148,163,184,.05); }
+    .dark .scrum-card { border-color: rgba(255,255,255,.08); background: rgba(255,255,255,.03); }
+    .scrum-ico { width:2.6rem; height:2.6rem; border-radius:.8rem; display:grid; place-items:center; font-size:1.1rem; }
     /* Gantt */
     .gantt { width:100%; border-collapse:collapse; font-size:.72rem; }
-    .gantt th, .gantt td { border:1px solid rgba(148,163,184,.25); padding:.4rem .5rem; text-align:center; }
-    .dark .gantt th, .dark .gantt td { border-color: rgba(255,255,255,.1); }
+    .gantt th, .gantt td { border:1px solid rgba(148,163,184,.25); padding:.4rem .5rem; text-align:center; } .dark .gantt th, .dark .gantt td { border-color: rgba(255,255,255,.1); }
     .gantt .g-head { background:#162054; color:#fff; font-weight:800; }
     .gantt .g-sprint { background: var(--ds-brand); color:#fff; font-weight:800; }
     .gantt .g-sub { background: rgba(148,163,184,.12); font-weight:700; }
@@ -38,7 +37,7 @@
     .g-bar-done { background:#10B981; color:#fff; font-weight:800; }
     .g-bar-prog { background: var(--ds-brand); color:#fff; font-weight:800; }
     .g-bar-todo { background: rgba(148,163,184,.4); }
-    @media print { .no-print { display:none !important; } .task-row, .bl-sprint, section { break-inside: avoid; } body { background:#fff !important; } }
+    @media print { .no-print { display:none !important; } .tab-panel { display:block !important; } .task-row, .bl-sprint, section, .scrum-card { break-inside: avoid; } body { background:#fff !important; } }
 </style>
 
 <div class="max-w-6xl mx-auto space-y-6">
@@ -46,74 +45,138 @@
     <div class="flex items-start justify-between flex-wrap gap-4">
         <div>
             <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                <i class="fa-solid fa-list-check text-[var(--ds-brand)] mr-2"></i> Bitácora del proyecto
+                <i class="fa-solid fa-diagram-project text-[var(--ds-brand)] mr-2"></i> Bitácora del proyecto
             </h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">Backlog y cronograma de CertifAI. Cambiá el estado de cada tarea con el select — se guarda en tu navegador y el Gantt se actualiza solo.</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Metodología <b>Scrum</b> aplicada a CertifAI: marco de trabajo, backlog y cronograma.</p>
         </div>
         <div class="flex items-center gap-2 no-print">
             <button onclick="blSetAll('done')" class="lg-btn"><i class="fa-solid fa-circle-check"></i> Todo completado</button>
             <button onclick="blReset()" class="lg-btn lg-btn-clear"><i class="fa-solid fa-rotate-left"></i> Reiniciar</button>
-            <button onclick="window.print()" class="lg-btn lg-btn-prominent"><i class="fa-solid fa-file-pdf"></i> Imprimir / PDF</button>
+            <button onclick="window.print()" class="lg-btn lg-btn-prominent"><i class="fa-solid fa-file-pdf"></i> PDF</button>
         </div>
     </div>
 
     <!-- Progreso -->
-    <div class="lg-card rounded-3xl p-6">
-        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-            <p class="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Progreso general</p>
+    <div class="lg-card rounded-3xl p-5">
+        <div class="flex items-center justify-between mb-2.5 flex-wrap gap-2">
+            <p class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Progreso general</p>
             <p class="text-sm font-bold text-slate-700 dark:text-slate-200"><span id="bl-pct">0</span>% · <span id="bl-done-n">0</span>/<span id="bl-total-n">0</span> tareas</p>
         </div>
         <div class="h-3 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
             <div id="bl-bar" class="h-full rounded-full transition-all duration-500" style="width:0%; background: linear-gradient(90deg, var(--ds-brand), var(--ds-brand-dark));"></div>
         </div>
-        <div class="flex flex-wrap items-center gap-4 mt-4 text-xs font-semibold">
-            <span class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-300"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Completado: <b id="bl-c-done">0</b></span>
-            <span class="flex items-center gap-1.5" style="color: var(--ds-brand-dark)"><span class="w-2.5 h-2.5 rounded-full" style="background: var(--ds-brand)"></span> En progreso: <b id="bl-c-prog">0</b></span>
-            <span class="flex items-center gap-1.5 text-slate-500"><span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> Pendiente: <b id="bl-c-todo">0</b></span>
-        </div>
     </div>
 
-    <!-- Filtros -->
-    <div class="flex items-center gap-2 flex-wrap no-print">
-        <span class="text-xs font-bold uppercase tracking-wide text-slate-400 mr-1">Filtrar:</span>
-        <button class="bl-chip active" data-filter="all">Todas</button>
-        <button class="bl-chip" data-filter="done">Completadas</button>
-        <button class="bl-chip" data-filter="prog">En progreso</button>
-        <button class="bl-chip" data-filter="todo">Pendientes</button>
+    <!-- TABS -->
+    <div class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 dark:bg-white/5 overflow-x-auto no-print" id="bl-tabs">
+        <button class="bl-tab active" data-tab="scrum"><i class="fa-solid fa-people-group"></i> Marco Scrum</button>
+        <button class="bl-tab" data-tab="backlog"><i class="fa-solid fa-list-check"></i> Product Backlog</button>
+        <button class="bl-tab" data-tab="gantt"><i class="fa-solid fa-chart-gantt"></i> Cronograma</button>
     </div>
 
-    <!-- Tablero -->
-    <div id="bl-board" class="space-y-5"></div>
+    <!-- ══════════ TAB: MARCO SCRUM ══════════ -->
+    <div id="tab-scrum" class="tab-panel space-y-6">
+        <!-- Roles -->
+        <section class="lg-card rounded-3xl p-6">
+            <h2 class="text-base font-black text-slate-900 dark:text-white mb-1"><i class="fa-solid fa-user-group text-[var(--ds-brand)] mr-2"></i> Roles del equipo</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Adaptados a un equipo de dos integrantes de Ingeniería de Software.</p>
+            <div class="grid sm:grid-cols-3 gap-4">
+                <div class="scrum-card">
+                    <div class="scrum-ico mb-3" style="background:rgba(245,136,48,.16);color:var(--ds-brand-dark)"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <p class="font-black text-slate-900 dark:text-white">Product Owner</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">Asumido de forma compartida. Define y prioriza el catálogo de necesidades según el valor de negocio.</p>
+                </div>
+                <div class="scrum-card">
+                    <div class="scrum-ico mb-3" style="background:rgba(168,85,247,.16);color:#a855f7"><i class="fa-solid fa-people-arrows"></i></div>
+                    <p class="font-black text-slate-900 dark:text-white">Scrum Master</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">Rol alternado. Facilita el marco ágil, elimina bloqueos y cuida la aplicación de estándares.</p>
+                </div>
+                <div class="scrum-card">
+                    <div class="scrum-ico mb-3" style="background:rgba(59,130,246,.16);color:#3b82f6"><i class="fa-solid fa-code"></i></div>
+                    <p class="font-black text-slate-900 dark:text-white">Development Team</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">Ambos autores. Construyen el incremento: modelado, backend, móvil e integración.</p>
+                </div>
+            </div>
+        </section>
 
-    <!-- Gantt -->
-    <section class="lg-card rounded-3xl p-6">
-        <h2 class="text-base font-black text-slate-900 dark:text-white mb-1"><i class="fa-solid fa-chart-gantt text-[var(--ds-brand)] mr-2"></i> Diagrama de Gantt — Cronograma</h2>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">20/04/2026 – 14/06/2026 · las barras reflejan el estado de cada Historia de Usuario.</p>
-        <div class="overflow-x-auto rounded-xl">
-            <table class="gantt">
-                <thead>
-                    <tr>
-                        <th class="g-head g-act">CRONOGRAMA</th>
-                        <th class="g-head">SP</th>
-                        <th class="g-head">Estado</th>
-                        <th class="g-head">Sem 0</th>
-                        <th class="g-sprint">Sprint 1</th><th class="g-sprint">Sprint 1</th>
-                        <th class="g-sprint">Sprint 2</th><th class="g-sprint">Sprint 2</th>
-                        <th class="g-sprint">Sprint 3</th><th class="g-sprint">Sprint 3</th>
-                        <th class="g-head">Cierre</th>
-                    </tr>
-                    <tr>
-                        <th class="g-sub g-act">Actividad</th><th class="g-sub"></th><th class="g-sub"></th>
-                        <th class="g-sub">20/04</th><th class="g-sub">27/04</th><th class="g-sub">04/05</th>
-                        <th class="g-sub">11/05</th><th class="g-sub">18/05</th><th class="g-sub">25/05</th>
-                        <th class="g-sub">01/06</th><th class="g-sub">08/06</th>
-                    </tr>
-                </thead>
-                <tbody id="gantt-body"></tbody>
-            </table>
+        <!-- Eventos -->
+        <section class="lg-card rounded-3xl p-6">
+            <h2 class="text-base font-black text-slate-900 dark:text-white mb-1"><i class="fa-solid fa-arrows-spin text-[var(--ds-brand)] mr-2"></i> Eventos de Scrum</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">El ciclo iterativo e incremental del proyecto.</p>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div class="scrum-card text-center"><div class="scrum-ico mx-auto mb-2" style="background:rgba(245,136,48,.16);color:var(--ds-brand-dark)"><i class="fa-solid fa-flag-checkered"></i></div><p class="font-bold text-sm text-slate-900 dark:text-white">Sprint</p><p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Ciclo fijo de 2 semanas.</p></div>
+                <div class="scrum-card text-center"><div class="scrum-ico mx-auto mb-2" style="background:rgba(16,185,129,.16);color:#059669"><i class="fa-solid fa-calendar-plus"></i></div><p class="font-bold text-sm text-slate-900 dark:text-white">Planning</p><p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Selección de HU prioritarias.</p></div>
+                <div class="scrum-card text-center"><div class="scrum-ico mx-auto mb-2" style="background:rgba(59,130,246,.16);color:#3b82f6"><i class="fa-solid fa-comments"></i></div><p class="font-bold text-sm text-slate-900 dark:text-white">Daily</p><p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Sincronización de avance.</p></div>
+                <div class="scrum-card text-center"><div class="scrum-ico mx-auto mb-2" style="background:rgba(168,85,247,.16);color:#a855f7"><i class="fa-solid fa-magnifying-glass-chart"></i></div><p class="font-bold text-sm text-slate-900 dark:text-white">Review</p><p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Inspección del incremento.</p></div>
+                <div class="scrum-card text-center"><div class="scrum-ico mx-auto mb-2" style="background:rgba(245,158,11,.16);color:#d97706"><i class="fa-solid fa-rotate"></i></div><p class="font-bold text-sm text-slate-900 dark:text-white">Retrospective</p><p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Mejora continua del proceso.</p></div>
+            </div>
+        </section>
+
+        <!-- Artefactos -->
+        <section class="lg-card rounded-3xl p-6">
+            <h2 class="text-base font-black text-slate-900 dark:text-white mb-1"><i class="fa-solid fa-cubes-stacked text-[var(--ds-brand)] mr-2"></i> Artefactos</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Describen el alcance del sistema de forma medible.</p>
+            <div class="grid sm:grid-cols-3 gap-4">
+                <div class="scrum-card">
+                    <div class="scrum-ico mb-3" style="background:rgba(245,136,48,.16);color:var(--ds-brand-dark)"><i class="fa-solid fa-layer-group"></i></div>
+                    <p class="font-black text-slate-900 dark:text-white">Product Backlog</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">Inventario priorizado de todas las Historias de Usuario del sistema.</p>
+                </div>
+                <div class="scrum-card">
+                    <div class="scrum-ico mb-3" style="background:rgba(16,185,129,.16);color:#059669"><i class="fa-solid fa-list-check"></i></div>
+                    <p class="font-black text-slate-900 dark:text-white">Sprint Backlog</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">HU seleccionadas para el ciclo en curso + sus tareas de ingeniería.</p>
+                </div>
+                <div class="scrum-card">
+                    <div class="scrum-ico mb-3" style="background:rgba(59,130,246,.16);color:#3b82f6"><i class="fa-solid fa-box-open"></i></div>
+                    <p class="font-black text-slate-900 dark:text-white">Incremento</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">Suma de elementos completados que cumplen la <i>Definition of Done</i>.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ══════════ TAB: PRODUCT BACKLOG ══════════ -->
+    <div id="tab-backlog" class="tab-panel hidden space-y-5">
+        <div class="flex items-center gap-2 flex-wrap no-print">
+            <span class="text-xs font-bold uppercase tracking-wide text-slate-400 mr-1">Filtrar:</span>
+            <button class="bl-chip active" data-filter="all">Todas</button>
+            <button class="bl-chip" data-filter="done">Completadas</button>
+            <button class="bl-chip" data-filter="prog">En progreso</button>
+            <button class="bl-chip" data-filter="todo">Pendientes</button>
         </div>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-3"><b>Leyenda:</b> <span class="text-emerald-600 dark:text-emerald-300 font-bold">verde</span> = completada · <span style="color:var(--ds-brand)" class="font-bold">naranja</span> = en progreso · gris = pendiente · SP = puntos de historia · Sprints de 2 semanas.</p>
-    </section>
+        <div id="bl-board" class="space-y-5"></div>
+    </div>
+
+    <!-- ══════════ TAB: CRONOGRAMA (GANTT) ══════════ -->
+    <div id="tab-gantt" class="tab-panel hidden">
+        <section class="lg-card rounded-3xl p-6">
+            <h2 class="text-base font-black text-slate-900 dark:text-white mb-1"><i class="fa-solid fa-chart-gantt text-[var(--ds-brand)] mr-2"></i> Diagrama de Gantt — Cronograma</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">20/04/2026 – 14/06/2026 · las barras reflejan el estado de cada Historia de Usuario.</p>
+            <div class="overflow-x-auto rounded-xl">
+                <table class="gantt">
+                    <thead>
+                        <tr>
+                            <th class="g-head g-act">CRONOGRAMA</th><th class="g-head">SP</th><th class="g-head">Estado</th>
+                            <th class="g-head">Sem 0</th>
+                            <th class="g-sprint">Sprint 1</th><th class="g-sprint">Sprint 1</th>
+                            <th class="g-sprint">Sprint 2</th><th class="g-sprint">Sprint 2</th>
+                            <th class="g-sprint">Sprint 3</th><th class="g-sprint">Sprint 3</th>
+                            <th class="g-head">Cierre</th>
+                        </tr>
+                        <tr>
+                            <th class="g-sub g-act">Actividad</th><th class="g-sub"></th><th class="g-sub"></th>
+                            <th class="g-sub">20/04</th><th class="g-sub">27/04</th><th class="g-sub">04/05</th>
+                            <th class="g-sub">11/05</th><th class="g-sub">18/05</th><th class="g-sub">25/05</th>
+                            <th class="g-sub">01/06</th><th class="g-sub">08/06</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gantt-body"></tbody>
+                </table>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-3"><b>Leyenda:</b> <span class="text-emerald-600 dark:text-emerald-300 font-bold">verde</span> = completada · <span style="color:var(--ds-brand)" class="font-bold">naranja</span> = en progreso · gris = pendiente · SP = puntos de historia · Sprints de 2 semanas.</p>
+        </section>
+    </div>
 </div>
 
 <script>
@@ -164,8 +227,6 @@
             { id:'sc-5', t:'Documentación técnica (README y guía de despliegue)', hu:'Docs' },
         ]},
     ];
-
-    // Actividades del Gantt (agrupan tareas del backlog)
     const GANTT = [
         { name:'Semana 0 — Arquitectura de software base', sp:'—', weeks:[0], src:['s0-1','s0-2','s0-3','s0-4'] },
         { name:'HU1 — Autenticación y Acceso Seguro', sp:5, weeks:[1,2], src:['s1-1','s1-2','s1-3','s1-4'] },
@@ -185,10 +246,9 @@
     const ganttBody = document.getElementById('gantt-body');
     let filter = 'all';
 
-    // ── Select de estado (dropdown custom) ──────────────────────────────
     function stateSelect(id) {
         const s = stateOf(id);
-        const opt = (val) => `<button type="button" class="st-opt" data-val="${val}"><i class="fa-solid ${STATE_ICON[val]} ${val==='done'?'text-emerald-500':val==='prog'?'':'text-slate-400'}" ${val==='prog'?'style="color:var(--ds-brand)"':''}></i> ${STATE_LABEL[val]}</button>`;
+        const opt = (val) => `<button type="button" class="st-opt" data-val="${val}"><i class="fa-solid ${STATE_ICON[val]}" style="color:${val==='done'?'#10B981':val==='prog'?'var(--ds-brand)':'#94a3b8'}"></i> ${STATE_LABEL[val]}</button>`;
         return `<div class="st-select" data-stid="${id}">
             <button type="button" class="st-trigger st-badge st-${s}"><i class="fa-solid ${STATE_ICON[s]}"></i> ${STATE_LABEL[s]} <i class="fa-solid fa-chevron-down text-[9px] ml-0.5 opacity-70"></i></button>
             <div class="st-menu hidden">${STATES.map(opt).join('')}</div>
@@ -200,26 +260,19 @@
         if (task.pts) tags.push(`<span class="text-[10px] font-bold text-slate-400"><i class="fa-solid fa-star text-[8px]"></i> ${task.pts} SP</span>`);
         if (task.dev) tags.push(`<span class="text-[10px] font-bold text-slate-400"><i class="fa-solid fa-user text-[8px]"></i> ${task.dev}</span>`);
         return `<div class="task-row flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl" data-task="${task.id}" data-state="${stateOf(task.id)}">
-            <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">${task.t}</p>
-                <div class="flex items-center flex-wrap gap-2 mt-1">${tags.join('')}</div>
-            </div>
+            <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">${task.t}</p><div class="flex items-center flex-wrap gap-2 mt-1">${tags.join('')}</div></div>
             ${stateSelect(task.id)}
         </div>`;
     }
     function sprintCard(sp) {
         return `<section class="bl-sprint lg-card rounded-3xl p-5" data-sprint="${sp.id}">
             <div class="flex items-start justify-between gap-3 mb-3 flex-wrap">
-                <div>
-                    <h2 class="text-base font-black text-slate-900 dark:text-white">${sp.name}</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"><i class="fa-regular fa-calendar mr-1"></i>${sp.dates} · ${sp.obj}</p>
-                </div>
+                <div><h2 class="text-base font-black text-slate-900 dark:text-white">${sp.name}</h2><p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"><i class="fa-regular fa-calendar mr-1"></i>${sp.dates} · ${sp.obj}</p></div>
                 <span class="text-xs font-bold text-slate-400" data-sprint-count="${sp.id}"></span>
             </div>
             <div class="space-y-1">${sp.tasks.map(taskRow).join('')}</div>
         </section>`;
     }
-
     function aggState(ids) {
         const sts = ids.map(stateOf);
         if (sts.every(s => s === 'done')) return 'done';
@@ -230,32 +283,20 @@
         const st = aggState(a.src);
         let cells = '';
         for (let w = 0; w < 8; w++) {
-            if (a.weeks.includes(w)) {
-                const first = w === a.weeks[0];
-                cells += `<td class="g-bar-${st}">${(first && a.sp !== '—') ? a.sp : ''}</td>`;
-            } else cells += '<td></td>';
+            if (a.weeks.includes(w)) { const first = w === a.weeks[0]; cells += `<td class="g-bar-${st}">${(first && a.sp !== '—') ? a.sp : ''}</td>`; }
+            else cells += '<td></td>';
         }
-        return `<tr>
-            <td class="g-act">${a.name}</td>
-            <td>${a.sp}</td>
-            <td class="st-${st}" style="font-weight:800">${STATE_LABEL[st]}</td>
-            ${cells}
-        </tr>`;
+        return `<tr><td class="g-act">${a.name}</td><td>${a.sp}</td><td class="st-${st}" style="font-weight:800">${STATE_LABEL[st]}</td>${cells}</tr>`;
     }
     function renderGantt() { ganttBody.innerHTML = GANTT.map(ganttRow).join(''); }
-
     function updateStats() {
-        const all = SPRINTS.flatMap(s => s.tasks);
-        const counts = { done:0, prog:0, todo:0 };
+        const all = SPRINTS.flatMap(s => s.tasks), counts = { done:0, prog:0, todo:0 };
         all.forEach(t => counts[stateOf(t.id)]++);
         const total = all.length, pct = Math.round(counts.done / total * 100);
         document.getElementById('bl-pct').textContent = pct;
         document.getElementById('bl-bar').style.width = pct + '%';
         document.getElementById('bl-done-n').textContent = counts.done;
         document.getElementById('bl-total-n').textContent = total;
-        document.getElementById('bl-c-done').textContent = counts.done;
-        document.getElementById('bl-c-prog').textContent = counts.prog;
-        document.getElementById('bl-c-todo').textContent = counts.todo;
         SPRINTS.forEach(sp => {
             const d = sp.tasks.filter(t => stateOf(t.id) === 'done').length;
             const el = board.querySelector(`[data-sprint-count="${sp.id}"]`);
@@ -263,74 +304,47 @@
         });
     }
     function applyFilter() {
-        board.querySelectorAll('[data-task]').forEach(row => {
-            row.style.display = (filter === 'all' || row.dataset.state === filter) ? '' : 'none';
-        });
+        board.querySelectorAll('[data-task]').forEach(row => row.style.display = (filter === 'all' || row.dataset.state === filter) ? '' : 'none');
         board.querySelectorAll('.bl-sprint').forEach(sec => {
-            const anyVisible = Array.from(sec.querySelectorAll('[data-task]')).some(r => r.style.display !== 'none');
-            sec.style.display = anyVisible ? '' : 'none';
+            const any = Array.from(sec.querySelectorAll('[data-task]')).some(r => r.style.display !== 'none');
+            sec.style.display = any ? '' : 'none';
         });
     }
-
     function closeMenus() { document.querySelectorAll('.st-menu').forEach(m => m.classList.add('hidden')); }
-    function bindSelects() {
-        board.querySelectorAll('.st-select').forEach(sel => {
-            const id = sel.dataset.stid;
-            const trigger = sel.querySelector('.st-trigger');
-            trigger.addEventListener('click', e => {
-                e.stopPropagation();
-                const menu = sel.querySelector('.st-menu');
-                const open = !menu.classList.contains('hidden');
-                closeMenus();
-                if (!open) menu.classList.remove('hidden');
-            });
-            sel.querySelectorAll('.st-opt').forEach(opt => opt.addEventListener('click', e => {
-                e.stopPropagation();
-                saved[id] = opt.dataset.val; persist();
-                // refrescar la fila
-                const row = board.querySelector(`[data-task="${id}"]`);
-                row.dataset.state = saved[id];
-                sel.outerHTML = stateSelect(id);
-                bindSelectFor(board.querySelector(`[data-task="${id}"] .st-select`));
-                updateStats(); renderGantt(); applyFilter();
-            }));
-        });
-    }
-    function bindSelectFor(sel) {
+    function bindSelect(sel) {
         if (!sel) return;
         const id = sel.dataset.stid;
         sel.querySelector('.st-trigger').addEventListener('click', e => {
             e.stopPropagation();
-            const menu = sel.querySelector('.st-menu');
-            const open = !menu.classList.contains('hidden');
-            closeMenus();
-            if (!open) menu.classList.remove('hidden');
+            const menu = sel.querySelector('.st-menu'); const open = !menu.classList.contains('hidden');
+            closeMenus(); if (!open) menu.classList.remove('hidden');
         });
         sel.querySelectorAll('.st-opt').forEach(opt => opt.addEventListener('click', e => {
             e.stopPropagation();
             saved[id] = opt.dataset.val; persist();
-            const row = board.querySelector(`[data-task="${id}"]`);
-            row.dataset.state = saved[id];
+            const row = board.querySelector(`[data-task="${id}"]`); row.dataset.state = saved[id];
             sel.outerHTML = stateSelect(id);
-            bindSelectFor(board.querySelector(`[data-task="${id}"] .st-select`));
+            bindSelect(board.querySelector(`[data-task="${id}"] .st-select`));
             updateStats(); renderGantt(); applyFilter();
         }));
     }
-
     function render() {
         board.innerHTML = SPRINTS.map(sprintCard).join('');
-        bindSelects();
-        renderGantt();
-        applyFilter();
-        updateStats();
+        board.querySelectorAll('.st-select').forEach(bindSelect);
+        renderGantt(); applyFilter(); updateStats();
     }
 
+    // Tabs
+    document.querySelectorAll('.bl-tab').forEach(tab => tab.addEventListener('click', () => {
+        document.querySelectorAll('.bl-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+        document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
+    }));
     document.addEventListener('click', closeMenus);
     document.querySelectorAll('.bl-chip').forEach(chip => chip.addEventListener('click', () => {
         document.querySelectorAll('.bl-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        filter = chip.dataset.filter;
-        applyFilter();
+        chip.classList.add('active'); filter = chip.dataset.filter; applyFilter();
     }));
     window.blSetAll = function (state) { SPRINTS.flatMap(s => s.tasks).forEach(t => saved[t.id] = state); persist(); render(); };
     window.blReset = function () { saved = {}; persist(); render(); };
