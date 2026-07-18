@@ -1,0 +1,527 @@
+{% extends 'panel/base.html' %}
+{% load static %}
+{% block page_title %}Componentes{% endblock %}
+
+{% block content %}
+<style>
+    .comp-nav { display:block; padding:.5rem .75rem; border-radius:.6rem; font-size:.82rem; font-weight:700; color:#64748b; transition:.15s; }
+    .dark .comp-nav { color:#94a3b8; }
+    .comp-nav:hover { background: rgba(245,136,48,.10); color: var(--ds-brand-dark); }
+    .dark .comp-nav:hover { color: var(--ds-brand); }
+    .comp-nav.active { background: var(--ds-brand); color:#fff; box-shadow: 0 6px 14px -6px rgba(245,136,48,.5); }
+    .comp-h { font-size:.72rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; color:#94a3b8; margin-bottom:.35rem; }
+    /* Toggle switch */
+    .toggle { position:relative; display:inline-block; width:44px; height:24px; cursor:pointer; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .toggle .track { position:absolute; inset:0; border-radius:999px; background:#cbd5e1; transition:.2s; }
+    .dark .toggle .track { background: rgba(255,255,255,.16); }
+    .toggle .thumb { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+    .toggle input:checked ~ .track { background: var(--ds-brand); }
+    .toggle input:checked ~ .thumb { transform: translateX(20px); }
+    /* Skeleton */
+    .skeleton { background: linear-gradient(90deg, rgba(148,163,184,.14) 25%, rgba(148,163,184,.30) 37%, rgba(148,163,184,.14) 63%); background-size:400% 100%; animation: comp-shim 1.4s ease infinite; }
+    @keyframes comp-shim { 0%{background-position:100% 50%} 100%{background-position:0 50%} }
+    .spin { animation: comp-spin .8s linear infinite; }
+    @keyframes comp-spin { to { transform: rotate(360deg); } }
+    #compModal { display:none; } #compModal.open { display:flex; }
+    .ico-cell { cursor:pointer; }
+    .ico-cell:hover { background: rgba(245,136,48,.10); color: var(--ds-brand); }
+</style>
+
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <a href="{% url 'panel:design_system' %}" class="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-[var(--ds-brand)] transition-colors mb-3">
+            <i class="fa-solid fa-arrow-left"></i> Volver al Design System
+        </a>
+        <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            <i class="fa-solid fa-cubes text-[var(--ds-brand)] mr-2"></i> Galería de componentes
+        </h1>
+        <p class="text-slate-500 dark:text-slate-400 mt-1">Todos los componentes del sistema, en un solo lugar. Usan los tokens del Design System.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-[210px,1fr] gap-6 items-start">
+        <!-- ═══ MENÚ LATERAL ═══ -->
+        <aside class="hidden lg:block lg:sticky lg:top-24">
+            <nav class="lg-card rounded-2xl p-2 space-y-0.5" id="compMenu">
+                <a href="#botones"  class="comp-nav"><i class="fa-solid fa-hand-pointer w-4 mr-1.5"></i> Botones</a>
+                <a href="#cards"    class="comp-nav"><i class="fa-solid fa-square w-4 mr-1.5"></i> Cards</a>
+                <a href="#alerts"   class="comp-nav"><i class="fa-solid fa-circle-exclamation w-4 mr-1.5"></i> Alerts</a>
+                <a href="#toasts"   class="comp-nav"><i class="fa-solid fa-bell w-4 mr-1.5"></i> Toasts</a>
+                <a href="#chips"    class="comp-nav"><i class="fa-solid fa-tag w-4 mr-1.5"></i> Chips y badges</a>
+                <a href="#inputs"   class="comp-nav"><i class="fa-solid fa-keyboard w-4 mr-1.5"></i> Inputs</a>
+                <a href="#select"   class="comp-nav"><i class="fa-solid fa-list w-4 mr-1.5"></i> Select</a>
+                <a href="#tabs"     class="comp-nav"><i class="fa-solid fa-table-columns w-4 mr-1.5"></i> Tabs</a>
+                <a href="#controles" class="comp-nav"><i class="fa-solid fa-toggle-on w-4 mr-1.5"></i> Toggles y checks</a>
+                <a href="#loaders"  class="comp-nav"><i class="fa-solid fa-spinner w-4 mr-1.5"></i> Loaders</a>
+                <a href="#avatares" class="comp-nav"><i class="fa-solid fa-user w-4 mr-1.5"></i> Avatares</a>
+                <a href="#modal"    class="comp-nav"><i class="fa-solid fa-window-maximize w-4 mr-1.5"></i> Modal</a>
+                <a href="#tabla"    class="comp-nav"><i class="fa-solid fa-table w-4 mr-1.5"></i> Tabla</a>
+                <a href="#iconos"   class="comp-nav"><i class="fa-solid fa-icons w-4 mr-1.5"></i> Iconos</a>
+            </nav>
+        </aside>
+
+        <!-- ═══ SECCIONES ═══ -->
+        <div class="space-y-6 scroll-mt-24">
+
+            <!-- BOTONES -->
+            <section id="botones" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-4"><i class="fa-solid fa-hand-pointer text-[var(--ds-brand)] mr-2"></i> Botones</h2>
+                <p class="comp-h">Del panel</p>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button class="lg-btn lg-btn-prominent"><i class="fa-solid fa-bolt"></i> Primario</button>
+                    <button class="lg-btn"><i class="fa-solid fa-pen"></i> Secundario</button>
+                    <button class="lg-btn lg-btn-clear"><i class="fa-solid fa-eye"></i> Sutil</button>
+                    <button class="lg-btn lg-btn-prominent opacity-50 cursor-not-allowed" disabled><i class="fa-solid fa-ban"></i> Deshabilitado</button>
+                </div>
+                <p class="comp-h">Neumórficos</p>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button class="nm-btn nm-btn-primary"><i class="fa-solid fa-check"></i> Acción</button>
+                    <button class="nm-btn"><i class="fa-solid fa-xmark"></i> Cancelar</button>
+                </div>
+                <p class="comp-h">Por estado</p>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button class="px-4 py-2 rounded-xl text-sm font-bold text-white" style="background: var(--ds-success);"><i class="fa-solid fa-check mr-1"></i> Éxito</button>
+                    <button class="px-4 py-2 rounded-xl text-sm font-bold text-white" style="background: var(--ds-danger);"><i class="fa-solid fa-trash mr-1"></i> Peligro</button>
+                    <button class="px-4 py-2 rounded-xl text-sm font-bold text-white" style="background: var(--ds-warning);"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Aviso</button>
+                    <button class="px-4 py-2 rounded-xl text-sm font-bold text-white" style="background: var(--ds-info);"><i class="fa-solid fa-circle-info mr-1"></i> Info</button>
+                </div>
+                <p class="comp-h">Tamaños e íconos</p>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button class="px-2.5 py-1 rounded-lg text-xs font-bold text-white" style="background: var(--ds-brand);">Pequeño</button>
+                    <button class="px-4 py-2 rounded-xl text-sm font-bold text-white" style="background: var(--ds-brand);">Mediano</button>
+                    <button class="px-6 py-3 rounded-2xl text-base font-black text-white" style="background: var(--ds-brand);">Grande</button>
+                    <button class="w-10 h-10 rounded-xl text-white grid place-items-center" style="background: var(--ds-brand);"><i class="fa-solid fa-plus"></i></button>
+                    <button class="w-10 h-10 rounded-full text-white grid place-items-center" style="background: var(--ds-brand);"><i class="fa-solid fa-heart"></i></button>
+                </div>
+            </section>
+
+            <!-- CARDS -->
+            <section id="cards" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-4"><i class="fa-solid fa-square text-[var(--ds-brand)] mr-2"></i> Cards</h2>
+                <div class="grid sm:grid-cols-3 gap-4">
+                    <div class="lg-card rounded-2xl overflow-hidden">
+                        <div class="h-20 bg-gradient-to-br from-[var(--ds-brand)] to-[var(--ds-brand-dark)] flex items-center justify-center"><i class="fa-solid fa-certificate text-white/50 text-3xl"></i></div>
+                        <div class="p-4"><p class="font-black text-sm text-slate-900 dark:text-white">Card con hero</p><p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Con imagen y cuerpo.</p></div>
+                    </div>
+                    <div class="nm-card p-4 text-center">
+                        <div class="nm-ico mx-auto mb-2"><i class="fa-solid fa-award text-[var(--ds-brand)]"></i></div>
+                        <p class="font-bold text-sm text-slate-700 dark:text-slate-200">Card neumórfica</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Estilo suave (nm-card).</p>
+                    </div>
+                    <div class="nm-tile p-4 flex flex-col items-center justify-center">
+                        <p class="text-2xl font-black text-slate-900 dark:text-white">128</p>
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Certificados</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ALERTS -->
+            <section id="alerts" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-4"><i class="fa-solid fa-circle-exclamation text-[var(--ds-brand)] mr-2"></i> Alerts</h2>
+                <div class="space-y-3">
+                    <div class="flex items-start gap-3 p-3.5 rounded-xl border-l-4" style="border-color: var(--ds-success); background: rgba(16,185,129,.10);">
+                        <i class="fa-solid fa-circle-check mt-0.5" style="color: var(--ds-success);"></i>
+                        <div><p class="text-sm font-bold text-slate-800 dark:text-slate-100">Operación exitosa</p><p class="text-xs text-slate-600 dark:text-slate-400">El certificado se generó correctamente.</p></div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3.5 rounded-xl border-l-4" style="border-color: var(--ds-danger); background: rgba(239,68,68,.10);">
+                        <i class="fa-solid fa-circle-exclamation mt-0.5" style="color: var(--ds-danger);"></i>
+                        <div><p class="text-sm font-bold text-slate-800 dark:text-slate-100">Ocurrió un error</p><p class="text-xs text-slate-600 dark:text-slate-400">No se pudo procesar la solicitud.</p></div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3.5 rounded-xl border-l-4" style="border-color: var(--ds-warning); background: rgba(245,158,11,.10);">
+                        <i class="fa-solid fa-triangle-exclamation mt-0.5" style="color: var(--ds-warning);"></i>
+                        <div><p class="text-sm font-bold text-slate-800 dark:text-slate-100">Atención</p><p class="text-xs text-slate-600 dark:text-slate-400">Revisá los datos antes de continuar.</p></div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3.5 rounded-xl border-l-4" style="border-color: var(--ds-info); background: rgba(59,130,246,.10);">
+                        <i class="fa-solid fa-circle-info mt-0.5" style="color: var(--ds-info);"></i>
+                        <div><p class="text-sm font-bold text-slate-800 dark:text-slate-100">Información</p><p class="text-xs text-slate-600 dark:text-slate-400">Podés editar esto más tarde.</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TOASTS -->
+            <section id="toasts" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-2"><i class="fa-solid fa-bell text-[var(--ds-brand)] mr-2"></i> Toasts</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Notificaciones flotantes (aparecen arriba a la derecha).</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="showToast('El certificado se descargó.', 'success')" class="px-4 py-2 rounded-xl text-sm font-bold text-white" style="background: var(--ds-success);"><i class="fa-solid fa-circle-check mr-1"></i> Éxito</button>
+                    <button onclick="showToast('No se pudo conectar al servidor.', 'error')" class="px-4 py-2 rounded-xl text-sm font-bold text-white" style="background: var(--ds-danger);"><i class="fa-solid fa-circle-exclamation mr-1"></i> Error</button>
+                    <button onclick="showToast('Revisá los campos marcados.', 'warning')" class="px-4 py-2 rounded-xl text-sm font-bold text-white" style="background: var(--ds-warning);"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Aviso</button>
+                </div>
+            </section>
+
+            <!-- CHIPS Y BADGES -->
+            <section id="chips" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-4"><i class="fa-solid fa-tag text-[var(--ds-brand)] mr-2"></i> Chips y badges</h2>
+                <p class="comp-h">Chips de estado</p>
+                <div class="flex flex-wrap gap-1.5 mb-4">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-white" style="background: var(--ds-brand);"><i class="fa-solid fa-bolt text-[9px]"></i> Marca</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-white" style="background: var(--ds-success);"><i class="fa-solid fa-check text-[9px]"></i> Aprobado</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-white" style="background: var(--ds-info);">Inscrito</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border border-slate-300 dark:border-white/15 text-slate-500 dark:text-slate-400">Neutro</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-slate-700 dark:text-slate-200" style="background: rgba(245,136,48,.14);">Suave</span>
+                </div>
+                <p class="comp-h">Badge numérico y removible</p>
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="relative inline-flex"><i class="fa-solid fa-bell text-xl text-slate-500 dark:text-slate-300"></i><span class="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black text-white grid place-items-center" style="background: var(--ds-danger);">5</span></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-white" style="background: var(--ds-brand);">Filtro <i class="fa-solid fa-xmark cursor-pointer opacity-80 hover:opacity-100"></i></span>
+                </div>
+            </section>
+
+            <!-- INPUTS -->
+            <section id="inputs" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-4"><i class="fa-solid fa-keyboard text-[var(--ds-brand)] mr-2"></i> Inputs</h2>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="comp-h block">Texto</label>
+                        <input type="text" placeholder="Escribí algo…" class="w-full text-sm rounded-xl px-3 py-2 bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/25 transition">
+                    </div>
+                    <div>
+                        <label class="comp-h block">Con ícono</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" placeholder="Buscar…" class="w-full text-sm rounded-xl pl-9 pr-3 py-2 bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/25 transition">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="comp-h block">Con error</label>
+                        <input type="text" value="valor@invalido" class="w-full text-sm rounded-xl px-3 py-2 bg-white/70 dark:bg-white/5 border-2 text-slate-800 dark:text-slate-100 focus:outline-none transition" style="border-color: var(--ds-danger);">
+                        <p class="text-[11px] mt-1 font-semibold" style="color: var(--ds-danger);">Correo no válido.</p>
+                    </div>
+                    <div>
+                        <label class="comp-h block">Deshabilitado</label>
+                        <input type="text" value="No editable" disabled class="w-full text-sm rounded-xl px-3 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-400 cursor-not-allowed">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="comp-h block">Área de texto</label>
+                        <textarea rows="2" placeholder="Descripción…" class="w-full text-sm rounded-xl px-3 py-2 bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/25 transition"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SELECT -->
+            <section id="select" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-4"><i class="fa-solid fa-list text-[var(--ds-brand)] mr-2"></i> Select (custom)</h2>
+                <div class="max-w-xs">
+                    <div class="ds-select relative">
+                        <button type="button" class="ds-select-trigger w-full flex items-center justify-between gap-2 text-sm rounded-xl px-3 py-2 bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100 hover:border-[var(--ds-brand)]/50 focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/25 transition">
+                            <span class="ds-select-value truncate text-slate-500 dark:text-slate-400">Seleccioná una opción</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+                        </button>
+                        <div class="ds-select-menu hidden absolute z-30 left-0 right-0 mt-1 p-1 rounded-xl bg-white dark:bg-[#0f1836] border border-slate-200 dark:border-white/10 shadow-xl">
+                            <button type="button" class="ds-select-opt w-full text-left text-sm px-2.5 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-200 hover:bg-[var(--ds-brand)]/10 hover:text-[var(--ds-brand-dark)] dark:hover:text-[var(--ds-brand)] transition"><i class="fa-solid fa-check text-[10px] text-[var(--ds-brand)] opacity-0"></i> Programa</button>
+                            <button type="button" class="ds-select-opt w-full text-left text-sm px-2.5 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-200 hover:bg-[var(--ds-brand)]/10 hover:text-[var(--ds-brand-dark)] dark:hover:text-[var(--ds-brand)] transition"><i class="fa-solid fa-check text-[10px] text-[var(--ds-brand)] opacity-0"></i> Seminario</button>
+                            <button type="button" class="ds-select-opt w-full text-left text-sm px-2.5 py-2 rounded-lg flex items-center gap-2 text-slate-700 dark:text-slate-200 hover:bg-[var(--ds-brand)]/10 hover:text-[var(--ds-brand-dark)] dark:hover:text-[var(--ds-brand)] transition"><i class="fa-solid fa-check text-[10px] text-[var(--ds-brand)] opacity-0"></i> Taller</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TABS -->
+            <section id="tabs" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-4"><i class="fa-solid fa-table-columns text-[var(--ds-brand)] mr-2"></i> Tabs</h2>
+                <p class="comp-h">Segmentadas</p>
+                <div class="flex p-1 rounded-xl bg-slate-100 dark:bg-white/5 gap-1 max-w-sm mb-5">
+                    <button class="flex-1 text-xs font-bold py-1.5 rounded-lg text-white shadow" style="background: var(--ds-brand);">Activa</button>
+                    <button class="flex-1 text-xs font-bold py-1.5 rounded-lg text-slate-500 dark:text-slate-400">Otra</button>
+                    <button class="flex-1 text-xs font-bold py-1.5 rounded-lg text-slate-500 dark:text-slate-400">Más</button>
+                </div>
+                <p class="comp-h">Subrayadas</p>
+                <div class="flex gap-5 border-b border-slate-200 dark:border-white/10">
+                    <button class="pb-2 text-sm font-bold border-b-2" style="color: var(--ds-brand); border-color: var(--ds-brand);">Resumen</button>
+                    <button class="pb-2 text-sm font-bold text-slate-500 dark:text-slate-400 border-b-2 border-transparent">Seminarios</button>
+                    <button class="pb-2 text-sm font-bold text-slate-500 dark:text-slate-400 border-b-2 border-transparent">Certificados</button>
+                </div>
+            </section>
+
+            <!-- TOGGLES Y CHECKS -->
+            <section id="controles" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-4"><i class="fa-solid fa-toggle-on text-[var(--ds-brand)] mr-2"></i> Toggles y checks</h2>
+                <div class="flex flex-wrap items-center gap-6">
+                    <label class="toggle"><input type="checkbox" checked><span class="track"></span><span class="thumb"></span></label>
+                    <label class="toggle"><input type="checkbox"><span class="track"></span><span class="thumb"></span></label>
+                    <label class="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300"><input type="checkbox" checked class="w-4 h-4 rounded accent-[var(--ds-brand)]"> Casilla</label>
+                    <label class="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300"><input type="radio" name="demo" checked class="w-4 h-4 accent-[var(--ds-brand)]"> Opción A</label>
+                    <label class="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300"><input type="radio" name="demo" class="w-4 h-4 accent-[var(--ds-brand)]"> Opción B</label>
+                </div>
+            </section>
+
+            <!-- LOADERS -->
+            <section id="loaders" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-4"><i class="fa-solid fa-spinner text-[var(--ds-brand)] mr-2"></i> Loaders</h2>
+                <div class="flex flex-wrap items-center gap-8">
+                    <div class="text-center"><i class="fa-solid fa-circle-notch spin text-3xl" style="color: var(--ds-brand);"></i><p class="comp-h mt-2">Spinner</p></div>
+                    <div class="text-center">
+                        <div class="flex gap-1.5 justify-center h-8 items-center">
+                            <span class="w-2.5 h-2.5 rounded-full spin" style="background: var(--ds-brand); animation: comp-bounce 1s infinite;"></span>
+                            <span class="w-2.5 h-2.5 rounded-full" style="background: var(--ds-brand); animation: comp-bounce 1s infinite .15s;"></span>
+                            <span class="w-2.5 h-2.5 rounded-full" style="background: var(--ds-brand); animation: comp-bounce 1s infinite .3s;"></span>
+                        </div>
+                        <p class="comp-h mt-2">Puntos</p>
+                    </div>
+                    <div class="flex-1 min-w-[160px]">
+                        <div class="h-2.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden"><div class="h-full rounded-full" style="width:62%; background: var(--ds-brand);"></div></div>
+                        <p class="comp-h mt-2">Barra de progreso</p>
+                    </div>
+                    <div class="flex-1 min-w-[160px] space-y-2">
+                        <div class="h-3 rounded skeleton w-3/4"></div>
+                        <div class="h-3 rounded skeleton w-full"></div>
+                        <div class="h-3 rounded skeleton w-1/2"></div>
+                        <p class="comp-h">Skeleton</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AVATARES -->
+            <section id="avatares" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-4"><i class="fa-solid fa-user text-[var(--ds-brand)] mr-2"></i> Avatares</h2>
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="w-8 h-8 rounded-full grid place-items-center text-white text-xs font-black" style="background: var(--ds-brand);">RA</div>
+                    <div class="w-11 h-11 rounded-full grid place-items-center text-white text-sm font-black" style="background: var(--ds-accent);">MV</div>
+                    <div class="w-14 h-14 rounded-full grid place-items-center text-white text-lg font-black" style="background: var(--ds-brand-dark);">CM</div>
+                    <div class="relative"><div class="w-11 h-11 rounded-full grid place-items-center text-white font-black" style="background: var(--ds-info);">DR</div><span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#0f1836]" style="background: var(--ds-success);"></span></div>
+                    <div class="flex -space-x-2">
+                        <div class="w-9 h-9 rounded-full grid place-items-center text-white text-xs font-black ring-2 ring-white dark:ring-[#0f1836]" style="background: var(--ds-brand);">A</div>
+                        <div class="w-9 h-9 rounded-full grid place-items-center text-white text-xs font-black ring-2 ring-white dark:ring-[#0f1836]" style="background: var(--ds-accent);">B</div>
+                        <div class="w-9 h-9 rounded-full grid place-items-center text-white text-xs font-black ring-2 ring-white dark:ring-[#0f1836]" style="background: var(--ds-info);">C</div>
+                        <div class="w-9 h-9 rounded-full grid place-items-center text-slate-600 dark:text-slate-200 text-xs font-black ring-2 ring-white dark:ring-[#0f1836] bg-slate-200 dark:bg-white/10">+3</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODAL -->
+            <section id="modal" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-2"><i class="fa-solid fa-window-maximize text-[var(--ds-brand)] mr-2"></i> Modal</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Ventana modal centrada con fondo difuminado.</p>
+                <button onclick="document.getElementById('compModal').classList.add('open')" class="lg-btn lg-btn-prominent"><i class="fa-solid fa-window-restore"></i> Abrir modal</button>
+            </section>
+
+            <!-- TABLA -->
+            <section id="tabla" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-4"><i class="fa-solid fa-table text-[var(--ds-brand)] mr-2"></i> Tabla</h2>
+                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-white/10">
+                                <th class="px-4 py-2.5 font-black">Curso</th><th class="px-4 py-2.5 font-black">Horas</th><th class="px-4 py-2.5 font-black">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-700 dark:text-slate-200">
+                            <tr class="border-b border-slate-100 dark:border-white/5"><td class="px-4 py-2.5 font-semibold">SQL Avanzado</td><td class="px-4 py-2.5">8h</td><td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold text-white" style="background: var(--ds-success);">Aprobado</span></td></tr>
+                            <tr class="border-b border-slate-100 dark:border-white/5"><td class="px-4 py-2.5 font-semibold">Machine Learning</td><td class="px-4 py-2.5">16h</td><td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold text-white" style="background: var(--ds-info);">Inscrito</span></td></tr>
+                            <tr><td class="px-4 py-2.5 font-semibold">Power BI</td><td class="px-4 py-2.5">10h</td><td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-white/15">Pendiente</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ICONOS -->
+            <section id="iconos" class="lg-card rounded-3xl p-6 scroll-mt-24">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white mb-2"><i class="fa-solid fa-icons text-[var(--ds-brand)] mr-2"></i> Iconos usados</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Font Awesome 6. Clic en cualquiera para copiar su clase.</p>
+                <div class="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="certificate" title="fa-certificate">
+                        <i class="fa-solid fa-certificate text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">certificate</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="graduation-cap" title="fa-graduation-cap">
+                        <i class="fa-solid fa-graduation-cap text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">graduation-cap</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="award" title="fa-award">
+                        <i class="fa-solid fa-award text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">award</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="book" title="fa-book">
+                        <i class="fa-solid fa-book text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">book</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="calendar-day" title="fa-calendar-day">
+                        <i class="fa-solid fa-calendar-day text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">calendar-day</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="clock" title="fa-clock">
+                        <i class="fa-solid fa-clock text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">clock</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="qr-code" title="fa-qr-code">
+                        <i class="fa-solid fa-qr-code text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">qr-code</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="download" title="fa-download">
+                        <i class="fa-solid fa-download text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">download</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="shield-halved" title="fa-shield-halved">
+                        <i class="fa-solid fa-shield-halved text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">shield-halved</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="share-nodes" title="fa-share-nodes">
+                        <i class="fa-solid fa-share-nodes text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">share-nodes</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="user" title="fa-user">
+                        <i class="fa-solid fa-user text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">user</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="users" title="fa-users">
+                        <i class="fa-solid fa-users text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">users</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="layer-group" title="fa-layer-group">
+                        <i class="fa-solid fa-layer-group text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">layer-group</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="bolt" title="fa-bolt">
+                        <i class="fa-solid fa-bolt text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">bolt</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="check" title="fa-check">
+                        <i class="fa-solid fa-check text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">check</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="circle-check" title="fa-circle-check">
+                        <i class="fa-solid fa-circle-check text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">circle-check</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="circle-xmark" title="fa-circle-xmark">
+                        <i class="fa-solid fa-circle-xmark text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">circle-xmark</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="circle-info" title="fa-circle-info">
+                        <i class="fa-solid fa-circle-info text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">circle-info</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="triangle-exclamation" title="fa-triangle-exclamation">
+                        <i class="fa-solid fa-triangle-exclamation text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">triangle-exclamation</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="magnifying-glass" title="fa-magnifying-glass">
+                        <i class="fa-solid fa-magnifying-glass text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">magnifying-glass</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="gear" title="fa-gear">
+                        <i class="fa-solid fa-gear text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">gear</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="pen" title="fa-pen">
+                        <i class="fa-solid fa-pen text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">pen</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="trash" title="fa-trash">
+                        <i class="fa-solid fa-trash text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">trash</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="plus" title="fa-plus">
+                        <i class="fa-solid fa-plus text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">plus</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="arrow-left" title="fa-arrow-left">
+                        <i class="fa-solid fa-arrow-left text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">arrow-left</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="chevron-down" title="fa-chevron-down">
+                        <i class="fa-solid fa-chevron-down text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">chevron-down</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="star" title="fa-star">
+                        <i class="fa-solid fa-star text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">star</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="heart" title="fa-heart">
+                        <i class="fa-solid fa-heart text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">heart</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="bell" title="fa-bell">
+                        <i class="fa-solid fa-bell text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">bell</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="file-pdf" title="fa-file-pdf">
+                        <i class="fa-solid fa-file-pdf text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">file-pdf</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="chart-line" title="fa-chart-line">
+                        <i class="fa-solid fa-chart-line text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">chart-line</span>
+                    </div>
+                    <div class="ico-cell flex flex-col items-center gap-1 p-2.5 rounded-xl transition" data-ico="brain" title="fa-brain">
+                        <i class="fa-solid fa-brain text-lg text-slate-700 dark:text-slate-200"></i>
+                        <span class="text-[9px] text-slate-400 truncate w-full text-center">brain</span>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal demo -->
+<div id="compModal" class="fixed inset-0 z-[120] items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="document.getElementById('compModal').classList.remove('open')"></div>
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-[#0f1836] shadow-2xl overflow-hidden">
+        <div class="flex items-center justify-between gap-3 p-4 border-b border-slate-200 dark:border-white/10">
+            <p class="font-black text-slate-900 dark:text-white"><i class="fa-solid fa-circle-info text-[var(--ds-brand)] mr-1.5"></i> Título del modal</p>
+            <button onclick="document.getElementById('compModal').classList.remove('open')" class="w-8 h-8 rounded-lg grid place-items-center text-slate-500 hover:text-white hover:bg-[var(--ds-brand)] transition"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-5">
+            <p class="text-sm text-slate-600 dark:text-slate-300">Este es un modal de ejemplo con fondo difuminado, encabezado y acciones.</p>
+        </div>
+        <div class="flex justify-end gap-2 p-4 border-t border-slate-200 dark:border-white/10">
+            <button onclick="document.getElementById('compModal').classList.remove('open')" class="lg-btn lg-btn-clear">Cancelar</button>
+            <button onclick="document.getElementById('compModal').classList.remove('open')" class="lg-btn lg-btn-prominent"><i class="fa-solid fa-check"></i> Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<style>@keyframes comp-bounce { 0%,100%{transform:translateY(0);opacity:.6} 50%{transform:translateY(-6px);opacity:1} }</style>
+<script>
+(function () {
+    // Select custom
+    function closeAllSelects() {
+        document.querySelectorAll('.ds-select-menu').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('.ds-select .fa-chevron-down').forEach(c => c.style.transform = '');
+    }
+    document.querySelectorAll('.ds-select').forEach(sel => {
+        const trigger = sel.querySelector('.ds-select-trigger');
+        const menu = sel.querySelector('.ds-select-menu');
+        const valueEl = sel.querySelector('.ds-select-value');
+        const chevron = trigger.querySelector('.fa-chevron-down');
+        trigger.addEventListener('click', e => {
+            e.stopPropagation();
+            const open = !menu.classList.contains('hidden');
+            closeAllSelects();
+            if (!open) { menu.classList.remove('hidden'); chevron.style.transform = 'rotate(180deg)'; }
+        });
+        sel.querySelectorAll('.ds-select-opt').forEach(opt => opt.addEventListener('click', () => {
+            valueEl.textContent = opt.textContent.trim();
+            valueEl.classList.remove('text-slate-500', 'dark:text-slate-400');
+            sel.querySelectorAll('.ds-select-opt .fa-check').forEach(c => c.style.opacity = '0');
+            const chk = opt.querySelector('.fa-check'); if (chk) chk.style.opacity = '1';
+            closeAllSelects();
+        }));
+    });
+    document.addEventListener('click', closeAllSelects);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAllSelects(); document.getElementById('compModal').classList.remove('open'); } });
+
+    // Menú lateral: resaltar sección visible
+    const links = Array.from(document.querySelectorAll('#compMenu .comp-nav'));
+    const byId = id => links.find(l => l.getAttribute('href') === '#' + id);
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+            if (en.isIntersecting) {
+                links.forEach(l => l.classList.remove('active'));
+                const a = byId(en.target.id); if (a) a.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    document.querySelectorAll('section[id]').forEach(s => obs.observe(s));
+
+    // Copiar clase de ícono
+    document.querySelectorAll('.ico-cell').forEach(cell => cell.addEventListener('click', () => {
+        const cls = cell.dataset.ico;
+        navigator.clipboard && navigator.clipboard.writeText('fa-solid fa-' + cls);
+        if (window.showToast) showToast('Copiado: fa-' + cls, 'success', 2000);
+    }));
+})();
+</script>
+{% endblock %}

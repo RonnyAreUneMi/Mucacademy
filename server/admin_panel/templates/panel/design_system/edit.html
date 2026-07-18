@@ -17,7 +17,10 @@
             </h1>
             <p class="text-slate-500 dark:text-slate-400 mt-1">Personalizá los tokens del sistema (:root): colores, tipografías, radios, sombras y componentes del panel.</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="{% url 'panel:componentes' %}" class="lg-btn">
+                <i class="fa-solid fa-cubes"></i> Galería de componentes
+            </a>
             <form action="{% url 'panel:design_system_reset' %}" method="post" onsubmit="return confirm('¿Restaurar todos los valores por defecto?')">
                 {% csrf_token %}
                 <button type="submit" class="lg-btn lg-btn-clear">

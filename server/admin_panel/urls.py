@@ -92,6 +92,7 @@ urlpatterns = [
     # Design System (UI tokens — colores, fuentes, botones del panel)
     path('design-system/', design_system_edit, name='design_system'),
     path('design-system/reset/', design_system_reset, name='design_system_reset'),
+    path('design-system/componentes/', superadmin_page('panel/design_system/componentes.html'), name='componentes'),
 
     # Certificates (form add)
     path('batches/<int:id>/add-certificate/', add_certificate, name='add_certificate'),
