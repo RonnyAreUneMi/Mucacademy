@@ -10,7 +10,9 @@
     .st-prog { background: rgba(245,136,48,.16); color: var(--ds-brand-dark); } .dark .st-prog { color: var(--ds-brand); }
     .st-todo { background: rgba(148,163,184,.16); color:#64748b; } .dark .st-todo { color:#94a3b8; }
     .st-select { position:relative; } .st-trigger { cursor:pointer; transition:.15s; } .st-trigger:hover { filter:brightness(1.05); }
-    .st-menu { position:absolute; right:0; margin-top:.35rem; z-index:30; width:11rem; padding:.25rem; border-radius:.75rem; background:#fff; border:1px solid rgba(226,232,240,1); box-shadow:0 10px 30px -10px rgba(0,0,0,.35); }
+    .st-menu { position:absolute; right:0; margin-top:.35rem; z-index:50; width:11rem; padding:.25rem; border-radius:.75rem; background:#fff; border:1px solid rgba(226,232,240,1); box-shadow:0 10px 30px -10px rgba(0,0,0,.35); }
+    .bl-sprint { position:relative; }
+    .bl-sprint.menu-open { z-index:60; }   /* eleva la card cuyo select está abierto por encima de las siguientes */
     .dark .st-menu { background:#0f1836; border-color: rgba(255,255,255,.1); }
     .st-opt { width:100%; display:flex; align-items:center; gap:.5rem; padding:.4rem .6rem; border-radius:.5rem; font-size:.78rem; font-weight:700; color:#475569; transition:.12s; } .dark .st-opt { color:#cbd5e1; }
     .st-opt:hover { background: rgba(245,136,48,.1); }
@@ -300,14 +302,18 @@
             sec.style.display = any ? '' : 'none';
         });
     }
-    function closeMenus() { document.querySelectorAll('.st-menu').forEach(m => m.classList.add('hidden')); }
+    function closeMenus() {
+        document.querySelectorAll('.st-menu').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('.bl-sprint.menu-open').forEach(s => s.classList.remove('menu-open'));
+    }
     function bindSelect(sel) {
         if (!sel) return;
         const id = sel.dataset.stid;
         sel.querySelector('.st-trigger').addEventListener('click', e => {
             e.stopPropagation();
             const menu = sel.querySelector('.st-menu'); const open = !menu.classList.contains('hidden');
-            closeMenus(); if (!open) menu.classList.remove('hidden');
+            closeMenus();
+            if (!open) { menu.classList.remove('hidden'); const card = sel.closest('.bl-sprint'); if (card) card.classList.add('menu-open'); }
         });
         sel.querySelectorAll('.st-opt').forEach(opt => opt.addEventListener('click', e => {
             e.stopPropagation();
