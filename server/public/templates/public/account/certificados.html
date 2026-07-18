@@ -103,14 +103,19 @@
         <!-- ═══════════ Certificados sueltos ═══════════ -->
         {% for c in sueltos %}
         <div class="lg-card rounded-2xl overflow-hidden flex flex-col group">
-            <!-- Hero -->
-            <div class="relative h-28 rounded-t-2xl overflow-hidden bg-gradient-to-br from-[var(--ds-brand)] via-[#E8721C] to-[var(--ds-brand-dark)] flex items-center justify-center">
+            <!-- Hero (clic = vista previa) -->
+            <div class="cert-preview relative h-28 rounded-t-2xl overflow-hidden cursor-pointer bg-gradient-to-br from-[var(--ds-brand)] via-[#E8721C] to-[var(--ds-brand-dark)] flex items-center justify-center"
+                 data-preview="/api/v1/public/certificates/{{ c.verification_hash }}/download/?inline=1"
+                 data-title="{{ c.course }}">
                 <div class="absolute inset-0 opacity-15" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 18px 18px;"></div>
                 <i class="fa-solid fa-certificate text-white/40 text-5xl relative"></i>
-                <span class="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/85 dark:bg-black/40 text-slate-900 dark:text-white backdrop-blur-md ring-1 ring-white/60">
+                <div class="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 text-white text-xs font-black opacity-0 hover:opacity-100 transition-opacity">
+                    <i class="fa-solid fa-eye"></i> Vista previa
+                </div>
+                <span class="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/85 dark:bg-black/40 text-slate-900 dark:text-white backdrop-blur-md ring-1 ring-white/60 pointer-events-none">
                     <i class="fa-solid fa-graduation-cap text-[9px]"></i> Seminario suelto
                 </span>
-                <span class="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/85 dark:bg-black/40 text-slate-900 dark:text-white backdrop-blur-md ring-1 ring-white/60">
+                <span class="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/85 dark:bg-black/40 text-slate-900 dark:text-white backdrop-blur-md ring-1 ring-white/60 pointer-events-none">
                     {{ c.hours }}h
                 </span>
             </div>
@@ -213,4 +218,55 @@
     {% endif %}
 
 </div>
+
+<!-- Modal de vista previa del certificado -->
+<div id="certPreview" class="fixed inset-0 z-[100] items-center justify-center p-3 sm:p-6">
+    <div class="cp-backdrop absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    <div class="relative w-full max-w-4xl h-[86vh] rounded-2xl overflow-hidden flex flex-col bg-white dark:bg-[#0f1836] shadow-2xl">
+        <div class="flex items-center justify-between gap-3 p-3 border-b border-slate-200 dark:border-white/10 flex-shrink-0">
+            <p class="font-black text-sm text-slate-900 dark:text-white truncate min-w-0">
+                <i class="fa-solid fa-certificate text-[var(--ds-brand)] mr-1.5"></i><span id="cpTitle">Certificado</span>
+            </p>
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+                <a id="cpDownload" href="#" target="_blank"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white
+                          bg-gradient-to-r from-[var(--ds-brand)] to-[var(--ds-brand-dark)] hover:brightness-110 transition-all">
+                    <i class="fa-solid fa-download"></i> Descargar
+                </a>
+                <button type="button" class="cp-close w-8 h-8 rounded-lg grid place-items-center text-slate-500 hover:text-white hover:bg-[var(--ds-brand)] transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+        <iframe id="cpFrame" class="flex-1 w-full bg-slate-200 dark:bg-slate-800 border-0" title="Vista previa del certificado"></iframe>
+    </div>
+</div>
+<style>#certPreview { display: none; } #certPreview.open { display: flex; }</style>
+<script>
+(function () {
+    var modal = document.getElementById('certPreview');
+    if (!modal) return;
+    var frame = document.getElementById('cpFrame');
+    var titleEl = document.getElementById('cpTitle');
+    var dl = document.getElementById('cpDownload');
+    function open(src, title) {
+        frame.src = src;
+        titleEl.textContent = title || 'Certificado';
+        dl.href = src.replace(/\?inline=1$/, '');   // el botón descarga la versión attachment
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function close() {
+        modal.classList.remove('open');
+        frame.src = 'about:blank';
+        document.body.style.overflow = '';
+    }
+    document.querySelectorAll('.cert-preview').forEach(function (el) {
+        el.addEventListener('click', function () { open(el.dataset.preview, el.dataset.title); });
+    });
+    modal.querySelector('.cp-backdrop').addEventListener('click', close);
+    modal.querySelector('.cp-close').addEventListener('click', close);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+</script>
 {% endblock %}

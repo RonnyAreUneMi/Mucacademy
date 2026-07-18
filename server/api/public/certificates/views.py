@@ -143,12 +143,15 @@ class PublicCertificadoViewSet(viewsets.ReadOnlyModelViewSet):
 
         buffer = generate_certificate_pdf(cert)
 
-        Certificate.objects.filter(pk=cert.pk).update(
-            download_count=cert.download_count + 1,
-            last_download_at=timezone.now(),
-        )
+        # Vista previa: se sirve inline (visible en el navegador) y NO cuenta como descarga.
+        inline = request.query_params.get('inline') in ('1', 'true')
+        if not inline:
+            Certificate.objects.filter(pk=cert.pk).update(
+                download_count=cert.download_count + 1,
+                last_download_at=timezone.now(),
+            )
 
         filename = f'Certificado_{cert.national_id}_{cert.verification_hash[:8]}.pdf'
-        response = FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')
+        response = FileResponse(buffer, as_attachment=not inline, filename=filename, content_type='application/pdf')
         response['Cache-Control'] = 'no-store'
         return response
