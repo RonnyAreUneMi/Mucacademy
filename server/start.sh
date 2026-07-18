@@ -10,6 +10,9 @@ done
 python manage.py import_data || true
 python manage.py ensure_admin || true
 
+# Recopila estáticos y regenera el manifiesto de WhiteNoise (obligatorio con DEBUG=False)
+python manage.py collectstatic --noinput || true
+
 exec gunicorn config.wsgi:application \
   --bind "[::]:8000" \
   --workers 1 \

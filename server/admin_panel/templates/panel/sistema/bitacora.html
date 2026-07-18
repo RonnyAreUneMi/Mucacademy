@@ -4,14 +4,22 @@
 
 {% block content %}
 <style>
-    .st-badge { display:inline-flex; align-items:center; gap:.4rem; padding:.28rem .7rem; border-radius:999px; font-size:.72rem; font-weight:800; cursor:pointer; user-select:none; transition:.15s; white-space:nowrap; }
+    .st-badge { display:inline-flex; align-items:center; gap:.4rem; padding:.28rem .7rem; border-radius:999px; font-size:.72rem; font-weight:800; white-space:nowrap; }
     .st-done  { background: rgba(16,185,129,.14);  color:#059669; }
     .dark .st-done  { color:#6EE7B7; }
     .st-prog  { background: rgba(245,136,48,.16);  color: var(--ds-brand-dark); }
     .dark .st-prog  { color: var(--ds-brand); }
     .st-todo  { background: rgba(148,163,184,.16); color:#64748b; }
     .dark .st-todo  { color:#94a3b8; }
-    .st-badge:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .st-select { position:relative; }
+    .st-trigger { cursor:pointer; transition:.15s; }
+    .st-trigger:hover { filter:brightness(1.05); }
+    .st-menu { position:absolute; right:0; margin-top:.35rem; z-index:30; width:11rem; padding:.25rem; border-radius:.75rem;
+               background:#fff; border:1px solid rgba(226,232,240,1); box-shadow:0 10px 30px -10px rgba(0,0,0,.35); }
+    .dark .st-menu { background:#0f1836; border-color: rgba(255,255,255,.1); }
+    .st-opt { width:100%; display:flex; align-items:center; gap:.5rem; padding:.4rem .6rem; border-radius:.5rem; font-size:.78rem; font-weight:700; color:#475569; transition:.12s; }
+    .dark .st-opt { color:#cbd5e1; }
+    .st-opt:hover { background: rgba(245,136,48,.1); }
     .task-row { transition: background .15s; }
     .task-row:hover { background: rgba(148,163,184,.06); }
     .dark .task-row:hover { background: rgba(255,255,255,.03); }
@@ -19,11 +27,18 @@
     .bl-chip.active { background: var(--ds-brand); color:#fff; }
     .bl-chip:not(.active) { background: rgba(148,163,184,.12); color:#64748b; }
     .dark .bl-chip:not(.active) { color:#94a3b8; }
-    @media print {
-        .no-print { display:none !important; }
-        .task-row, .bl-sprint { break-inside: avoid; }
-        body { background:#fff !important; }
-    }
+    /* Gantt */
+    .gantt { width:100%; border-collapse:collapse; font-size:.72rem; }
+    .gantt th, .gantt td { border:1px solid rgba(148,163,184,.25); padding:.4rem .5rem; text-align:center; }
+    .dark .gantt th, .dark .gantt td { border-color: rgba(255,255,255,.1); }
+    .gantt .g-head { background:#162054; color:#fff; font-weight:800; }
+    .gantt .g-sprint { background: var(--ds-brand); color:#fff; font-weight:800; }
+    .gantt .g-sub { background: rgba(148,163,184,.12); font-weight:700; }
+    .gantt .g-act { text-align:left; font-weight:600; min-width:230px; }
+    .g-bar-done { background:#10B981; color:#fff; font-weight:800; }
+    .g-bar-prog { background: var(--ds-brand); color:#fff; font-weight:800; }
+    .g-bar-todo { background: rgba(148,163,184,.4); }
+    @media print { .no-print { display:none !important; } .task-row, .bl-sprint, section { break-inside: avoid; } body { background:#fff !important; } }
 </style>
 
 <div class="max-w-6xl mx-auto space-y-6">
@@ -33,7 +48,7 @@
             <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                 <i class="fa-solid fa-list-check text-[var(--ds-brand)] mr-2"></i> Bitácora del proyecto
             </h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">Backlog detallado de CertifAI por Sprint. Clic en un estado para cambiarlo — se guarda en tu navegador.</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Backlog y cronograma de CertifAI. Cambiá el estado de cada tarea con el select — se guarda en tu navegador y el Gantt se actualiza solo.</p>
         </div>
         <div class="flex items-center gap-2 no-print">
             <button onclick="blSetAll('done')" class="lg-btn"><i class="fa-solid fa-circle-check"></i> Todo completado</button>
@@ -42,7 +57,7 @@
         </div>
     </div>
 
-    <!-- Resumen de progreso -->
+    <!-- Progreso -->
     <div class="lg-card rounded-3xl p-6">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
             <p class="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Progreso general</p>
@@ -67,8 +82,38 @@
         <button class="bl-chip" data-filter="todo">Pendientes</button>
     </div>
 
-    <!-- Tablero (lo puebla JS) -->
+    <!-- Tablero -->
     <div id="bl-board" class="space-y-5"></div>
+
+    <!-- Gantt -->
+    <section class="lg-card rounded-3xl p-6">
+        <h2 class="text-base font-black text-slate-900 dark:text-white mb-1"><i class="fa-solid fa-chart-gantt text-[var(--ds-brand)] mr-2"></i> Diagrama de Gantt — Cronograma</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">20/04/2026 – 14/06/2026 · las barras reflejan el estado de cada Historia de Usuario.</p>
+        <div class="overflow-x-auto rounded-xl">
+            <table class="gantt">
+                <thead>
+                    <tr>
+                        <th class="g-head g-act">CRONOGRAMA</th>
+                        <th class="g-head">SP</th>
+                        <th class="g-head">Estado</th>
+                        <th class="g-head">Sem 0</th>
+                        <th class="g-sprint">Sprint 1</th><th class="g-sprint">Sprint 1</th>
+                        <th class="g-sprint">Sprint 2</th><th class="g-sprint">Sprint 2</th>
+                        <th class="g-sprint">Sprint 3</th><th class="g-sprint">Sprint 3</th>
+                        <th class="g-head">Cierre</th>
+                    </tr>
+                    <tr>
+                        <th class="g-sub g-act">Actividad</th><th class="g-sub"></th><th class="g-sub"></th>
+                        <th class="g-sub">20/04</th><th class="g-sub">27/04</th><th class="g-sub">04/05</th>
+                        <th class="g-sub">11/05</th><th class="g-sub">18/05</th><th class="g-sub">25/05</th>
+                        <th class="g-sub">01/06</th><th class="g-sub">08/06</th>
+                    </tr>
+                </thead>
+                <tbody id="gantt-body"></tbody>
+            </table>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-3"><b>Leyenda:</b> <span class="text-emerald-600 dark:text-emerald-300 font-bold">verde</span> = completada · <span style="color:var(--ds-brand)" class="font-bold">naranja</span> = en progreso · gris = pendiente · SP = puntos de historia · Sprints de 2 semanas.</p>
+    </section>
 </div>
 
 <script>
@@ -78,7 +123,6 @@
     const STATE_LABEL = { done: 'Completado', prog: 'En progreso', todo: 'Pendiente' };
     const STATE_ICON  = { done: 'fa-circle-check', prog: 'fa-spinner', todo: 'fa-circle' };
 
-    // ── Datos del backlog ──────────────────────────────────────────────
     const SPRINTS = [
         { id:'s0', name:'Semana 0 — Arquitectura base', dates:'20/04 – 26/04', obj:'Definir la arquitectura y los cimientos técnicos.', tasks:[
             { id:'s0-1', t:'Arquitectura cliente-servidor desacoplada (API REST + colas)', hu:'Arquitectura' },
@@ -121,17 +165,34 @@
         ]},
     ];
 
+    // Actividades del Gantt (agrupan tareas del backlog)
+    const GANTT = [
+        { name:'Semana 0 — Arquitectura de software base', sp:'—', weeks:[0], src:['s0-1','s0-2','s0-3','s0-4'] },
+        { name:'HU1 — Autenticación y Acceso Seguro', sp:5, weeks:[1,2], src:['s1-1','s1-2','s1-3','s1-4'] },
+        { name:'HU5 — Gestión de Eventos y Carga Masiva', sp:8, weeks:[1,2], src:['s1-5','s1-6','s1-7'] },
+        { name:'HU2 — Generación de Certificados Verificables', sp:8, weeks:[3,4], src:['s2-1','s2-2','s2-3','s2-4'] },
+        { name:'HU4 — Registro de Asistencia Móvil Integrado', sp:5, weeks:[3,4], src:['s2-5','s2-6','s2-7'] },
+        { name:'HU3 — Transcripción a Microaprendizaje (IA)', sp:13, weeks:[5,6], src:['s3-1','s3-2','s3-3','s3-4','s3-5','s3-6'] },
+        { name:'Cierre — Consolidación, pruebas y documentación', sp:'—', weeks:[7], src:['sc-1','sc-2','sc-3','sc-4','sc-5'] },
+    ];
+
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
-    function stateOf(id) { return saved[id] || 'done'; }   // por defecto: completado
-    function persist() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} }
+    const stateOf = id => saved[id] || 'done';
+    const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} };
 
     const board = document.getElementById('bl-board');
+    const ganttBody = document.getElementById('gantt-body');
     let filter = 'all';
 
-    function badge(id) {
+    // ── Select de estado (dropdown custom) ──────────────────────────────
+    function stateSelect(id) {
         const s = stateOf(id);
-        return `<span class="st-badge st-${s}" data-badge="${id}" title="Clic para cambiar de estado"><i class="fa-solid ${STATE_ICON[s]}"></i> ${STATE_LABEL[s]}</span>`;
+        const opt = (val) => `<button type="button" class="st-opt" data-val="${val}"><i class="fa-solid ${STATE_ICON[val]} ${val==='done'?'text-emerald-500':val==='prog'?'':'text-slate-400'}" ${val==='prog'?'style="color:var(--ds-brand)"':''}></i> ${STATE_LABEL[val]}</button>`;
+        return `<div class="st-select" data-stid="${id}">
+            <button type="button" class="st-trigger st-badge st-${s}"><i class="fa-solid ${STATE_ICON[s]}"></i> ${STATE_LABEL[s]} <i class="fa-solid fa-chevron-down text-[9px] ml-0.5 opacity-70"></i></button>
+            <div class="st-menu hidden">${STATES.map(opt).join('')}</div>
+        </div>`;
     }
     function taskRow(task) {
         const tags = [];
@@ -143,7 +204,7 @@
                 <p class="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">${task.t}</p>
                 <div class="flex items-center flex-wrap gap-2 mt-1">${tags.join('')}</div>
             </div>
-            ${badge(task.id)}
+            ${stateSelect(task.id)}
         </div>`;
     }
     function sprintCard(sp) {
@@ -159,23 +220,30 @@
         </section>`;
     }
 
-    function render() {
-        board.innerHTML = SPRINTS.map(sprintCard).join('');
-        board.querySelectorAll('[data-badge]').forEach(b => b.addEventListener('click', () => cycle(b.dataset.badge)));
-        applyFilter();
-        updateStats();
+    function aggState(ids) {
+        const sts = ids.map(stateOf);
+        if (sts.every(s => s === 'done')) return 'done';
+        if (sts.every(s => s === 'todo')) return 'todo';
+        return 'prog';
     }
-    function cycle(id) {
-        const cur = stateOf(id);
-        const next = STATES[(STATES.indexOf(cur) + 1) % STATES.length];
-        saved[id] = next; persist();
-        // actualizar solo esa fila
-        const row = board.querySelector(`[data-task="${id}"]`);
-        const badgeEl = board.querySelector(`[data-badge="${id}"]`);
-        if (badgeEl) badgeEl.outerHTML = badge(id);
-        if (row) { row.dataset.state = next; board.querySelector(`[data-badge="${id}"]`).addEventListener('click', () => cycle(id)); }
-        applyFilter(); updateStats();
+    function ganttRow(a) {
+        const st = aggState(a.src);
+        let cells = '';
+        for (let w = 0; w < 8; w++) {
+            if (a.weeks.includes(w)) {
+                const first = w === a.weeks[0];
+                cells += `<td class="g-bar-${st}">${(first && a.sp !== '—') ? a.sp : ''}</td>`;
+            } else cells += '<td></td>';
+        }
+        return `<tr>
+            <td class="g-act">${a.name}</td>
+            <td>${a.sp}</td>
+            <td class="st-${st}" style="font-weight:800">${STATE_LABEL[st]}</td>
+            ${cells}
+        </tr>`;
     }
+    function renderGantt() { ganttBody.innerHTML = GANTT.map(ganttRow).join(''); }
+
     function updateStats() {
         const all = SPRINTS.flatMap(s => s.tasks);
         const counts = { done:0, prog:0, todo:0 };
@@ -204,6 +272,60 @@
         });
     }
 
+    function closeMenus() { document.querySelectorAll('.st-menu').forEach(m => m.classList.add('hidden')); }
+    function bindSelects() {
+        board.querySelectorAll('.st-select').forEach(sel => {
+            const id = sel.dataset.stid;
+            const trigger = sel.querySelector('.st-trigger');
+            trigger.addEventListener('click', e => {
+                e.stopPropagation();
+                const menu = sel.querySelector('.st-menu');
+                const open = !menu.classList.contains('hidden');
+                closeMenus();
+                if (!open) menu.classList.remove('hidden');
+            });
+            sel.querySelectorAll('.st-opt').forEach(opt => opt.addEventListener('click', e => {
+                e.stopPropagation();
+                saved[id] = opt.dataset.val; persist();
+                // refrescar la fila
+                const row = board.querySelector(`[data-task="${id}"]`);
+                row.dataset.state = saved[id];
+                sel.outerHTML = stateSelect(id);
+                bindSelectFor(board.querySelector(`[data-task="${id}"] .st-select`));
+                updateStats(); renderGantt(); applyFilter();
+            }));
+        });
+    }
+    function bindSelectFor(sel) {
+        if (!sel) return;
+        const id = sel.dataset.stid;
+        sel.querySelector('.st-trigger').addEventListener('click', e => {
+            e.stopPropagation();
+            const menu = sel.querySelector('.st-menu');
+            const open = !menu.classList.contains('hidden');
+            closeMenus();
+            if (!open) menu.classList.remove('hidden');
+        });
+        sel.querySelectorAll('.st-opt').forEach(opt => opt.addEventListener('click', e => {
+            e.stopPropagation();
+            saved[id] = opt.dataset.val; persist();
+            const row = board.querySelector(`[data-task="${id}"]`);
+            row.dataset.state = saved[id];
+            sel.outerHTML = stateSelect(id);
+            bindSelectFor(board.querySelector(`[data-task="${id}"] .st-select`));
+            updateStats(); renderGantt(); applyFilter();
+        }));
+    }
+
+    function render() {
+        board.innerHTML = SPRINTS.map(sprintCard).join('');
+        bindSelects();
+        renderGantt();
+        applyFilter();
+        updateStats();
+    }
+
+    document.addEventListener('click', closeMenus);
     document.querySelectorAll('.bl-chip').forEach(chip => chip.addEventListener('click', () => {
         document.querySelectorAll('.bl-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
