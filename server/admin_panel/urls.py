@@ -142,6 +142,9 @@ urlpatterns = [
     # Modelado de datos (ERD interactivo)
     path('modelado/', superadmin_page('panel/sistema/modelado.html'), name='modelado_datos'),
 
+    # Bitácora del proyecto (backlog / tablero de tareas con estados)
+    path('bitacora/', superadmin_page('panel/sistema/bitacora.html'), name='bitacora'),
+
     # Títulos académicos (catálogo)
     path('titulos/', titulos_list, name='titulos_list'),
     path('titulos/add/', titulos_create, name='titulos_create'),

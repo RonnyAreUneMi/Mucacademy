@@ -132,6 +132,7 @@ def nav_menu(request):
                     'icon': 'fa-database',
                     'items': [
                         {'label': 'Design System',      'icon': 'fa-swatchbook',      'url': _safe_url('panel:design_system'),  'color': 'brand'},
+                        {'label': 'Bitácora del proyecto', 'icon': 'fa-list-check',   'url': _safe_url('panel:bitacora'),       'color': 'success'},
                         {'label': 'Títulos académicos', 'icon': 'fa-user-graduate',   'url': _safe_url('panel:titulos_list'),   'color': 'accent'},
                         {'label': 'Modelado de datos',  'icon': 'fa-diagram-project', 'url': _safe_url('panel:modelado_datos'), 'color': 'info'},
                     ],

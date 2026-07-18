@@ -383,9 +383,18 @@
                 paint();
             }, 350);
         }
-        pager.classList.remove('hidden');
-        pager.classList.add('flex');
-        paint();
+        // Flash de skeleton al cargar (para que se vea el estado de carga)
+        const listVisible0 = !viewList.classList.contains('hidden');
+        const activeView0 = listVisible0 ? viewList : viewCards;
+        skel.classList.remove('hidden');
+        activeView0.classList.add('hidden');
+        setTimeout(() => {
+            skel.classList.add('hidden');
+            activeView0.classList.remove('hidden');
+            pager.classList.remove('hidden');
+            pager.classList.add('flex');
+            paint();
+        }, 650);
     })();
     </script>
 </div>
