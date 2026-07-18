@@ -154,4 +154,7 @@ class PublicCertificadoViewSet(viewsets.ReadOnlyModelViewSet):
         filename = f'Certificado_{cert.national_id}_{cert.verification_hash[:8]}.pdf'
         response = FileResponse(buffer, as_attachment=not inline, filename=filename, content_type='application/pdf')
         response['Cache-Control'] = 'no-store'
+        if inline:
+            # Permite mostrar el PDF dentro de un iframe del mismo sitio (vista previa).
+            response['X-Frame-Options'] = 'SAMEORIGIN'
         return response
