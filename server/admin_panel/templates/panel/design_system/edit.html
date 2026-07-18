@@ -15,7 +15,7 @@
             <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                 <i class="fa-solid fa-swatchbook text-[var(--ds-brand)] mr-2"></i> Design System
             </h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">Tokens del :root — colores, fuentes, radios, sombras y botones del panel.</p>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Personalizá los tokens del sistema (:root): colores, tipografías, radios, sombras y componentes del panel.</p>
         </div>
         <div class="flex items-center gap-2">
             <form action="{% url 'panel:design_system_reset' %}" method="post" onsubmit="return confirm('¿Restaurar todos los valores por defecto?')">
@@ -43,8 +43,8 @@
                     <i class="fa-solid fa-droplet text-[var(--ds-brand)]"></i> Branding
                 </h2>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {% include 'panel/design_system/_color_field.html' with name='color_brand' label='Brand' value=tokens.color_brand %}
-                    {% include 'panel/design_system/_color_field.html' with name='color_brand_dark' label='Brand Dark' value=tokens.color_brand_dark %}
+                    {% include 'panel/design_system/_color_field.html' with name='color_brand' label='Marca' value=tokens.color_brand %}
+                    {% include 'panel/design_system/_color_field.html' with name='color_brand_dark' label='Marca oscura' value=tokens.color_brand_dark %}
                     {% include 'panel/design_system/_color_field.html' with name='color_accent' label='Acento' value=tokens.color_accent %}
                 </div>
                 </div>
@@ -160,20 +160,21 @@
                 <div class="lg-card relative overflow-hidden rounded-3xl p-6">
                     <div class="relative z-10">
                     <h2 class="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-eye text-[var(--ds-brand)]"></i> Preview en vivo
+                        <i class="fa-solid fa-eye text-[var(--ds-brand)]"></i> Vista previa en vivo
                     </h2>
 
                     <!-- Tipografía -->
                     <div class="mb-5 pb-5 border-b border-slate-200 dark:border-white/10">
                         <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tipografía</p>
-                        <p class="ds-display text-2xl font-bold text-slate-900 dark:text-white">Display: CertifAI</p>
-                        <p class="text-base text-slate-700 dark:text-slate-200 mt-1">Sans: el renacuajo come pollo</p>
-                        <p class="ds-mono text-xs text-slate-500 dark:text-slate-400 mt-1">mono: const x = 42;</p>
+                        <p class="ds-display text-2xl font-bold text-slate-900 dark:text-white leading-tight">Certificación digital con IA</p>
+                        <p class="text-base text-slate-700 dark:text-slate-200 mt-1.5">Texto de cuerpo claro, legible y accesible en cualquier pantalla.</p>
+                        <p class="ds-mono text-xs text-slate-500 dark:text-slate-400 mt-1.5">const certificado = generarPDF();</p>
+                        <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-2 tracking-wide">Aa Bb Cc — áéíóú ñ — 0123456789</p>
                     </div>
 
                     <!-- Color brand -->
                     <div class="mb-5 pb-5 border-b border-slate-200 dark:border-white/10">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Brand</p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Marca</p>
                         <div class="flex gap-2">
                             <div class="flex-1 h-12 rounded-lg" style="background: var(--ds-brand);"></div>
                             <div class="flex-1 h-12 rounded-lg" style="background: var(--ds-brand-dark);"></div>
@@ -185,26 +186,82 @@
                     <div class="mb-5 pb-5 border-b border-slate-200 dark:border-white/10">
                         <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Estado</p>
                         <div class="grid grid-cols-4 gap-2">
-                            <div class="h-9 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style="background: var(--ds-success);">OK</div>
-                            <div class="h-9 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style="background: var(--ds-danger);">ERR</div>
-                            <div class="h-9 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style="background: var(--ds-warning);">WARN</div>
-                            <div class="h-9 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style="background: var(--ds-info);">INFO</div>
+                            <div class="h-9 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style="background: var(--ds-success);">Éxito</div>
+                            <div class="h-9 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style="background: var(--ds-danger);">Error</div>
+                            <div class="h-9 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style="background: var(--ds-warning);">Aviso</div>
+                            <div class="h-9 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style="background: var(--ds-info);">Info</div>
                         </div>
                     </div>
 
-                    <!-- Botones -->
+                    <!-- Botones del panel -->
                     <div class="mb-5 pb-5 border-b border-slate-200 dark:border-white/10">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Botones</p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Botones del panel</p>
                         <div class="flex flex-wrap gap-2">
-                            <button type="button" class="lg-btn lg-btn-prominent">
-                                <i class="fa-solid fa-bolt"></i> Prominent
-                            </button>
-                            <button type="button" class="lg-btn">
-                                <i class="fa-solid fa-pen"></i> Regular
-                            </button>
-                            <button type="button" class="lg-btn lg-btn-clear">
-                                <i class="fa-solid fa-eye"></i> Clear
-                            </button>
+                            <button type="button" class="lg-btn lg-btn-prominent"><i class="fa-solid fa-bolt"></i> Primario</button>
+                            <button type="button" class="lg-btn"><i class="fa-solid fa-pen"></i> Secundario</button>
+                            <button type="button" class="lg-btn lg-btn-clear"><i class="fa-solid fa-eye"></i> Sutil</button>
+                        </div>
+                    </div>
+
+                    <!-- Botones neumórficos -->
+                    <div class="mb-5 pb-5 border-b border-slate-200 dark:border-white/10">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Botones neumórficos</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" class="nm-btn nm-btn-primary"><i class="fa-solid fa-check"></i> Acción</button>
+                            <button type="button" class="nm-btn"><i class="fa-solid fa-xmark"></i> Cancelar</button>
+                        </div>
+                    </div>
+
+                    <!-- Cards -->
+                    <div class="mb-5 pb-5 border-b border-slate-200 dark:border-white/10">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Cards</p>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div class="nm-card p-3.5 text-center">
+                                <div class="nm-ico mx-auto mb-2"><i class="fa-solid fa-award text-[var(--ds-brand)]"></i></div>
+                                <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200">Card neumórfica</p>
+                            </div>
+                            <div class="nm-tile p-3.5 flex flex-col items-center justify-center">
+                                <p class="text-xl font-black text-slate-900 dark:text-white">42</p>
+                                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Métrica</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inputs y selects -->
+                    <div class="mb-5 pb-5 border-b border-slate-200 dark:border-white/10">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Inputs y selects</p>
+                        <div class="space-y-2">
+                            <input type="text" placeholder="Campo de texto"
+                                   class="w-full text-sm rounded-xl px-3 py-2 bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/25 transition">
+                            <select class="w-full text-sm rounded-xl px-3 py-2 bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-[var(--ds-brand)] focus:ring-2 focus:ring-[var(--ds-brand)]/25 transition">
+                                <option>Seleccioná una opción</option>
+                                <option>Programa</option>
+                                <option>Seminario</option>
+                            </select>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1">
+                                <input type="checkbox" checked class="w-4 h-4 rounded accent-[var(--ds-brand)]"> Opción marcada
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="mb-5 pb-5 border-b border-slate-200 dark:border-white/10">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tabs</p>
+                        <div class="flex p-1 rounded-xl bg-slate-100 dark:bg-white/5 gap-1">
+                            <button type="button" class="flex-1 text-xs font-bold py-1.5 rounded-lg text-white shadow" style="background: var(--ds-brand);">Activa</button>
+                            <button type="button" class="flex-1 text-xs font-bold py-1.5 rounded-lg text-slate-500 dark:text-slate-400">Otra</button>
+                            <button type="button" class="flex-1 text-xs font-bold py-1.5 rounded-lg text-slate-500 dark:text-slate-400">Más</button>
+                        </div>
+                    </div>
+
+                    <!-- Chips y etiquetas -->
+                    <div class="mb-5 pb-5 border-b border-slate-200 dark:border-white/10">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Chips y etiquetas</p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-white" style="background: var(--ds-brand);"><i class="fa-solid fa-bolt text-[9px]"></i> Marca</span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-white" style="background: var(--ds-success);"><i class="fa-solid fa-check text-[9px]"></i> Aprobado</span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-white" style="background: var(--ds-info);">Inscrito</span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border border-slate-300 dark:border-white/15 text-slate-500 dark:text-slate-400">Neutro</span>
                         </div>
                     </div>
 
