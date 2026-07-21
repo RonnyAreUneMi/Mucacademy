@@ -67,7 +67,7 @@ urlpatterns = [
     path('search/', page('public/search.html'), name='search'),
     path('attendance/', page('public/attendance_search.html'), name='attendance_search'),
     path('attendance/verify/', page('public/attendance_verify.html'), name='attendance_verify'),
-    path('sesion/<int:id>/registro/', page('public/session_register.html'), name='session_register'),
+    path('sesion/<int:id>/registro/', account_views.session_register_view, name='session_register'),
     path('checkin/<str:codigo_qr>/', page('public/qr_checkin.html'), name='qr_checkin'),
     path('verificar/<str:hash>/', page('public/verify_certificate.html'), name='verify_certificate'),
 

@@ -1070,6 +1070,30 @@ def escanear_registrar(request):
 
 
 # ════════════════════════════════════════════════════════════════
+# Registro público a un evento (flujo guest — sin login)
+# ════════════════════════════════════════════════════════════════
+
+def session_register_view(request, id: int):
+    """Página pública de inscripción a un evento (`/sesion/<id>/registro/`).
+
+    Es la pantalla a la que llega quien abre las inscripciones de un
+    seminario/programa. Necesita el objeto `sesion` en el contexto: el
+    template renderiza `{{ sesion.id }}` (que alimenta el buscador JS) y
+    el encabezado con fecha, horario y cupos.
+    """
+    try:
+        sesion = Event.objects.get(pk=id, is_active=True)
+    except Event.DoesNotExist:
+        raise Http404('Evento no encontrado o inscripciones cerradas.')
+
+    return render(request, 'public/session_register.html', {
+        'sesion': sesion,
+        'cupos': sesion.available_seats,          # None si es ilimitado
+        'capacidad_ilimitada': sesion.is_unlimited,
+    })
+
+
+# ════════════════════════════════════════════════════════════════
 # Landing pública (rediseñada) — datos para el carousel/swiper
 # ════════════════════════════════════════════════════════════════
 
