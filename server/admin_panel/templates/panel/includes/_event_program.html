@@ -13,7 +13,7 @@ Contexto: `programs` (lista), opcional `sesion` (edición) y `preset_program_id`
         <h2 class="text-lg font-bold text-gray-800 dark:text-white">Programa y competencias</h2>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div class="grid grid-cols-1 gap-3">
         <div>
             <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1"><i class="fa-solid fa-diagram-project mr-1 text-[#F58830]"></i> Programa</label>
             <select id="ev-program-select" class="{{ css }} text-sm {% if preset_program_id %}opacity-70 cursor-not-allowed{% endif %}" {% if preset_program_id %}disabled{% endif %}>
@@ -27,10 +27,6 @@ Contexto: `programs` (lista), opcional `sesion` (edición) y `preset_program_id`
             {% else %}
             <p class="text-[11px] text-gray-400 mt-1">Si pertenece a un programa, se agrupa bajo él.</p>
             {% endif %}
-        </div>
-        <div>
-            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1"><i class="fa-solid fa-clock mr-1 text-[#F58830]"></i> Horas del seminario</label>
-            <input type="number" id="ev-hours" min="0" value="{{ sesion.hours|default:0 }}" class="{{ css }} text-sm">
         </div>
     </div>
 

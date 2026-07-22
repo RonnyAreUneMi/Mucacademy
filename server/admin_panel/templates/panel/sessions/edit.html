@@ -119,7 +119,7 @@
                 <input type="text" name="location" value="{{ sesion.location|default:'' }}" placeholder="Ej: Auditorio Principal" class="{{ css }}">
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Fecha</label>
                     <input id="id_fecha" type="date" name="date" value="{{ sesion.date|date:'Y-m-d' }}" required class="{{ css }}">
@@ -139,6 +139,10 @@
                 <div>
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Hora inicio</label>
                     <input type="time" name="start_time" value="{{ sesion.start_time|time:'H:i' }}" required class="{{ css }}">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Horas</label>
+                    <input type="number" id="ev-hours" min="0" value="{{ sesion.hours|default:0 }}" class="{{ css }}">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Hora fin</label>
