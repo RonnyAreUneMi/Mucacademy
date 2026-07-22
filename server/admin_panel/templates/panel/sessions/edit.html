@@ -345,6 +345,7 @@ function collectPonentes() {
 
 document.getElementById('session-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (window.validateEventTimes && !window.validateEventTimes(e.target)) return;
     const btn = document.getElementById('submit-btn');
     const errBox = document.getElementById('error-box');
     btn.disabled = true;
@@ -389,4 +390,5 @@ document.getElementById('session-form').addEventListener('submit', async (e) => 
 });
 </script>
 {% include 'panel/includes/_apple_pickers.html' %}
+{% include 'panel/includes/_event_time_rules.html' %}
 {% endblock %}

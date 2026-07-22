@@ -606,7 +606,7 @@
             // 409 con needs_confirm → el evento tiene participantes, pedimos confirmación extra
             if (res.status === 409 && data.needs_confirm) {
                 const n = (data.enrollments || 0) + (data.attendances || 0);
-                const warn = `Este evento tiene ${n} participante(s). Si lo eliminás, también se borran sus inscripciones y asistencias. ¿Eliminar igual?`;
+                const warn = `Este evento tiene ${n} participante(s). Si lo eliminas, también se borran sus inscripciones y asistencias. ¿Eliminar igual?`;
                 const forceDelete = () => doDelete(true);
                 if (typeof showConfirm === 'function') {
                     showConfirm('Eliminar con participantes', warn, forceDelete);
@@ -653,6 +653,7 @@
         const form = document.getElementById('create-session-form');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (window.validateEventTimes && !window.validateEventTimes(form)) return;
             const errBox = document.getElementById('create-error-box');
             errBox.classList.add('hidden');
 
@@ -691,4 +692,5 @@
     });
 </script>
 {% include 'panel/includes/_apple_pickers.html' %}
+{% include 'panel/includes/_event_time_rules.html' %}
 {% endblock %}

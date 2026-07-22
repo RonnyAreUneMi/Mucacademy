@@ -1,0 +1,62 @@
+{% comment %}
+Reglas de horario del evento (incluir DESPUÉS de _apple_pickers.html):
+- Auto-calcula `end_time` = `start_time` + `#ev-hours` (si el campo de horas existe).
+  El campo sigue siendo editable: solo se recalcula al cambiar inicio u horas.
+- Expone window.validateEventTimes(form) → false si la hora de fin no es posterior
+  a la de inicio (llamalo en el submit).
+{% endcomment %}
+<script>
+(function () {
+    const MSG = 'La hora de fin debe ser posterior a la hora de inicio.';
+    const MAX_MIN = 23 * 60 + 59;
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function toMinutes(value) {
+        const m = (value || '').match(/^(\d{1,2}):(\d{2})/);
+        return m ? (+m[1]) * 60 + (+m[2]) : null;
+    }
+
+    function setTime(input, minutes) {
+        input.value = `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+        if (typeof input.refreshApplePicker === 'function') input.refreshApplePicker();
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function init() {
+        const start = document.querySelector('input[name="start_time"]');
+        const end = document.querySelector('input[name="end_time"]');
+        if (!start || !end) return;
+
+        const hours = document.getElementById('ev-hours');
+        if (!hours) return;
+
+        function autoFillEnd() {
+            const from = toMinutes(start.value);
+            const h = parseInt(hours.value, 10);
+            if (from === null || !h || h < 0) return;
+            setTime(end, Math.min(from + h * 60, MAX_MIN));
+        }
+        start.addEventListener('change', autoFillEnd);
+        hours.addEventListener('input', autoFillEnd);
+        hours.addEventListener('change', autoFillEnd);
+    }
+
+    window.validateEventTimes = function (scope) {
+        const root = scope || document;
+        const start = root.querySelector('input[name="start_time"]');
+        const end = root.querySelector('input[name="end_time"]');
+        if (!start || !end) return true;
+        const from = toMinutes(start.value);
+        const to = toMinutes(end.value);
+        if (from === null || to === null) return true;
+        if (to > from) return true;
+        if (typeof window.showToast === 'function') window.showToast(MSG, 'error');
+        else alert(MSG);
+        return false;
+    };
+
+    if (document.readyState !== 'loading') init();
+    else document.addEventListener('DOMContentLoaded', init);
+})();
+</script>

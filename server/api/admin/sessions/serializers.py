@@ -140,6 +140,8 @@ class SesionWriteSerializer(serializers.ModelSerializer):
 
         El admin no escoge plataforma ni enlace: ambos se llenan en el hook
         `perform_create` del viewset. Para presenciales, limpiamos los dos.
+
+        Además, la hora de fin debe ser posterior a la de inicio.
         """
         modality = attrs.get('modality') or (self.instance and self.instance.modality)
         if modality == 'virtual':
@@ -148,6 +150,13 @@ class SesionWriteSerializer(serializers.ModelSerializer):
         elif modality == 'in_person':
             attrs['meeting_url'] = ''
             attrs['virtual_platform'] = ''
+
+        start = attrs.get('start_time') or (self.instance and self.instance.start_time)
+        end = attrs.get('end_time') or (self.instance and self.instance.end_time)
+        if start and end and end <= start:
+            raise serializers.ValidationError(
+                {'end_time': 'La hora de fin debe ser posterior a la hora de inicio.'}
+            )
 
         return attrs
 

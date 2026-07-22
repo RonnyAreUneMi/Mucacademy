@@ -8,6 +8,9 @@ Incluí este partial UNA vez por página. Mejora automáticamente todos los
 <input type="date"> y <input type="time">, conservando name/valor ISO
 (Y-m-d / H:i) para que el submit no cambie. Para inputs dinámicos llamá a
 window.initApplePickers(root).
+
+Si cambias el valor de un <input type="time"> por código, llama a
+input.refreshApplePicker() para que la rueda y el display se actualicen.
 {% endcomment %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
@@ -136,6 +139,9 @@ window.initApplePickers(root).
             setIdx(apCol, AP.indexOf(ap));
             if (orig.value) disp.value = `${pad(h12)}:${pad(M)} ${ap}`;
         }
+
+        // Permite refrescar la rueda + el display cuando el valor se setea por código.
+        orig.refreshApplePicker = syncFromValue;
 
         function open(){
             const r = disp.getBoundingClientRect();
