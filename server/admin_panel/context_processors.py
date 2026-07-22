@@ -105,6 +105,16 @@ def nav_menu(request):
             ],
         },
         {
+            'label': 'Seguridad',
+            'icon': 'fa-shield-halved',
+            'color': '#EF4444',
+            'match_keywords': ['seguridad'],
+            'visible': is_superadmin,
+            'items': [
+                {'label': 'Permisos por perfil', 'icon': 'fa-user-shield', 'url': _safe_url('panel:seguridad'), 'color': 'danger'},
+            ],
+        },
+        {
             'label': 'Admin',
             'icon': 'fa-gears',
             'color': '#8B5CF6',
@@ -134,7 +144,6 @@ def nav_menu(request):
                     'icon': 'fa-database',
                     'items': [
                         {'label': 'Design System',      'icon': 'fa-swatchbook',      'url': _safe_url('panel:design_system'),  'color': 'brand', 'module': 'design_system'},
-                        {'label': 'Seguridad',          'icon': 'fa-shield-halved',   'url': _safe_url('panel:seguridad'),      'color': 'danger'},
                         {'label': 'Bitácora del proyecto', 'icon': 'fa-list-check',   'url': _safe_url('panel:bitacora'),       'color': 'success', 'module': 'bitacora'},
                         {'label': 'Títulos académicos', 'icon': 'fa-user-graduate',   'url': _safe_url('panel:titulos_list'),   'color': 'accent', 'module': 'titulos'},
                         {'label': 'Modelado de datos',  'icon': 'fa-diagram-project', 'url': _safe_url('panel:modelado_datos'), 'color': 'info', 'module': 'modelado'},
