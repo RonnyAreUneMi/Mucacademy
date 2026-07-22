@@ -93,7 +93,6 @@ DEFAULTS = {
         'perfil': _NONE,
     },
     # Hoy los profesores no entran al panel (se los redirige a "Mi estado").
-    'profesor': {slug: _NONE for slug in MODULE_SLUGS},
     # Los estudiantes solo tienen el área pública de su cuenta.
     'estudiante': {
         **{m['slug']: _NONE for m in MODULES if m['area'] == AREA_PANEL},

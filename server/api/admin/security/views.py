@@ -8,7 +8,7 @@ from core.models import AuditAction, RolePermission, SecurityRole
 from core.security.modules import ACTIONS, MODULE_SLUGS, modules_by_area
 from core.security.perms import invalidate_cache, role_can
 
-ROLES = [SecurityRole.ESTUDIANTE, SecurityRole.PROFESOR, SecurityRole.ADMINISTRADOR]
+ROLES = [SecurityRole.ESTUDIANTE, SecurityRole.ADMINISTRADOR]
 FIELD_BY_ACTION = {
     'ver': 'can_view', 'crear': 'can_create',
     'editar': 'can_edit', 'eliminar': 'can_delete',
