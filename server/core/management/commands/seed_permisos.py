@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 
 from core.security.modules import ACTIONS, MODULE_SLUGS, default_flags
 
-ROLES = ['estudiante', 'administrador']
+ROLES = ['estudiante', 'profesor']
 
 _FIELDS = ['can_view', 'can_create', 'can_edit', 'can_delete']
 

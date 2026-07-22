@@ -11,13 +11,13 @@ from core.security.modules import MODULE_SLUGS, module_label
 
 class SecurityRole(models.TextChoices):
     ESTUDIANTE = 'estudiante', 'Estudiante'
-    ADMINISTRADOR = 'administrador', 'Administrador'
+    PROFESOR = 'profesor', 'Profesor'
 
 
 # User.role (AdminRole) → perfil configurable de seguridad.
 USER_ROLE_TO_PROFILE = {
-    'admin': SecurityRole.ADMINISTRADOR,
-    'professor': SecurityRole.ADMINISTRADOR,
+    'admin': SecurityRole.PROFESOR,
+    'professor': SecurityRole.PROFESOR,
 }
 
 

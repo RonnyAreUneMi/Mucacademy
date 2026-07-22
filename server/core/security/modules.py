@@ -66,11 +66,11 @@ _VIEW = (True, False, False, False)
 # sistema. Sirven como semilla de la migración y como fallback cuando no hay
 # fila de RolePermission para (perfil, módulo).
 #
-# `administrador` = rol User.role 'admin'. Hoy accede a lo que protege
+# `profesor` = quienes administran el panel (User.role admin/professor).
 # `admin_required`/`IsPanelAdmin`; las pantallas con `superadmin_required`
 # siguen bloqueadas por su propio decorador.
 DEFAULTS = {
-    'administrador': {
+    'profesor': {
         'eventos': _ALL,
         'programas': _ALL,
         'lotes': _ALL,
@@ -92,8 +92,6 @@ DEFAULTS = {
         'evaluaciones': _NONE,
         'perfil': _NONE,
     },
-    # Hoy los profesores no entran al panel (se los redirige a "Mi estado").
-    # Los estudiantes solo tienen el área pública de su cuenta.
     'estudiante': {
         **{m['slug']: _NONE for m in MODULES if m['area'] == AREA_PANEL},
         'mis_certificados': _VIEW,
@@ -118,7 +116,7 @@ def default_flags(role: str, slug: str):
     if flags is not None:
         return flags
     area = MODULE_BY_SLUG.get(slug, {}).get('area')
-    if role == 'administrador' and area != AREA_STUDENT:
+    if role == 'profesor' and area != AREA_STUDENT:
         return _ALL
     if role == 'estudiante' and area == AREA_STUDENT:
         return _ALL
