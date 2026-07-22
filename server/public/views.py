@@ -29,6 +29,8 @@ from core.models import (
     Event,
     Program,
 )
+from core.security.decorators import student_module_required
+from core.security.perms import participant_can
 from core.services import evaluations as eval_service
 from public.services import auth as account_auth
 from public.services import google_auth as gsignin
@@ -317,6 +319,7 @@ def dashboard(request):
 # ════════════════════════════════════════════════════════════════
 
 @account_auth.login_required
+@student_module_required('mis_certificados')
 def certificados_view(request):
     p: Participant = request.participant
     q = request.GET.get('q', '').strip()
@@ -366,6 +369,7 @@ def certificados_view(request):
 # ════════════════════════════════════════════════════════════════
 
 @account_auth.login_required
+@student_module_required('mis_eventos')
 def eventos_view(request):
     p: Participant = request.participant
     tab = request.GET.get('tab', 'mios')  # mios | disponibles
@@ -491,6 +495,7 @@ def _programs_feed(participant=None, enrolled=None):
 
 
 @account_auth.login_required
+@student_module_required('mis_programas')
 def programas_view(request):
     """Feed de programas publicados (estilo tarjetas, mismo diseño de eventos)."""
     p: Participant = request.participant
@@ -519,6 +524,7 @@ def programas_view(request):
 
 
 @account_auth.login_required
+@student_module_required('mis_programas')
 def programa_detalle_view(request, program_id: int):
     """Detalle de un programa: nota mínima + seminarios con descripción e imagen."""
     p: Participant = request.participant
@@ -574,6 +580,7 @@ def programa_detalle_view(request, program_id: int):
 
 @account_auth.login_required
 @require_POST
+@student_module_required('mis_programas', 'crear')
 def programa_inscribir(request, program_id: int):
     """Inscribe al participante al programa → lo asocia a TODOS sus seminarios."""
     from core.services import programs as program_service
@@ -613,6 +620,7 @@ def _eval_back_url(ev) -> str:
 
 @account_auth.login_required
 @require_http_methods(['GET', 'POST'])
+@student_module_required('evaluaciones')
 def evaluacion_view(request, evaluation_id: int):
     """Rinde una evaluación desde la web (mismo grading y auto-emisión que la API)."""
     p: Participant = request.participant
@@ -697,6 +705,7 @@ def evaluacion_view(request, evaluation_id: int):
 
 
 @account_auth.login_required
+@student_module_required('evaluaciones')
 def evaluacion_resumen_view(request, evaluation_id: int):
     """Resumen del mejor intento del participante: respuesta elegida vs correcta."""
     p: Participant = request.participant
@@ -745,9 +754,13 @@ def evaluacion_resumen_view(request, evaluation_id: int):
 
 
 @account_auth.login_required
+@student_module_required('perfil')
 def perfil_view(request):
     p: Participant = request.participant
     if request.method == 'POST':
+        if not participant_can('perfil', 'editar'):
+            messages.error(request, 'No tienes permiso para editar tu perfil.')
+            return redirect('public:account_perfil')
         p.first_name = request.POST.get('nombres', p.first_name).strip()
         p.last_name = request.POST.get('apellidos', p.last_name).strip()
         cedula_in = request.POST.get('cedula', '').strip()
@@ -779,6 +792,7 @@ def perfil_view(request):
 # ════════════════════════════════════════════════════════════════
 
 @account_auth.login_required
+@student_module_required('mis_eventos')
 def evento_resumen_view(request, sesion_id: int):
     """Pantalla web del resumen IA del evento (Betto).
 
@@ -838,6 +852,7 @@ def evento_resumen_view(request, sesion_id: int):
 
 
 @account_auth.login_required
+@student_module_required('mis_eventos')
 def evento_resumen_pdf_view(request, sesion_id: int):
     """Descarga el resumen IA como PDF profesional.
 
@@ -875,6 +890,7 @@ def evento_resumen_pdf_view(request, sesion_id: int):
 
 
 @account_auth.login_required
+@student_module_required('mis_eventos')
 def evento_cuestionario_view(request, sesion_id: int):
     """Pantalla inmersiva del cuestionario IA, estilo Quizizz/Wayground.
 
@@ -988,6 +1004,7 @@ def evento_cuestionario_submit(request, sesion_id: int):
 
 @account_auth.login_required
 @require_POST
+@student_module_required('mis_eventos', 'crear')
 def evento_inscribir(request, sesion_id: int):
     p: Participant = request.participant
     try:

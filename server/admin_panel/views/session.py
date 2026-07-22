@@ -11,6 +11,7 @@ from django.db.models import Count, F
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core.models import AcademicTitle, Enrollment, CertificateBatch, Event, Program
+from core.security.decorators import module_required
 from ._shared import admin_required
 
 
@@ -56,6 +57,7 @@ def _series_events(exclude_id=None):
 
 
 @admin_required
+@module_required('eventos')
 def session_list(request):
     """Lista con filtros (el template renderiza cards server-side).
 
@@ -87,6 +89,7 @@ def session_list(request):
 
 
 @admin_required
+@module_required('eventos', 'crear')
 def session_create(request):
     """Shell de creación de sesión (form completo con ponentes).
 
@@ -105,6 +108,7 @@ def session_create(request):
 
 
 @admin_required
+@module_required('eventos', 'editar')
 def session_edit(request, id):
     """Shell de edición: el submit va a PATCH /api/v1/admin/sessions/{id}/."""
     sesion = get_object_or_404(Event, id=id)
@@ -118,6 +122,7 @@ def session_edit(request, id):
 
 
 @admin_required
+@module_required('eventos')
 def session_qr_display(request, id):
     """Pantalla de QR: muestra el código que apunta a /checkin/<codigo_qr>/.
 
@@ -137,6 +142,7 @@ def session_qr_display(request, id):
 
 
 @admin_required
+@module_required('eventos', 'crear')
 def session_generate_batch(request, id):
     """Shell para confirmar. El click del botón POSTea a /api/v1/admin/sessions/{id}/generate-batch/."""
     sesion = get_object_or_404(Event, id=id)

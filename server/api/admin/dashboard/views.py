@@ -4,7 +4,7 @@ from django.db.models import Sum, Count, Q, Exists, OuterRef
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from rest_framework import permissions
-from api.admin.permissions import IsPanelAdmin
+from api.admin.permissions import HasModulePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -16,7 +16,7 @@ from core.models import (
 
 class AdminDashboardView(APIView):
     """GET /api/v1/admin/dashboard/ → todas las métricas del dashboard admin."""
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
 
     def get(self, request):
         now = timezone.now()

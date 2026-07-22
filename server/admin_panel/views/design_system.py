@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 
 from core.models import UIDesignTokens
 from ._shared import superadmin_required, _log_audit
+from core.security.decorators import module_required
 
 
 # Campos color (input type=color, valores #RRGGBB)
@@ -37,6 +38,7 @@ FLOAT_FIELDS = (
 
 
 @superadmin_required
+@module_required('design_system')
 def design_system_edit(request):
     """Pantalla del Design System. GET muestra el form; POST guarda."""
     tokens = UIDesignTokens.load()
@@ -63,6 +65,7 @@ def design_system_edit(request):
 
 @superadmin_required
 @require_POST
+@module_required('design_system', 'editar')
 def design_system_reset(request):
     """Restaura todos los tokens a sus valores por defecto."""
     tokens = UIDesignTokens.load()

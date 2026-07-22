@@ -114,6 +114,7 @@ TEMPLATES = [
                 'admin_panel.context_processors.solicitudes_pendientes',
                 'admin_panel.context_processors.nav_menu',
                 'admin_panel.context_processors.design_tokens',
+                'admin_panel.context_processors.module_perms',
                 'public.context_processors.participante',
             ],
         },

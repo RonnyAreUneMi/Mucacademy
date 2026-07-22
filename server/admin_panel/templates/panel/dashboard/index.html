@@ -21,12 +21,16 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-2.5">
+                    {% if module_perms.eventos.crear %}
                     <a href="{% url 'panel:session_create' %}" class="nm-btn-primary">
                         <i class="fa-solid fa-plus"></i> Nuevo evento
                     </a>
+                    {% endif %}
+                    {% if module_perms.lotes.crear %}
                     <a href="{% url 'panel:batch_create' %}" class="nm-btn">
                         <i class="fa-solid fa-upload"></i> Subir lote
                     </a>
+                    {% endif %}
                 </div>
             </div>
 
@@ -80,16 +84,16 @@
             <div class="relative z-10">
             <p class="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5"><i class="fa-solid fa-bolt text-[#F58830]"></i> Acciones rápidas</p>
             <div class="grid grid-cols-3 gap-3">
-                {% include 'panel/includes/_quick_pill.html' with url='panel:session_create' icon='fa-calendar-plus' label='Evento' color='brand' %}
-                {% include 'panel/includes/_quick_pill.html' with url='panel:batch_create' icon='fa-upload' label='Lote' color='info' %}
-                {% include 'panel/includes/_quick_pill.html' with url='panel:session_list' icon='fa-calendar-days' label='Eventos' color='success' %}
-                {% include 'panel/includes/_quick_pill.html' with url='panel:participantes_list' icon='fa-user-graduate' label='Personas' color='accent' %}
+                {% if module_perms.eventos.crear %}{% include 'panel/includes/_quick_pill.html' with url='panel:session_create' icon='fa-calendar-plus' label='Evento' color='brand' %}{% endif %}
+                {% if module_perms.lotes.crear %}{% include 'panel/includes/_quick_pill.html' with url='panel:batch_create' icon='fa-upload' label='Lote' color='info' %}{% endif %}
+                {% if module_perms.eventos.ver %}{% include 'panel/includes/_quick_pill.html' with url='panel:session_list' icon='fa-calendar-days' label='Eventos' color='success' %}{% endif %}
+                {% if module_perms.participantes.ver %}{% include 'panel/includes/_quick_pill.html' with url='panel:participantes_list' icon='fa-user-graduate' label='Personas' color='accent' %}{% endif %}
                 {% if user.role == 'superadmin' %}
-                {% include 'panel/includes/_quick_pill.html' with url='panel:solicitudes_pendientes' icon='fa-user-clock' label='Solicit.' color='warning' badge=pendientes_count %}
-                {% include 'panel/includes/_quick_pill.html' with url='panel:ai_config' icon='fa-microchip' label='IA' color='danger' %}
+                {% if module_perms.solicitudes.ver %}{% include 'panel/includes/_quick_pill.html' with url='panel:solicitudes_pendientes' icon='fa-user-clock' label='Solicit.' color='warning' badge=pendientes_count %}{% endif %}
+                {% if module_perms.ai_config.ver %}{% include 'panel/includes/_quick_pill.html' with url='panel:ai_config' icon='fa-microchip' label='IA' color='danger' %}{% endif %}
                 {% else %}
                 {# Líderes: sección deshabilitada #}
-                {% include 'panel/includes/_quick_pill.html' with url='panel:firma_list' icon='fa-signature' label='Firmas' color='danger' %}
+                {% if module_perms.firmas.ver %}{% include 'panel/includes/_quick_pill.html' with url='panel:firma_list' icon='fa-signature' label='Firmas' color='danger' %}{% endif %}
                 {% endif %}
             </div>
             </div>
@@ -400,7 +404,7 @@ function timeAgo(iso) {
             <div class="text-center py-12 px-4">
                 <i class="fa-solid fa-calendar-xmark text-gray-300 dark:text-gray-600 text-3xl mb-2"></i>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Sin eventos en los próximos 7 días</p>
-                <a href="{% url 'panel:session_create' %}" class="inline-block mt-3 text-xs font-bold text-[#F58830] hover:underline">+ Crear uno</a>
+                {% if module_perms.eventos.crear %}<a href="{% url 'panel:session_create' %}" class="inline-block mt-3 text-xs font-bold text-[#F58830] hover:underline">+ Crear uno</a>{% endif %}
             </div>`;
     } else {
         upcomingEl.innerHTML = data.upcoming_sessions.map(s => {

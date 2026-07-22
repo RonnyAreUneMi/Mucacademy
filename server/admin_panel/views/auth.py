@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from core.models import AccessRequest, User
+from core.security.decorators import module_required
 from ._shared import superadmin_required, _log_audit
 
 class CustomLoginView(DjangoLoginView):
@@ -123,6 +124,7 @@ def mi_estado(request):
 
 
 @superadmin_required
+@module_required('solicitudes')
 def solicitudes_pendientes(request):
     """Admin view: lista de solicitudes de acceso pendientes"""
     estado_filter = request.GET.get('estado', 'pending')
@@ -152,6 +154,7 @@ def solicitudes_pendientes(request):
 
 @superadmin_required
 @require_http_methods(["POST"])
+@module_required('solicitudes', 'editar')
 def aprobar_solicitud(request, id):
     """Admin action: aprobar una solicitud de acceso - activa el usuario existente"""
     solicitud = get_object_or_404(AccessRequest, id=id)
@@ -213,6 +216,7 @@ def aprobar_solicitud(request, id):
 
 @superadmin_required
 @require_http_methods(["GET", "POST"])
+@module_required('solicitudes', 'editar')
 def rechazar_solicitud(request, id):
     """Admin action: rechazar una solicitud de acceso"""
     solicitud = get_object_or_404(AccessRequest, id=id)

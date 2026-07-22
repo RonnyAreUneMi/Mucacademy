@@ -9,6 +9,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import path
 from django.views.generic import RedirectView, TemplateView
 
+from core.security.decorators import module_required
+
 from .views._shared import _is_admin, _is_superadmin
 from .views import (
     # auth
@@ -44,18 +46,20 @@ from .views import ai_config as ai_config_views
 app_name = 'panel'
 
 
-def admin_page(template):
-    """Shell HTML protegido — requiere login + rol admin."""
-    return login_required(
-        user_passes_test(_is_admin)(TemplateView.as_view(template_name=template))
-    )
+def admin_page(template, module=None):
+    """Shell HTML protegido — requiere login + rol admin (+ permiso de módulo)."""
+    view = TemplateView.as_view(template_name=template)
+    if module:
+        view = module_required(module)(view)
+    return login_required(user_passes_test(_is_admin)(view))
 
 
-def superadmin_page(template):
-    """Shell HTML protegido — requiere login + rol superadmin."""
-    return login_required(
-        user_passes_test(_is_superadmin)(TemplateView.as_view(template_name=template))
-    )
+def superadmin_page(template, module=None):
+    """Shell HTML protegido — requiere login + rol superadmin (+ permiso de módulo)."""
+    view = TemplateView.as_view(template_name=template)
+    if module:
+        view = module_required(module)(view)
+    return login_required(user_passes_test(_is_superadmin)(view))
 
 
 urlpatterns = [
@@ -92,7 +96,7 @@ urlpatterns = [
     # Design System (UI tokens — colores, fuentes, botones del panel)
     path('design-system/', design_system_edit, name='design_system'),
     path('design-system/reset/', design_system_reset, name='design_system_reset'),
-    path('design-system/componentes/', superadmin_page('panel/design_system/componentes.html'), name='componentes'),
+    path('design-system/componentes/', superadmin_page('panel/design_system/componentes.html', 'design_system'), name='componentes'),
 
     # Certificates (form add)
     path('batches/<int:id>/add-certificate/', add_certificate, name='add_certificate'),
@@ -140,10 +144,10 @@ urlpatterns = [
     #      name='lideres_remove'),
 
     # Modelado de datos (ERD interactivo)
-    path('modelado/', superadmin_page('panel/sistema/modelado.html'), name='modelado_datos'),
+    path('modelado/', superadmin_page('panel/sistema/modelado.html', 'modelado'), name='modelado_datos'),
 
     # Bitácora del proyecto (backlog / tablero de tareas con estados)
-    path('bitacora/', superadmin_page('panel/sistema/bitacora.html'), name='bitacora'),
+    path('bitacora/', superadmin_page('panel/sistema/bitacora.html', 'bitacora'), name='bitacora'),
 
     # Títulos académicos (catálogo)
     path('titulos/', titulos_list, name='titulos_list'),
@@ -153,13 +157,13 @@ urlpatterns = [
 
     # ── Pages migradas a shell + API ──────────────────────────
     # Usuarios (superadmin)
-    path('usuarios/', superadmin_page('panel/usuarios/list.html'), name='usuarios_list'),
+    path('usuarios/', superadmin_page('panel/usuarios/list.html', 'usuarios'), name='usuarios_list'),
     path('usuarios/<int:id>/reset-password/',
          RedirectView.as_view(url='/api/v1/admin/users/%(id)s/reset-password/', permanent=False),
          name='usuario_reset_password'),
 
     # Participantes (admin)
-    path('participantes/', admin_page('panel/participantes/list.html'), name='participantes_list'),
+    path('participantes/', admin_page('panel/participantes/list.html', 'participantes'), name='participantes_list'),
     path('impersonar/participante/<int:id>/', impersonate_participant, name='impersonate_participant'),
     path('impersonar/salir/', stop_impersonation, name='stop_impersonation'),
     path('impersonar/usuario/<int:id>/', impersonate_user, name='impersonate_user'),
@@ -169,7 +173,7 @@ urlpatterns = [
          name='participante_delete'),
 
     # Firmas (list + delete shell; create/edit siguen con forms)
-    path('firmas/', superadmin_page('panel/firmas/list.html'), name='firma_list'),
+    path('firmas/', superadmin_page('panel/firmas/list.html', 'firmas'), name='firma_list'),
     path('firmas/new/', views_firmas.firma_create, name='firma_create'),
     path('firmas/<int:id>/edit/', views_firmas.firma_edit, name='firma_edit'),
     path('firmas/<int:id>/delete/',
@@ -185,4 +189,7 @@ urlpatterns = [
 
     # Configuración IA (proveedor + API key)
     path('ai/config/', ai_config_views.ai_config, name='ai_config'),
+
+    # Seguridad — matriz de permisos por perfil (solo superadmin)
+    path('seguridad/', superadmin_page('panel/sistema/seguridad.html'), name='seguridad'),
 ]

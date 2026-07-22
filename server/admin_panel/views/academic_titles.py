@@ -12,6 +12,7 @@ from django.views.decorators.http import require_http_methods
 from core.models import AcademicTitle
 
 from ._shared import admin_required, _log_audit
+from core.security.decorators import module_required
 
 
 def _parse_form(request):
@@ -35,6 +36,7 @@ def _parse_form(request):
 
 
 @admin_required
+@module_required('titulos')
 def titulos_list(request):
     """Lista del catálogo con búsqueda."""
     q = request.GET.get('q', '').strip()
@@ -63,6 +65,7 @@ def titulos_list(request):
 
 @admin_required
 @require_http_methods(['POST'])
+@module_required('titulos', 'crear')
 def titulos_create(request):
     """Crear un nuevo título académico."""
     data = _parse_form(request)
@@ -83,6 +86,7 @@ def titulos_create(request):
 
 @admin_required
 @require_http_methods(['POST'])
+@module_required('titulos', 'editar')
 def titulos_update(request, id):
     """Editar un título académico existente."""
     titulo = get_object_or_404(AcademicTitle, id=id)
@@ -108,6 +112,7 @@ def titulos_update(request, id):
 
 @admin_required
 @require_http_methods(['POST'])
+@module_required('titulos', 'eliminar')
 def titulos_delete(request, id):
     """Eliminar un título académico del catálogo."""
     titulo = get_object_or_404(AcademicTitle, id=id)

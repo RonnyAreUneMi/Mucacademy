@@ -10,9 +10,11 @@ from django.shortcuts import get_object_or_404, redirect
 
 from core.models import Certificate, CertificateBatch, Participant
 from ._shared import admin_required, _log_audit
+from core.security.decorators import module_required
 
 
 @admin_required
+@module_required('lotes', 'crear')
 def add_certificate(request, id):
     """POST form del batch_detail para agregar un certificado al lote."""
     lote = get_object_or_404(CertificateBatch, id=id)

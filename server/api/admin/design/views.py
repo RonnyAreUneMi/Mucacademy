@@ -1,5 +1,5 @@
 from rest_framework import serializers, permissions
-from api.admin.permissions import IsPanelAdmin
+from api.admin.permissions import HasModulePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -28,7 +28,8 @@ class DisenoGlobalSerializer(serializers.ModelSerializer):
 
 class DisenoGlobalView(APIView):
     """Singleton: GET devuelve el diseño actual, PATCH lo actualiza."""
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
+    module_slug = 'diseno'
 
     def get(self, request):
         diseno = GlobalDesign.load()

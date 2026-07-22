@@ -13,8 +13,10 @@ from core.models import Certificate, Signature, CertificateBatch
 from core.models.catalogs.enums import CertificateKind
 from core.services.pdf_service import generate_certificate_pdf
 from ._shared import superadmin_required, _log_audit
+from core.security.decorators import module_required
 
 @superadmin_required
+@module_required('diseno')
 def design_global(request):
     """
     Configuración GLOBAL del diseño de certificados.
@@ -118,6 +120,7 @@ def design_global(request):
 
 @superadmin_required
 @require_POST
+@module_required('diseno', 'editar')
 def design_save_firma_pos(request):
     """AJAX: Save per-signature position/scale from the visual editor."""
     from core.models import GlobalDesign
@@ -149,6 +152,7 @@ def design_save_firma_pos(request):
 
 @superadmin_required
 @xframe_options_exempt
+@module_required('diseno')
 def design_global_preview(request):
     """Preview del diseño global con datos dummy."""
     # Lote en memoria (no se persiste) que HEREDA el Diseño Global.

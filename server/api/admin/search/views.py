@@ -1,7 +1,7 @@
 """Búsqueda global del panel: eventos, programas y participantes por nombre."""
 from django.db.models import Q
 from rest_framework import permissions
-from api.admin.permissions import IsPanelAdmin
+from api.admin.permissions import HasModulePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -10,7 +10,7 @@ from core.models import Event, Program, Participant
 
 class AdminSearchView(APIView):
     """GET /api/v1/admin/search/?q= → resultados por nombre (typeahead)."""
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
 
     def get(self, request):
         q = (request.query_params.get('q') or '').strip()

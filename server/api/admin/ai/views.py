@@ -1,5 +1,5 @@
 from rest_framework import permissions, status
-from api.admin.permissions import IsPanelAdmin
+from api.admin.permissions import HasModulePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -21,7 +21,7 @@ from .serializers import (
 
 class BaseAIView(APIView):
     """Base para endpoints de IA. Auditan uso."""
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
     ai_action = ''
 
     def _respond(self, result: dict):
@@ -147,7 +147,7 @@ class RecommendationsView(APIView):
 
 class AIConfigView(APIView):
     """GET / PUT: leer y actualizar la config IA singleton."""
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
 
     def _get_or_create(self) -> AIConfig:
         cfg, _ = AIConfig.objects.get_or_create(pk=1)
@@ -169,7 +169,7 @@ class AIConfigView(APIView):
 
 class AIProvidersView(APIView):
     """GET/PUT: credenciales por proveedor (con orden de fallback) + params globales."""
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
 
     def _available_models(self):
         from core.models import PROVIDER_MODELS
@@ -246,7 +246,7 @@ class AIProvidersView(APIView):
 
 class AIPromptsView(APIView):
     """GET/PUT: prompts editables por feature (override de BD sobre defaults)."""
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
 
     def get(self, request):
         from core.models import AIPrompt
@@ -289,7 +289,7 @@ class AITestView(APIView):
     Si el form manda `api_key`, `provider`, etc., construye un AIRuntime
     transitorio. Útil para probar antes de guardar.
     """
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
 
     def post(self, request):
         ser = AITestInputSerializer(data=request.data)

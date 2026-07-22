@@ -9,6 +9,8 @@ from django.urls import reverse, NoReverseMatch
 from django.utils.safestring import mark_safe
 
 from core.models import AccessRequest, UIDesignTokens
+from core.security.modules import ACTIONS, MODULES
+from core.security.perms import user_can
 
 
 # Logo Google (4 colores) inline, dimensionado para el disco del nav.
@@ -85,8 +87,8 @@ def nav_menu(request):
             'match_keywords': ['batch'],
             'visible': True,
             'items': [
-                {'label': 'Ver lotes',   'icon': 'fa-list-ul', 'url': _safe_url('panel:batch_list'),   'color': 'info'},
-                {'label': 'Subir nuevo', 'icon': 'fa-plus',    'url': _safe_url('panel:batch_create'), 'color': 'brand'},
+                {'label': 'Ver lotes',   'icon': 'fa-list-ul', 'url': _safe_url('panel:batch_list'),   'color': 'info', 'module': 'lotes'},
+                {'label': 'Subir nuevo', 'icon': 'fa-plus',    'url': _safe_url('panel:batch_create'), 'color': 'brand', 'module': 'lotes'},
             ],
         },
         {
@@ -96,10 +98,10 @@ def nav_menu(request):
             'match_keywords': ['session', 'participantes', 'program'],
             'visible': True,
             'items': [
-                {'label': 'Eventos',       'icon': 'fa-calendar-days',   'url': _safe_url('panel:session_list'),        'color': 'success'},
-                {'label': 'Programas',     'icon': 'fa-diagram-project', 'url': _safe_url('panel:program_list'),        'color': 'brand'},
+                {'label': 'Eventos',       'icon': 'fa-calendar-days',   'url': _safe_url('panel:session_list'),        'color': 'success', 'module': 'eventos'},
+                {'label': 'Programas',     'icon': 'fa-diagram-project', 'url': _safe_url('panel:program_list'),        'color': 'brand', 'module': 'programas'},
                 # Líderes: sección deshabilitada (oculta del menú).
-                {'label': 'Participantes', 'icon': 'fa-user-graduate',   'url': _safe_url('panel:participantes_list'),  'color': 'info'},
+                {'label': 'Participantes', 'icon': 'fa-user-graduate',   'url': _safe_url('panel:participantes_list'),  'color': 'info', 'module': 'participantes'},
             ],
         },
         {
@@ -113,32 +115,77 @@ def nav_menu(request):
                     'title': 'Configuración',
                     'icon': 'fa-sliders',
                     'items': [
-                        {'label': 'Configuración IA', 'icon': 'fa-microchip', 'url': _safe_url('panel:ai_config'),    'color': 'danger'},
-                        {'label': 'Google Cloud',     'svg': GOOGLE_SVG,      'url': _safe_url('panel:google_config'), 'color': 'accent'},
-                        {'label': 'Firmas inst.',     'icon': 'fa-signature', 'url': _safe_url('panel:firma_list'),    'color': 'info'},
+                        {'label': 'Configuración IA', 'icon': 'fa-microchip', 'url': _safe_url('panel:ai_config'),    'color': 'danger', 'module': 'ai_config'},
+                        {'label': 'Google Cloud',     'svg': GOOGLE_SVG,      'url': _safe_url('panel:google_config'), 'color': 'accent', 'module': 'google'},
+                        {'label': 'Firmas inst.',     'icon': 'fa-signature', 'url': _safe_url('panel:firma_list'),    'color': 'info', 'module': 'firmas'},
                     ],
                 },
                 {
                     'title': 'Certificados y cuentas',
                     'icon': 'fa-certificate',
                     'items': [
-                        {'label': 'Diseño de certificados', 'icon': 'fa-palette',    'url': _safe_url('panel:design_global'),           'color': 'success'},
-                        {'label': 'Solicitudes',            'icon': 'fa-user-clock', 'url': _safe_url('panel:solicitudes_pendientes'),  'badge': 'pendientes_count', 'color': 'warning'},
-                        {'label': 'Usuarios',               'icon': 'fa-users-cog',  'url': _safe_url('panel:usuarios_list'),           'color': 'info'},
+                        {'label': 'Diseño de certificados', 'icon': 'fa-palette',    'url': _safe_url('panel:design_global'),           'color': 'success', 'module': 'diseno'},
+                        {'label': 'Solicitudes',            'icon': 'fa-user-clock', 'url': _safe_url('panel:solicitudes_pendientes'),  'badge': 'pendientes_count', 'color': 'warning', 'module': 'solicitudes'},
+                        {'label': 'Usuarios',               'icon': 'fa-users-cog',  'url': _safe_url('panel:usuarios_list'),           'color': 'info', 'module': 'usuarios'},
                     ],
                 },
                 {
                     'title': 'Sistema',
                     'icon': 'fa-database',
                     'items': [
-                        {'label': 'Design System',      'icon': 'fa-swatchbook',      'url': _safe_url('panel:design_system'),  'color': 'brand'},
-                        {'label': 'Bitácora del proyecto', 'icon': 'fa-list-check',   'url': _safe_url('panel:bitacora'),       'color': 'success'},
-                        {'label': 'Títulos académicos', 'icon': 'fa-user-graduate',   'url': _safe_url('panel:titulos_list'),   'color': 'accent'},
-                        {'label': 'Modelado de datos',  'icon': 'fa-diagram-project', 'url': _safe_url('panel:modelado_datos'), 'color': 'info'},
+                        {'label': 'Design System',      'icon': 'fa-swatchbook',      'url': _safe_url('panel:design_system'),  'color': 'brand', 'module': 'design_system'},
+                        {'label': 'Seguridad',          'icon': 'fa-shield-halved',   'url': _safe_url('panel:seguridad'),      'color': 'danger'},
+                        {'label': 'Bitácora del proyecto', 'icon': 'fa-list-check',   'url': _safe_url('panel:bitacora'),       'color': 'success', 'module': 'bitacora'},
+                        {'label': 'Títulos académicos', 'icon': 'fa-user-graduate',   'url': _safe_url('panel:titulos_list'),   'color': 'accent', 'module': 'titulos'},
+                        {'label': 'Modelado de datos',  'icon': 'fa-diagram-project', 'url': _safe_url('panel:modelado_datos'), 'color': 'info', 'module': 'modelado'},
                     ],
                 },
             ],
         },
     ]
 
-    return {'nav_groups': [g for g in groups if g['visible']]}
+    return {'nav_groups': _filter_by_permissions(groups, request.user)}
+
+
+def _filter_by_permissions(groups, user):
+    """Quita del menú los items cuyo módulo el usuario no puede ver.
+
+    Un item sin `module` no se filtra (ya está cubierto por `visible`).
+    Grupos/secciones que quedan sin items desaparecen.
+    """
+    visibles = []
+    for group in groups:
+        if not group['visible']:
+            continue
+        g = dict(group)
+        if 'items' in g:
+            g['items'] = [i for i in g['items'] if _item_allowed(i, user)]
+            if not g['items']:
+                continue
+        if 'sections' in g:
+            secciones = []
+            for sec in g['sections']:
+                s = dict(sec)
+                s['items'] = [i for i in s['items'] if _item_allowed(i, user)]
+                if s['items']:
+                    secciones.append(s)
+            if not secciones:
+                continue
+            g['sections'] = secciones
+        visibles.append(g)
+    return visibles
+
+
+def _item_allowed(item, user) -> bool:
+    module = item.get('module')
+    return True if not module else user_can(user, module, 'ver')
+
+
+def module_perms(request):
+    """`{{ module_perms.eventos.crear }}` — permisos del usuario para los templates."""
+    if not request.user.is_authenticated:
+        return {'module_perms': {}}
+    return {'module_perms': {
+        m['slug']: {a: user_can(request.user, m['slug'], a) for a in ACTIONS}
+        for m in MODULES
+    }}

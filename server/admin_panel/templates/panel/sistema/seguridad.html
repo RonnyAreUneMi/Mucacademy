@@ -1,0 +1,220 @@
+{% extends 'panel/base.html' %}
+
+{% block page_title %}Seguridad{% endblock %}
+
+{% block content %}
+<style>
+    .sec-chip {
+        display: inline-flex; align-items: center; gap: .3rem;
+        padding: .3rem .6rem; border-radius: .7rem;
+        font-size: .68rem; font-weight: 800; letter-spacing: .02em;
+        border: 1px solid rgba(148, 163, 184, .28); color: #64748b;
+        background: rgba(148, 163, 184, .08);
+        cursor: pointer; transition: .14s; user-select: none; white-space: nowrap;
+    }
+    .dark .sec-chip { color: #94a3b8; border-color: rgba(255, 255, 255, .1); background: rgba(255, 255, 255, .04); }
+    .sec-chip:hover { border-color: var(--ds-brand); color: var(--ds-brand-dark); }
+    .dark .sec-chip:hover { color: var(--ds-brand); }
+    .sec-chip.on {
+        background: linear-gradient(180deg, var(--ds-brand), var(--ds-brand-dark));
+        border-color: transparent; color: #fff;
+        box-shadow: 0 6px 14px -8px rgba(245, 136, 48, .8);
+    }
+    .sec-chip.on:hover { color: #fff; }
+    .sec-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .sec-table th, .sec-table td { padding: .7rem .8rem; text-align: left; vertical-align: middle; }
+    .sec-table thead th {
+        font-size: .68rem; font-weight: 900; text-transform: uppercase; letter-spacing: .08em;
+        color: #64748b; border-bottom: 1px solid rgba(148, 163, 184, .22);
+    }
+    .dark .sec-table thead th { color: #94a3b8; border-color: rgba(255, 255, 255, .08); }
+    .sec-table tbody tr + tr td { border-top: 1px solid rgba(148, 163, 184, .16); }
+    .dark .sec-table tbody tr + tr td { border-color: rgba(255, 255, 255, .06); }
+    .sec-table tbody tr:hover td { background: rgba(148, 163, 184, .06); }
+    .dark .sec-table tbody tr:hover td { background: rgba(255, 255, 255, .03); }
+    .sec-mod-ico {
+        width: 2rem; height: 2rem; border-radius: .65rem; display: grid; place-items: center;
+        font-size: .8rem; flex-shrink: 0;
+        background: rgba(245, 136, 48, .12); color: var(--ds-brand);
+    }
+    .sec-quick {
+        font-size: .64rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+        color: #94a3b8; padding: .2rem .45rem; border-radius: .5rem; transition: .14s; cursor: pointer;
+    }
+    .sec-quick:hover { color: var(--ds-brand); background: rgba(245, 136, 48, .1); }
+</style>
+
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-gray-800 dark:text-white tracking-tight flex items-center gap-3">
+                <span class="w-11 h-11 rounded-2xl bg-[#F58830]/10 text-[#F58830] flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </span>
+                Seguridad
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">
+                Define qué acciones puede realizar cada perfil en cada módulo del sistema.
+            </p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="btn-reload" type="button" class="lg-btn">
+                <i class="fa-solid fa-rotate-left"></i> Descartar cambios
+            </button>
+            <button id="btn-save" type="button" class="lg-btn lg-btn-prominent">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar
+            </button>
+        </div>
+    </div>
+
+    <div class="lg-card rounded-2xl p-4 flex items-start gap-3">
+        <span class="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-500 grid place-items-center flex-shrink-0">
+            <i class="fa-solid fa-crown"></i>
+        </span>
+        <div class="text-sm text-gray-600 dark:text-gray-300">
+            <p class="font-black text-gray-800 dark:text-white">Super administrador · acceso total</p>
+            <p class="text-gray-500 dark:text-gray-400 mt-0.5">
+                El perfil superadmin no es configurable: siempre tiene todas las acciones sobre todos los módulos.
+            </p>
+        </div>
+    </div>
+
+    <div id="sec-areas" class="space-y-6">
+        <div class="lg-card rounded-2xl p-10 text-center text-gray-400">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const API = '/api/v1/admin/security/matrix/';
+    const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+    const ACTION_LABEL = { ver: 'Ver', crear: 'Crear', editar: 'Editar', eliminar: 'Eliminar' };
+
+    let data = null;   // respuesta del API
+    let state = null;  // matriz editable {role: {module: {accion: bool}}}
+
+    const esc = (s) => { const d = document.createElement('div'); d.textContent = String(s ?? ''); return d.innerHTML; };
+    const toast = (msg, type) => { if (typeof window.showToast === 'function') window.showToast(msg, type); };
+
+    function chip(role, module, action) {
+        const on = state[role][module][action];
+        return `<button type="button" class="sec-chip ${on ? 'on' : ''}"
+                    data-role="${role}" data-module="${module}" data-action="${action}">
+                    <i class="fa-solid ${on ? 'fa-check' : 'fa-minus'} text-[9px]"></i>${ACTION_LABEL[action]}
+                </button>`;
+    }
+
+    function cell(role, module) {
+        const chips = data.actions.map((a) => chip(role, module, a)).join('');
+        return `<td>
+            <div class="flex flex-wrap gap-1.5">${chips}</div>
+            <div class="flex gap-1 mt-1.5">
+                <span class="sec-quick" data-bulk="all" data-role="${role}" data-module="${module}">Todo</span>
+                <span class="sec-quick" data-bulk="none" data-role="${role}" data-module="${module}">Nada</span>
+            </div>
+        </td>`;
+    }
+
+    function render() {
+        const html = data.areas.map((area) => {
+            const rows = area.modules.map((m) => `
+                <tr>
+                    <td class="min-w-[13rem]">
+                        <div class="flex items-center gap-2.5">
+                            <span class="sec-mod-ico"><i class="fa-solid ${esc(m.icon)}"></i></span>
+                            <div class="min-w-0">
+                                <p class="text-sm font-black text-gray-800 dark:text-white truncate">${esc(m.label)}</p>
+                                <p class="text-[11px] text-gray-400 font-mono truncate">${esc(m.slug)}</p>
+                            </div>
+                        </div>
+                    </td>
+                    ${data.roles.map((r) => cell(r.value, m.slug)).join('')}
+                </tr>`).join('');
+
+            return `
+            <section class="lg-card rounded-2xl overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100 dark:border-white/5 flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-xl bg-[#F58830]/10 text-[#F58830] grid place-items-center">
+                        <i class="fa-solid ${area.area === 'panel' ? 'fa-gears' : 'fa-user-graduate'}"></i>
+                    </span>
+                    <h2 class="text-lg font-black text-gray-800 dark:text-white">${esc(area.label)}</h2>
+                    <span class="ml-auto text-xs font-bold text-gray-400">${area.modules.length} módulos</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="sec-table">
+                        <thead>
+                            <tr>
+                                <th>Módulo</th>
+                                ${data.roles.map((r) => `<th>${esc(r.label)}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            </section>`;
+        }).join('');
+
+        document.getElementById('sec-areas').innerHTML = html;
+    }
+
+    document.getElementById('sec-areas').addEventListener('click', (ev) => {
+        const c = ev.target.closest('.sec-chip');
+        if (c) {
+            const { role, module, action } = c.dataset;
+            state[role][module][action] = !state[role][module][action];
+            render();
+            return;
+        }
+        const q = ev.target.closest('.sec-quick');
+        if (q) {
+            const { role, module, bulk } = q.dataset;
+            data.actions.forEach((a) => { state[role][module][a] = (bulk === 'all'); });
+            render();
+        }
+    });
+
+    async function load() {
+        const res = await fetch(API, { credentials: 'same-origin' });
+        if (!res.ok) {
+            document.getElementById('sec-areas').innerHTML =
+                '<div class="lg-card rounded-2xl p-10 text-center text-gray-400">No se pudo cargar la matriz de permisos.</div>';
+            return;
+        }
+        data = await res.json();
+        state = JSON.parse(JSON.stringify(data.matrix));
+        render();
+    }
+
+    async function save() {
+        const btn = document.getElementById('btn-save');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando…';
+        try {
+            const res = await fetch(API, {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+                body: JSON.stringify({ matrix: state }),
+            });
+            const out = await res.json().catch(() => ({}));
+            if (!res.ok) { toast(out.detail || 'No se pudieron guardar los permisos.', 'error'); return; }
+            data.matrix = out.matrix;
+            state = JSON.parse(JSON.stringify(out.matrix));
+            render();
+            toast('Permisos actualizados.', 'success');
+        } catch (e) {
+            toast('Error de red al guardar.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+        }
+    }
+
+    document.getElementById('btn-save').addEventListener('click', save);
+    document.getElementById('btn-reload').addEventListener('click', load);
+    load();
+})();
+</script>
+{% endblock %}

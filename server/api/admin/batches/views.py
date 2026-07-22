@@ -6,7 +6,7 @@ from django.http import FileResponse, HttpResponse
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.utils.decorators import method_decorator
 from rest_framework import permissions, status
-from api.admin.permissions import IsPanelAdmin
+from api.admin.permissions import HasModulePermission
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -21,7 +21,8 @@ from .serializers import LoteListSerializer, LoteDetailSerializer, LoteWriteSeri
 class LoteViewSet(AuditedModelViewSet):
     """CRUD de lotes de certificados."""
     queryset = CertificateBatch.objects.all().select_related('administrator')
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
+    module_slug = 'lotes'
     filterset_fields = ['is_active', 'faculty', 'template', 'customize_design']
     search_fields = ['name']
     ordering_fields = ['created_at', 'name']

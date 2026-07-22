@@ -11,9 +11,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from core.models import Signature, CertificateBatch
 from core.services.excel_service import analyze_headers, process_excel_batch
 from ._shared import admin_required
+from core.security.decorators import module_required
 
 
 @admin_required
+@module_required('lotes')
 def list_batches(request):
     """Render con los lotes para el template de lista."""
     return render(request, 'panel/batch/list.html', {
@@ -22,6 +24,7 @@ def list_batches(request):
 
 
 @admin_required
+@module_required('lotes', 'crear')
 def create_batch(request):
     """Shell del form. Submit va a /api/v1/admin/batches/ via fetch+FormData."""
     from core.models import FACULTY_CHOICES
@@ -31,6 +34,7 @@ def create_batch(request):
 
 
 @admin_required
+@module_required('lotes', 'crear')
 def process_batch_mapping(request, id):
     """UI de mapeo de columnas Excel tras crear el lote."""
     lote = get_object_or_404(CertificateBatch, id=id)
@@ -78,6 +82,7 @@ def process_batch_mapping(request, id):
 
 
 @admin_required
+@module_required('lotes')
 def batch_detail(request, id):
     lote = get_object_or_404(CertificateBatch, id=id)
     return render(request, 'panel/batch/detail.html', {
@@ -87,6 +92,7 @@ def batch_detail(request, id):
 
 
 @admin_required
+@module_required('lotes', 'editar')
 def configure_batch(request, id):
     """Form de diseño personalizado para un lote (colores, firmas, logos)."""
     from django.urls import reverse

@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core.models import Signature
+from core.security.decorators import module_required
 
 
 def _is_superadmin(user):
@@ -11,6 +12,7 @@ def _is_superadmin(user):
 
 @login_required
 @user_passes_test(_is_superadmin)
+@module_required('firmas', 'crear')
 def firma_create(request):
     return render(request, 'panel/firmas/form.html', {
         'title': 'Nueva Firma Institucional',
@@ -19,6 +21,7 @@ def firma_create(request):
 
 @login_required
 @user_passes_test(_is_superadmin)
+@module_required('firmas', 'editar')
 def firma_edit(request, id):
     return render(request, 'panel/firmas/form.html', {
         'firma': get_object_or_404(Signature, id=id),
@@ -28,6 +31,7 @@ def firma_edit(request, id):
 
 @login_required
 @user_passes_test(_is_superadmin)
+@module_required('firmas', 'eliminar')
 def firma_delete(request, id):
     """Legacy: eliminar ahora es DELETE al API desde el template de lista."""
     return redirect('panel:firma_list')

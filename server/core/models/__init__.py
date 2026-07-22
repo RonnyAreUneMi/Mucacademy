@@ -21,6 +21,7 @@ from .integrations import (
     AIProviderCredential, AIPrompt,
 )
 from .design_system import UIDesignTokens
+from .security import RolePermission, SecurityRole, USER_ROLE_TO_PROFILE
 
 __all__ = [
     'FACULTY_CHOICES',
@@ -58,4 +59,7 @@ __all__ = [
     'AIProviderCredential',
     'AIPrompt',
     'UIDesignTokens',
+    'RolePermission',
+    'SecurityRole',
+    'USER_ROLE_TO_PROFILE',
 ]

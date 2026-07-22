@@ -1,5 +1,5 @@
 from rest_framework import permissions, status
-from api.admin.permissions import IsPanelAdmin
+from api.admin.permissions import HasModulePermission
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -14,7 +14,8 @@ from .serializers import ProgramSerializer, ProgramListSerializer
 class ProgramViewSet(AuditedModelViewSet):
     """CRUD admin de programas académicos (agrupan varios cursos)."""
     queryset = Program.objects.all()
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
+    module_slug = 'programas'
     filterset_fields = ['is_active', 'faculty']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'created_at']

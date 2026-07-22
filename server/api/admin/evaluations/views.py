@@ -1,5 +1,5 @@
 from rest_framework import permissions, status
-from api.admin.permissions import IsPanelAdmin
+from api.admin.permissions import HasModulePermission
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -15,7 +15,8 @@ from .serializers import (
 class EvaluationViewSet(AuditedModelViewSet):
     """CRUD de evaluaciones + banco de preguntas, generación IA y calificaciones."""
     queryset = Evaluation.objects.select_related('program', 'event').all()
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
+    module_slug = 'programas'
     filterset_fields = ['program', 'event', 'is_active']
     ordering = ['-created_at']
     audit_verbose_name = 'evaluación'
@@ -127,7 +128,8 @@ class EvaluationViewSet(AuditedModelViewSet):
 class QuestionViewSet(AuditedModelViewSet):
     """CRUD de preguntas del banco (agregar/editar/borrar manualmente)."""
     queryset = Question.objects.all()
-    permission_classes = [IsPanelAdmin]
+    permission_classes = [HasModulePermission]
+    module_slug = 'programas'
     serializer_class = QuestionSerializer
     filterset_fields = ['evaluation', 'is_active', 'kind']
     ordering = ['order', 'id']
