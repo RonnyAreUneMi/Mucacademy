@@ -4,44 +4,106 @@
 
 {% block content %}
 <style>
-    .sec-chip {
+    /* ───── Bloque 1 · tarjetas de perfil ───── */
+    .sec-prof {
+        position: relative; text-align: left; width: 100%;
+        border-radius: 1.25rem; padding: 1.1rem 1.15rem;
+        border: 1px solid rgba(148, 163, 184, .22);
+        background: rgba(255, 255, 255, .55);
+        transition: transform .16s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .dark .sec-prof { background: rgba(255, 255, 255, .04); border-color: rgba(255, 255, 255, .08); }
+    .sec-prof[data-clickable="1"] { cursor: pointer; }
+    .sec-prof[data-clickable="1"]:hover { transform: translateY(-2px); border-color: var(--sec-tint); }
+    .sec-prof.active {
+        border-color: var(--sec-tint);
+        box-shadow: 0 0 0 2px var(--sec-tint) inset, 0 14px 30px -18px var(--sec-tint);
+    }
+    .sec-prof-ico {
+        width: 2.5rem; height: 2.5rem; border-radius: .9rem; display: grid; place-items: center;
+        font-size: .95rem; color: #fff; background: var(--sec-tint);
+        box-shadow: 0 8px 18px -10px var(--sec-tint);
+    }
+    .sec-prof-bar { height: .35rem; border-radius: 999px; background: rgba(148, 163, 184, .22); overflow: hidden; }
+    .dark .sec-prof-bar { background: rgba(255, 255, 255, .1); }
+    .sec-prof-bar > i { display: block; height: 100%; border-radius: 999px; background: var(--sec-tint); transition: width .3s ease; }
+    .sec-prof-badge {
         display: inline-flex; align-items: center; gap: .3rem;
-        padding: .3rem .6rem; border-radius: .7rem;
-        font-size: .68rem; font-weight: 800; letter-spacing: .02em;
-        border: 1px solid rgba(148, 163, 184, .28); color: #64748b;
-        background: rgba(148, 163, 184, .08);
-        cursor: pointer; transition: .14s; user-select: none; white-space: nowrap;
+        padding: .2rem .55rem; border-radius: 999px;
+        font-size: .62rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase;
+        color: var(--sec-tint); background: color-mix(in srgb, var(--sec-tint) 14%, transparent);
+        border: 1px solid color-mix(in srgb, var(--sec-tint) 32%, transparent);
     }
-    .dark .sec-chip { color: #94a3b8; border-color: rgba(255, 255, 255, .1); background: rgba(255, 255, 255, .04); }
-    .sec-chip:hover { border-color: var(--ds-brand); color: var(--ds-brand-dark); }
-    .dark .sec-chip:hover { color: var(--ds-brand); }
-    .sec-chip.on {
-        background: linear-gradient(180deg, var(--ds-brand), var(--ds-brand-dark));
-        border-color: transparent; color: #fff;
-        box-shadow: 0 6px 14px -8px rgba(245, 136, 48, .8);
+
+    /* ───── Segmented control ───── */
+    .sec-seg {
+        display: grid; gap: .25rem; padding: .25rem; border-radius: 1rem;
+        background: rgba(148, 163, 184, .12); border: 1px solid rgba(148, 163, 184, .18);
     }
-    .sec-chip.on:hover { color: #fff; }
-    .sec-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-    .sec-table th, .sec-table td { padding: .7rem .8rem; text-align: left; vertical-align: middle; }
-    .sec-table thead th {
-        font-size: .68rem; font-weight: 900; text-transform: uppercase; letter-spacing: .08em;
-        color: #64748b; border-bottom: 1px solid rgba(148, 163, 184, .22);
+    .dark .sec-seg { background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .08); }
+    .sec-seg-item {
+        display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
+        padding: .6rem .9rem; border-radius: .8rem; cursor: pointer;
+        font-size: .8rem; font-weight: 800; color: #64748b; transition: .16s; white-space: nowrap;
     }
-    .dark .sec-table thead th { color: #94a3b8; border-color: rgba(255, 255, 255, .08); }
-    .sec-table tbody tr + tr td { border-top: 1px solid rgba(148, 163, 184, .16); }
-    .dark .sec-table tbody tr + tr td { border-color: rgba(255, 255, 255, .06); }
-    .sec-table tbody tr:hover td { background: rgba(148, 163, 184, .06); }
-    .dark .sec-table tbody tr:hover td { background: rgba(255, 255, 255, .03); }
+    .dark .sec-seg-item { color: #94a3b8; }
+    .sec-seg-item:hover { color: #0f172a; }
+    .dark .sec-seg-item:hover { color: #e2e8f0; }
+    .sec-seg-item.active {
+        background: #fff; color: var(--sec-tint);
+        box-shadow: 0 6px 16px -10px rgba(15, 23, 42, .5);
+    }
+    .dark .sec-seg-item.active { background: rgba(255, 255, 255, .12); color: #fff; }
+
+    /* ───── Bloque 2 · filas de módulo ───── */
+    .sec-row {
+        display: flex; flex-wrap: wrap; align-items: center; gap: .85rem 1rem;
+        padding: .9rem 1.25rem;
+    }
+    .sec-row + .sec-row { border-top: 1px solid rgba(148, 163, 184, .16); }
+    .dark .sec-row + .sec-row { border-color: rgba(255, 255, 255, .06); }
+    .sec-row:hover { background: rgba(148, 163, 184, .06); }
+    .dark .sec-row:hover { background: rgba(255, 255, 255, .03); }
     .sec-mod-ico {
-        width: 2rem; height: 2rem; border-radius: .65rem; display: grid; place-items: center;
-        font-size: .8rem; flex-shrink: 0;
+        width: 2.25rem; height: 2.25rem; border-radius: .75rem; display: grid; place-items: center;
+        font-size: .85rem; flex-shrink: 0;
         background: rgba(245, 136, 48, .12); color: var(--ds-brand);
     }
+    .sec-tog {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: .35rem .6rem .35rem .4rem; border-radius: .75rem;
+        border: 1px solid transparent; background: transparent;
+        font-size: .74rem; font-weight: 800; color: #94a3b8;
+        cursor: pointer; transition: .14s; user-select: none; white-space: nowrap;
+    }
+    .sec-tog:hover { background: rgba(148, 163, 184, .12); }
+    .dark .sec-tog:hover { background: rgba(255, 255, 255, .06); }
+    .sec-tog.on { color: var(--tog); }
+    .sec-sw {
+        width: 2.1rem; height: 1.15rem; border-radius: 999px; flex-shrink: 0;
+        background: rgba(148, 163, 184, .38); position: relative; transition: background .16s ease;
+    }
+    .dark .sec-sw { background: rgba(255, 255, 255, .18); }
+    .sec-sw::after {
+        content: ''; position: absolute; top: .17rem; left: .17rem;
+        width: .81rem; height: .81rem; border-radius: 999px; background: #fff;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .35); transition: transform .16s ease;
+    }
+    .sec-tog.on .sec-sw { background: var(--tog); }
+    .sec-tog.on .sec-sw::after { transform: translateX(.95rem); }
     .sec-quick {
         font-size: .64rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
-        color: #94a3b8; padding: .2rem .45rem; border-radius: .5rem; transition: .14s; cursor: pointer;
+        color: #94a3b8; padding: .25rem .5rem; border-radius: .5rem; transition: .14s; cursor: pointer;
     }
-    .sec-quick:hover { color: var(--ds-brand); background: rgba(245, 136, 48, .1); }
+    .sec-quick:hover { color: var(--ds-brand); background: rgba(245, 136, 48, .12); }
+    .sec-search {
+        width: 100%; border-radius: .9rem; padding: .6rem .9rem .6rem 2.2rem;
+        font-size: .85rem; color: inherit;
+        border: 1px solid rgba(148, 163, 184, .28); background: rgba(255, 255, 255, .7);
+        outline: none; transition: .14s;
+    }
+    .dark .sec-search { background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .1); }
+    .sec-search:focus { border-color: var(--ds-brand); box-shadow: 0 0 0 3px rgba(245, 136, 48, .16); }
 </style>
 
 <div class="max-w-7xl mx-auto space-y-6">
@@ -59,6 +121,9 @@
             </p>
         </div>
         <div class="flex items-center gap-2">
+            <span id="sec-dirty" class="hidden items-center gap-1.5 text-xs font-bold text-amber-500">
+                <i class="fa-solid fa-circle text-[7px]"></i> Cambios sin guardar
+            </span>
             <button id="btn-reload" type="button" class="lg-btn">
                 <i class="fa-solid fa-rotate-left"></i> Descartar cambios
             </button>
@@ -67,6 +132,19 @@
             </button>
         </div>
     </div>
+
+    <!-- Bloque 1 · catálogo de perfiles -->
+    <section id="sec-profiles" class="space-y-3">
+        <div class="flex items-center gap-2">
+            <h2 class="text-lg font-black text-gray-800 dark:text-white">Perfiles</h2>
+            <span class="text-xs font-bold text-gray-400">Selecciona un perfil para editar sus permisos</span>
+        </div>
+        <div id="sec-profiles-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div class="lg-card rounded-2xl p-10 text-center text-gray-400 sm:col-span-2 xl:col-span-4">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+            </div>
+        </div>
+    </section>
 
     <div class="lg-card rounded-2xl p-4 flex items-start gap-3">
         <span class="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-500 grid place-items-center flex-shrink-0">
@@ -80,11 +158,18 @@
         </div>
     </div>
 
-    <div id="sec-areas" class="space-y-6">
-        <div class="lg-card rounded-2xl p-10 text-center text-gray-400">
-            <i class="fa-solid fa-spinner fa-spin"></i>
+    <!-- Bloque 2 · permisos del perfil seleccionado -->
+    <section id="sec-perms" class="space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <h2 id="sec-perms-title" class="text-lg font-black text-gray-800 dark:text-white">Permisos</h2>
+            <div class="relative w-full lg:w-72">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400"></i>
+                <input id="sec-search" type="search" class="sec-search" placeholder="Buscar módulo…" autocomplete="off">
+            </div>
         </div>
-    </div>
+        <div id="sec-seg" class="sec-seg"></div>
+        <div id="sec-areas" class="space-y-4"></div>
+    </section>
 </div>
 
 <script>
@@ -92,88 +177,235 @@
     const API = '/api/v1/admin/security/matrix/';
     const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
     const ACTION_LABEL = { ver: 'Ver', crear: 'Crear', editar: 'Editar', eliminar: 'Eliminar' };
+    const ACTION_TINT = { ver: '#0ea5e9', crear: '#10b981', editar: '#f58830', eliminar: '#ef4444' };
+    const AREA_ICON = { panel: 'fa-gears', estudiante: 'fa-user-graduate' };
+
+    const PROFILES = {
+        estudiante: {
+            icon: 'fa-user', tint: '#0ea5e9',
+            desc: 'Participantes que entran a su cuenta: certificados, eventos, programas y evaluaciones.',
+        },
+        profesor: {
+            icon: 'fa-chalkboard-user', tint: '#10b981',
+            desc: 'Docentes registrados; hoy no acceden al panel de gestión.',
+        },
+        administrador: {
+            icon: 'fa-user-shield', tint: '#f58830',
+            desc: 'Gestiona eventos, programas, lotes y participantes del panel.',
+        },
+    };
+    const SUPERADMIN = {
+        label: 'Superadmin', icon: 'fa-crown', tint: '#8b5cf6',
+        desc: 'Acceso total al sistema; su alcance no se puede restringir.',
+    };
 
     let data = null;   // respuesta del API
     let state = null;  // matriz editable {role: {module: {accion: bool}}}
+    let role = null;   // perfil seleccionado
+    let filter = '';
 
     const esc = (s) => { const d = document.createElement('div'); d.textContent = String(s ?? ''); return d.innerHTML; };
     const toast = (msg, type) => { if (typeof window.showToast === 'function') window.showToast(msg, type); };
+    const allModules = () => data.areas.flatMap((a) => a.modules);
 
-    function chip(role, module, action) {
+    function profileMeta(value) {
+        return PROFILES[value] || { icon: 'fa-user', tint: '#64748b', desc: '' };
+    }
+
+    function stats(value) {
+        const mods = allModules();
+        const counts = { ver: 0, crear: 0, editar: 0, eliminar: 0 };
+        mods.forEach((m) => data.actions.forEach((a) => { if (state[value][m.slug][a]) counts[a] += 1; }));
+        return { total: mods.length, counts };
+    }
+
+    function isDirty() {
+        return JSON.stringify(state) !== JSON.stringify(data.matrix);
+    }
+
+    function renderDirty() {
+        const el = document.getElementById('sec-dirty');
+        el.classList.toggle('hidden', !isDirty());
+        el.classList.toggle('flex', isDirty());
+    }
+
+    function renderProfiles() {
+        const cards = data.roles.map((r) => {
+            const meta = profileMeta(r.value);
+            const s = stats(r.value);
+            const pct = s.total ? Math.round((s.counts.ver / s.total) * 100) : 0;
+            return `
+            <button type="button" data-clickable="1" data-role="${esc(r.value)}"
+                    class="sec-prof lg-card ${r.value === role ? 'active' : ''}" style="--sec-tint:${meta.tint}">
+                <div class="flex items-start gap-3">
+                    <span class="sec-prof-ico"><i class="fa-solid ${meta.icon}"></i></span>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-black text-gray-800 dark:text-white">${esc(r.label)}</p>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">${esc(meta.desc)}</p>
+                    </div>
+                </div>
+                <div class="mt-3 space-y-1.5">
+                    <div class="flex items-baseline justify-between">
+                        <span class="text-[11px] font-black text-gray-700 dark:text-gray-200">
+                            Ve ${s.counts.ver} de ${s.total} módulos
+                        </span>
+                        <span class="text-[10px] font-bold text-gray-400">${pct}%</span>
+                    </div>
+                    <div class="sec-prof-bar"><i style="width:${pct}%"></i></div>
+                    <p class="text-[10px] font-bold text-gray-400">
+                        Crear ${s.counts.crear} · Editar ${s.counts.editar} · Eliminar ${s.counts.eliminar}
+                    </p>
+                </div>
+            </button>`;
+        }).join('');
+
+        const supers = `
+            <div class="sec-prof lg-card" style="--sec-tint:${SUPERADMIN.tint}">
+                <div class="flex items-start gap-3">
+                    <span class="sec-prof-ico"><i class="fa-solid ${SUPERADMIN.icon}"></i></span>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <p class="text-sm font-black text-gray-800 dark:text-white">${SUPERADMIN.label}</p>
+                            <span class="sec-prof-badge"><i class="fa-solid fa-lock text-[8px]"></i> Acceso total</span>
+                        </div>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">${SUPERADMIN.desc}</p>
+                    </div>
+                </div>
+                <div class="mt-3 space-y-1.5">
+                    <div class="flex items-baseline justify-between">
+                        <span class="text-[11px] font-black text-gray-700 dark:text-gray-200">
+                            Ve ${allModules().length} de ${allModules().length} módulos
+                        </span>
+                        <span class="text-[10px] font-bold text-gray-400">100%</span>
+                    </div>
+                    <div class="sec-prof-bar"><i style="width:100%"></i></div>
+                    <p class="text-[10px] font-bold text-gray-400">No se puede restringir</p>
+                </div>
+            </div>`;
+
+        document.getElementById('sec-profiles-grid').innerHTML = cards + supers;
+    }
+
+    function renderSeg() {
+        const seg = document.getElementById('sec-seg');
+        seg.style.gridTemplateColumns = `repeat(${data.roles.length}, minmax(0, 1fr))`;
+        seg.innerHTML = data.roles.map((r) => {
+            const meta = profileMeta(r.value);
+            return `<button type="button" data-role="${esc(r.value)}"
+                        class="sec-seg-item ${r.value === role ? 'active' : ''}" style="--sec-tint:${meta.tint}">
+                        <i class="fa-solid ${meta.icon} text-[11px]"></i>${esc(r.label)}
+                    </button>`;
+        }).join('');
+    }
+
+    function toggle(module, action) {
         const on = state[role][module][action];
-        return `<button type="button" class="sec-chip ${on ? 'on' : ''}"
-                    data-role="${role}" data-module="${module}" data-action="${action}">
-                    <i class="fa-solid ${on ? 'fa-check' : 'fa-minus'} text-[9px]"></i>${ACTION_LABEL[action]}
+        return `<button type="button" role="switch" aria-checked="${on}"
+                    class="sec-tog ${on ? 'on' : ''}" style="--tog:${ACTION_TINT[action]}"
+                    data-module="${esc(module)}" data-action="${action}">
+                    <span class="sec-sw"></span>${ACTION_LABEL[action]}
                 </button>`;
     }
 
-    function cell(role, module) {
-        const chips = data.actions.map((a) => chip(role, module, a)).join('');
-        return `<td>
-            <div class="flex flex-wrap gap-1.5">${chips}</div>
-            <div class="flex gap-1 mt-1.5">
-                <span class="sec-quick" data-bulk="all" data-role="${role}" data-module="${module}">Todo</span>
-                <span class="sec-quick" data-bulk="none" data-role="${role}" data-module="${module}">Nada</span>
-            </div>
-        </td>`;
+    function renderAreas() {
+        const q = filter.trim().toLowerCase();
+        const html = data.areas.map((area) => {
+            const mods = area.modules.filter(
+                (m) => !q || m.label.toLowerCase().includes(q) || m.slug.toLowerCase().includes(q),
+            );
+            if (!mods.length) return '';
+
+            const rows = mods.map((m) => `
+                <div class="sec-row">
+                    <div class="flex items-center gap-2.5 min-w-[13rem] flex-1">
+                        <span class="sec-mod-ico"><i class="fa-solid ${esc(m.icon)}"></i></span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-black text-gray-800 dark:text-white truncate">${esc(m.label)}</p>
+                            <p class="text-[11px] text-gray-400 font-mono truncate">${esc(m.slug)}</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1">
+                        ${data.actions.map((a) => toggle(m.slug, a)).join('')}
+                    </div>
+                    <div class="flex items-center gap-1 ml-auto">
+                        <span class="sec-quick" data-bulk="all" data-module="${esc(m.slug)}">Todo</span>
+                        <span class="sec-quick" data-bulk="none" data-module="${esc(m.slug)}">Nada</span>
+                    </div>
+                </div>`).join('');
+
+            return `
+            <div class="lg-card rounded-2xl overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100 dark:border-white/5 flex flex-wrap items-center gap-3">
+                    <span class="w-9 h-9 rounded-xl bg-[#F58830]/10 text-[#F58830] grid place-items-center">
+                        <i class="fa-solid ${AREA_ICON[area.area] || 'fa-layer-group'}"></i>
+                    </span>
+                    <h3 class="text-base font-black text-gray-800 dark:text-white">${esc(area.label)}</h3>
+                    <span class="text-xs font-bold text-gray-400">${mods.length} módulos</span>
+                    <div class="flex items-center gap-1 ml-auto">
+                        <span class="sec-quick" data-area-bulk="all" data-area="${esc(area.area)}">Marcar todo</span>
+                        <span class="sec-quick" data-area-bulk="none" data-area="${esc(area.area)}">Desmarcar todo</span>
+                    </div>
+                </div>
+                <div>${rows}</div>
+            </div>`;
+        }).join('');
+
+        document.getElementById('sec-areas').innerHTML = html ||
+            '<div class="lg-card rounded-2xl p-10 text-center text-gray-400">Ningún módulo coincide con la búsqueda.</div>';
+    }
+
+    function renderTitle() {
+        const r = data.roles.find((x) => x.value === role);
+        document.getElementById('sec-perms-title').textContent = `Permisos de ${r ? r.label : ''}`;
     }
 
     function render() {
-        const html = data.areas.map((area) => {
-            const rows = area.modules.map((m) => `
-                <tr>
-                    <td class="min-w-[13rem]">
-                        <div class="flex items-center gap-2.5">
-                            <span class="sec-mod-ico"><i class="fa-solid ${esc(m.icon)}"></i></span>
-                            <div class="min-w-0">
-                                <p class="text-sm font-black text-gray-800 dark:text-white truncate">${esc(m.label)}</p>
-                                <p class="text-[11px] text-gray-400 font-mono truncate">${esc(m.slug)}</p>
-                            </div>
-                        </div>
-                    </td>
-                    ${data.roles.map((r) => cell(r.value, m.slug)).join('')}
-                </tr>`).join('');
-
-            return `
-            <section class="lg-card rounded-2xl overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100 dark:border-white/5 flex items-center gap-3">
-                    <span class="w-9 h-9 rounded-xl bg-[#F58830]/10 text-[#F58830] grid place-items-center">
-                        <i class="fa-solid ${area.area === 'panel' ? 'fa-gears' : 'fa-user-graduate'}"></i>
-                    </span>
-                    <h2 class="text-lg font-black text-gray-800 dark:text-white">${esc(area.label)}</h2>
-                    <span class="ml-auto text-xs font-bold text-gray-400">${area.modules.length} módulos</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="sec-table">
-                        <thead>
-                            <tr>
-                                <th>Módulo</th>
-                                ${data.roles.map((r) => `<th>${esc(r.label)}</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                </div>
-            </section>`;
-        }).join('');
-
-        document.getElementById('sec-areas').innerHTML = html;
+        renderProfiles();
+        renderSeg();
+        renderTitle();
+        renderAreas();
+        renderDirty();
     }
 
+    function selectRole(value) {
+        if (!value || value === role) return;
+        role = value;
+        render();
+    }
+
+    document.getElementById('sec-profiles-grid').addEventListener('click', (ev) => {
+        const card = ev.target.closest('.sec-prof[data-clickable="1"]');
+        if (card) selectRole(card.dataset.role);
+    });
+
+    document.getElementById('sec-seg').addEventListener('click', (ev) => {
+        const item = ev.target.closest('.sec-seg-item');
+        if (item) selectRole(item.dataset.role);
+    });
+
     document.getElementById('sec-areas').addEventListener('click', (ev) => {
-        const c = ev.target.closest('.sec-chip');
-        if (c) {
-            const { role, module, action } = c.dataset;
+        const t = ev.target.closest('.sec-tog');
+        if (t) {
+            const { module, action } = t.dataset;
             state[role][module][action] = !state[role][module][action];
             render();
             return;
         }
         const q = ev.target.closest('.sec-quick');
-        if (q) {
-            const { role, module, bulk } = q.dataset;
-            data.actions.forEach((a) => { state[role][module][a] = (bulk === 'all'); });
-            render();
+        if (!q) return;
+        if (q.dataset.bulk) {
+            data.actions.forEach((a) => { state[role][q.dataset.module][a] = (q.dataset.bulk === 'all'); });
+        } else if (q.dataset.areaBulk) {
+            const area = data.areas.find((x) => x.area === q.dataset.area);
+            const on = q.dataset.areaBulk === 'all';
+            area.modules.forEach((m) => data.actions.forEach((a) => { state[role][m.slug][a] = on; }));
         }
+        render();
+    });
+
+    document.getElementById('sec-search').addEventListener('input', (ev) => {
+        filter = ev.target.value;
+        renderAreas();
     });
 
     async function load() {
@@ -185,6 +417,9 @@
         }
         data = await res.json();
         state = JSON.parse(JSON.stringify(data.matrix));
+        if (!role || !data.roles.some((r) => r.value === role)) {
+            role = data.roles.length ? data.roles[0].value : null;
+        }
         render();
     }
 
