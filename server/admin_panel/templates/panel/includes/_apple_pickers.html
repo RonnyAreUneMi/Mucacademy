@@ -147,6 +147,13 @@ input.refreshApplePicker() para que la rueda y el display se actualicen.
             const r = disp.getBoundingClientRect();
             pop.style.top = (window.scrollY + r.bottom + 8) + 'px';
             pop.style.left = (window.scrollX + r.left) + 'px';
+            // Si se sale por la derecha, se recuesta al borde para no cortar el AM/PM.
+            requestAnimationFrame(() => {
+                const w = pop.offsetWidth;
+                const maxLeft = window.scrollX + document.documentElement.clientWidth - w - 12;
+                const minLeft = window.scrollX + 12;
+                pop.style.left = Math.max(minLeft, Math.min(window.scrollX + r.left, maxLeft)) + 'px';
+            });
             pop.classList.add('open');
             syncFromValue();
             // Pintar tras hacer visible (necesita layout)
