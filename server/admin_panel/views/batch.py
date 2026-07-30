@@ -99,9 +99,14 @@ def configure_batch(request, id):
     from core.models.catalogs.enums import CertificateKind
     lote = get_object_or_404(CertificateBatch, id=id)
 
-    # Si el lote es de un programa, salir/finalizar vuelve al programa.
+    # A dónde volver al salir/guardar el diseño:
+    #  - lote de programa  → detalle del programa
+    #  - lote de un seminario (tiene evento) → lista de eventos
+    #  - lote suelto (Excel/manual) → detalle del lote
     if getattr(lote, 'kind', None) == CertificateKind.PROGRAM and lote.program_id:
         back_url = reverse('panel:program_detail', args=[lote.program_id])
+    elif lote.events.exists():
+        back_url = reverse('panel:session_list')
     else:
         back_url = reverse('panel:batch_detail', args=[lote.id])
 
