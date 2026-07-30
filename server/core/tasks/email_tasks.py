@@ -40,12 +40,16 @@ def send_certificate_issued_bulk(self, batch_id: int) -> dict:
         logger.warning('Batch %s no existe — task abortada', batch_id)
         return {'sent': 0, 'failed': 0, 'total': 0, 'batch_id': batch_id, 'error': 'batch_not_found'}
 
-    event = getattr(batch, 'event', None) or batch.events.first() if hasattr(batch, 'events') else None
+    event = getattr(batch, 'event', None) or (batch.events.first() if hasattr(batch, 'events') else None)
     if event is None:
-        # Caso fallback: el lote no tiene evento asociado (lote subido manualmente).
-        # No mandamos correos porque no tenemos contexto del evento.
-        logger.info('Batch %s no tiene evento asociado — sin envío de correos', batch_id)
-        return {'sent': 0, 'failed': 0, 'total': 0, 'batch_id': batch_id, 'error': 'no_event'}
+        # Lote sin evento asociado (subido manualmente por Excel): usamos un
+        # objeto ligero con el nombre del lote como título, para enviar el MISMO
+        # correo branded (plantilla + Gmail institucional) que el resto del app.
+        event = type('SesionShim', (), {
+            'title': batch.name,
+            'day_of_week': batch.name,
+            'date': None,
+        })()
 
     certs = list(
         Certificate.objects

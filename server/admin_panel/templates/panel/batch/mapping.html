@@ -18,7 +18,7 @@
         </div>
     </div>
 
-    <form method="post" action="{% url 'panel:batch_process_mapping' lotes.id %}" id="mappingForm" class="space-y-8" x-data="mappingLogic()">
+    <form method="post" action="{% url 'panel:batch_process_mapping' lotes.id %}" id="mappingForm" class="space-y-8" x-data="mappingLogic()" x-init="setStrategy(strategy)">
         {% csrf_token %}
         
         <!-- Main Grid -->
@@ -148,7 +148,7 @@
                         </div>
                         
                         <!-- Hidden input to store strategy -->
-                        <input type="hidden" name="name_strategy" x-model="strategy">
+                        <input type="hidden" name="name_strategy" id="name_strategy" x-model="strategy">
 
                     </div>
                 </div>
@@ -280,7 +280,9 @@
 <script>
     function mappingLogic() {
         return {
-            strategy: 'single',
+            // Si el análisis detectó una columna de apellidos, arrancamos ya en
+            // "Dos Columnas (Separados)" — no obligamos a cambiar de tab a mano.
+            strategy: '{% if suggestions.apellidos %}split{% else %}single{% endif %}',
             colCedula: '{% if suggestions.cedula %}{{ suggestions.cedula }}{% endif %}',
             colEmail: '{% if suggestions.email %}{{ suggestions.email }}{% endif %}',
             

@@ -58,6 +58,20 @@
             </table>
         </div>
     </div>
+
+    <!-- Paginación -->
+    <div id="pagination-bar" class="hidden flex flex-wrap items-center justify-between gap-3 mt-4 px-2">
+        <p class="text-xs text-gray-500 dark:text-gray-400"><span id="page-range"></span></p>
+        <div class="flex items-center gap-2">
+            <button id="prev-btn" onclick="goPage(-1)" class="px-4 py-2 text-sm font-bold rounded-xl bg-white dark:bg-[#0F163A] border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                <i class="fa-solid fa-chevron-left mr-1"></i> Anterior
+            </button>
+            <span id="page-info" class="text-sm font-bold text-gray-700 dark:text-gray-200 px-2"></span>
+            <button id="next-btn" onclick="goPage(1)" class="px-4 py-2 text-sm font-bold rounded-xl bg-white dark:bg-[#0F163A] border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                Siguiente <i class="fa-solid fa-chevron-right ml-1"></i>
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -117,32 +131,69 @@ function renderRow(p) {
     </tr>`;
 }
 
+// Paginación client-side: traemos TODOS los participantes (siguiendo las
+// páginas de la API) y paginamos de a 20 en el navegador.
+let ALL = [];
+let curPage = 1;
+const PER = 20;
+
 async function loadParticipants(query = '') {
     const tbody = document.getElementById('participants-tbody');
+    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Cargando participantes…</td></tr>`;
+    document.getElementById('pagination-bar').classList.add('hidden');
     try {
-        const url = '/api/v1/admin/participants/' + (query ? `?search=${encodeURIComponent(query)}` : '');
-        const res = await fetch(url, { credentials: 'same-origin' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        const list = data.results || data;
-        document.getElementById('stat-total').textContent = data.count ?? list.length;
-
-        if (list.length === 0) {
-            tbody.innerHTML = `
-                <tr><td colspan="5" class="px-6 py-20 text-center">
-                    <div class="w-20 h-20 bg-gray-50 dark:bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                        <i class="fa-solid fa-user-slash text-3xl text-gray-300"></i>
-                    </div>
-                    <h3 class="text-lg font-black text-gray-800 dark:text-white">Sin resultados</h3>
-                    <p class="text-gray-500 text-sm mt-1">No se encontraron participantes con el criterio de búsqueda.</p>
-                </td></tr>`;
-            return;
+        let url = '/api/v1/admin/participants/' + (query ? `?search=${encodeURIComponent(query)}` : '');
+        ALL = [];
+        let count = null;
+        while (url) {
+            const res = await fetch(url, { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            if (Array.isArray(data)) { ALL = data; url = null; }
+            else { ALL = ALL.concat(data.results || []); count = data.count ?? count; url = data.next; }
         }
-        tbody.innerHTML = list.map(renderRow).join('');
+        document.getElementById('stat-total').textContent = count ?? ALL.length;
+        curPage = 1;
+        renderPage();
     } catch (err) {
         console.error(err);
         tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-red-500">Error al cargar participantes</td></tr>`;
     }
+}
+
+function renderPage() {
+    const tbody = document.getElementById('participants-tbody');
+    const bar = document.getElementById('pagination-bar');
+    if (ALL.length === 0) {
+        tbody.innerHTML = `
+            <tr><td colspan="5" class="px-6 py-20 text-center">
+                <div class="w-20 h-20 bg-gray-50 dark:bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <i class="fa-solid fa-user-slash text-3xl text-gray-300"></i>
+                </div>
+                <h3 class="text-lg font-black text-gray-800 dark:text-white">Sin resultados</h3>
+                <p class="text-gray-500 text-sm mt-1">No se encontraron participantes con el criterio de búsqueda.</p>
+            </td></tr>`;
+        bar.classList.add('hidden');
+        return;
+    }
+    const totalPages = Math.ceil(ALL.length / PER);
+    if (curPage > totalPages) curPage = totalPages;
+    const start = (curPage - 1) * PER;
+    const slice = ALL.slice(start, start + PER);
+    tbody.innerHTML = slice.map(renderRow).join('');
+
+    if (totalPages <= 1) { bar.classList.add('hidden'); return; }
+    bar.classList.remove('hidden');
+    document.getElementById('page-info').textContent = `Página ${curPage} de ${totalPages}`;
+    document.getElementById('page-range').textContent = `Mostrando ${start + 1}–${Math.min(start + PER, ALL.length)} de ${ALL.length}`;
+    document.getElementById('prev-btn').disabled = curPage === 1;
+    document.getElementById('next-btn').disabled = curPage === totalPages;
+}
+
+function goPage(delta) {
+    curPage += delta;
+    renderPage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function deleteParticipant(id) {

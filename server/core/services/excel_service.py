@@ -243,11 +243,15 @@ def procesar_archivo_excel_lote_business(lote_id, mapping=None):
                 # We need to save first to get IDs if needed, but for sending email we have the objects.
                 # However, bulk_create on SQLite/Postgres returns objects with IDs.
                 created_certs = Certificate.objects.bulk_create(certificates_to_create)
-                
-                # Send Emails (Async/Threaded inside the service)
-                from core.services.email_service import send_certificate_email
-                for cert in created_certs:
-                    send_certificate_email(cert)
+
+                # Enviar el MISMO correo branded que usa todo el aplicativo
+                # (plantilla + cuenta institucional por Gmail API), de forma
+                # asíncrona y solo DESPUÉS de confirmar la transacción, para que
+                # el worker vea los certificados ya guardados.
+                from core.tasks.email_tasks import send_certificate_issued_bulk
+                transaction.on_commit(
+                    lambda: send_certificate_issued_bulk.delay(batch_id=batch.id)
+                )
                 
             return True, f"Se procesaron {created_count} participantes exitosamente."
 
