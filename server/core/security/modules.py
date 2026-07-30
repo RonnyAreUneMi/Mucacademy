@@ -25,7 +25,7 @@ MODULES = [
     {'slug': 'diseno',        'label': 'Diseño de certificados', 'area': AREA_PANEL, 'icon': 'fa-palette'},
     {'slug': 'firmas',        'label': 'Firmas institucionales', 'area': AREA_PANEL, 'icon': 'fa-signature'},
     {'slug': 'auditoria',     'label': 'Auditoría',              'area': AREA_PANEL, 'icon': 'fa-clipboard-list'},
-    {'slug': 'usuarios',      'label': 'Usuarios',               'area': AREA_PANEL, 'icon': 'fa-users-cog'},
+    {'slug': 'usuarios',      'label': 'Docentes',               'area': AREA_PANEL, 'icon': 'fa-users-cog'},
     {'slug': 'solicitudes',   'label': 'Solicitudes de acceso',  'area': AREA_PANEL, 'icon': 'fa-user-clock'},
     {'slug': 'design_system', 'label': 'Design System',          'area': AREA_PANEL, 'icon': 'fa-swatchbook'},
     {'slug': 'ai_config',     'label': 'Configuración IA',       'area': AREA_PANEL, 'icon': 'fa-microchip'},

@@ -119,7 +119,11 @@ def nav_menu(request):
             'icon': 'fa-gears',
             'color': '#8B5CF6',
             'match_keywords': ['solicitudes', 'firma', 'design', 'ai_config', 'usuarios', 'titulos', 'google', 'modelado'],
-            'visible': is_superadmin,
+            # Visible por PERMISO (no solo superadmin): cada item se filtra por
+            # user_can, y el grupo aparece solo si el usuario tiene al menos uno.
+            # Así, si el superadmin le da a un docente acceso (p. ej. Configuración),
+            # ese módulo se le construye en el menú al instante.
+            'visible': True,
             'sections': [
                 {
                     'title': 'Configuración',
@@ -136,7 +140,7 @@ def nav_menu(request):
                     'items': [
                         {'label': 'Diseño de certificados', 'icon': 'fa-palette',    'url': _safe_url('panel:design_global'),           'color': 'success', 'module': 'diseno'},
                         {'label': 'Solicitudes',            'icon': 'fa-user-clock', 'url': _safe_url('panel:solicitudes_pendientes'),  'badge': 'pendientes_count', 'color': 'warning', 'module': 'solicitudes'},
-                        {'label': 'Usuarios',               'icon': 'fa-users-cog',  'url': _safe_url('panel:usuarios_list'),           'color': 'info', 'module': 'usuarios'},
+                        {'label': 'Docentes',               'icon': 'fa-users-cog',  'url': _safe_url('panel:usuarios_list'),           'color': 'info', 'module': 'usuarios'},
                     ],
                 },
                 {
