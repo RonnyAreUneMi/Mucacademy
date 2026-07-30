@@ -207,7 +207,14 @@ STORAGES = {
     },
 }
 
-SITE_URL = os.getenv('SITE_URL', 'http://localhost:8001')
+# URL pública del sitio — se incrusta en el QR de los certificados, en los
+# correos y en la verificación. Prioridad:
+#   1) variable SITE_URL explícita (p. ej. un dominio propio)
+#   2) dominio público que Railway inyecta automáticamente en producción
+#   3) localhost para desarrollo
+SITE_URL = os.getenv('SITE_URL') or (
+    f'https://{RAILWAY_PUBLIC_DOMAIN}' if RAILWAY_PUBLIC_DOMAIN else 'http://localhost:8500'
+)
 
 # ── Sentry (opcional, solo si SENTRY_DSN está configurado en producción) ──
 SENTRY_DSN = os.getenv('SENTRY_DSN', '')
