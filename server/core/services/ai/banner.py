@@ -216,14 +216,52 @@ def compose_banner(bg_bytes: bytes, title: str) -> bytes:
     return out.getvalue()
 
 
+def _fallback_background(size=(CANVAS_W, CANVAS_H)) -> bytes:
+    """Fondo branded generado LOCALMENTE (sin IA): degradado azul marca con un
+    glow naranja. Se usa cuando la IA de imagen no está disponible (sin crédito
+    de OpenAI, sin proveedor, etc.), para que el banner siempre se genere."""
+    from PIL import Image, ImageChops, ImageDraw, ImageFilter
+
+    W, H = size
+    top = (28, 42, 99)   # navy un poco más claro arriba (#1c2a63)
+    grad = Image.new('RGB', (1, H))
+    for y in range(H):
+        t = y / H
+        grad.putpixel((0, y), tuple(int(top[i] + (NAVY[i] - top[i]) * t) for i in range(3)))
+    base = grad.resize((W, H))
+
+    # Glow naranja difuso (esquina superior derecha).
+    glow = Image.new('RGB', (W, H), (0, 0, 0))
+    gd = ImageDraw.Draw(glow)
+    gx, gy, gr = int(W * 0.80), int(H * 0.26), int(W * 0.28)
+    gd.ellipse([gx - gr, gy - gr, gx + gr, gy + gr],
+               fill=(int(ORANGE[0] * 0.55), int(ORANGE[1] * 0.42), int(ORANGE[2] * 0.30)))
+    glow = glow.filter(ImageFilter.GaussianBlur(130))
+    base = ImageChops.add(base, glow)
+
+    out = BytesIO()
+    base.save(out, format='PNG', optimize=True)
+    return out.getvalue()
+
+
 def generate_event_banner(title: str, custom_prompt: str = '') -> dict:
     """Genera el banner completo. Devuelve dict con base64 listo para el form.
 
+    Si la IA de imagen no está disponible (sin crédito/proveedor), cae a un
+    fondo branded local — el banner SIEMPRE se genera.
+
     {'implemented': True, 'image_base64': '<data:image/png;base64,...>',
-     'prompt': '<prompt usado>', 'filename': 'banner-...png'}
+     'prompt': '<prompt usado>', 'ai_background': bool, 'filename': 'banner-...png'}
     """
     prompt = build_prompt(title, custom_prompt)
-    bg = _generate_background(prompt)
+    ai_background = True
+    try:
+        bg = _generate_background(prompt)
+    except Exception as exc:  # noqa: BLE001 — sin IA usamos el fondo local
+        import logging
+        logging.getLogger(__name__).info('Banner sin IA (fondo local): %s', exc)
+        bg = _fallback_background()
+        ai_background = False
     png = compose_banner(bg, title)
     b64 = base64.b64encode(png).decode('ascii')
     slug = ''.join(c if c.isalnum() else '-' for c in (title or 'evento').lower())[:40].strip('-')
@@ -231,5 +269,6 @@ def generate_event_banner(title: str, custom_prompt: str = '') -> dict:
         'implemented': True,
         'image_base64': f'data:image/png;base64,{b64}',
         'prompt': prompt,
+        'ai_background': ai_background,
         'filename': f'banner-ia-{slug or "evento"}.png',
     }
