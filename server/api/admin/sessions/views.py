@@ -1,3 +1,4 @@
+import logging
 import os
 import uuid
 from datetime import datetime
@@ -29,6 +30,8 @@ from .serializers import (
     SesionWriteSerializer,
     ConfirmacionSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class SesionViewSet(AuditedModelViewSet):
@@ -350,21 +353,26 @@ class SesionViewSet(AuditedModelViewSet):
 
         # ── Notificación por correo a cada participante (async vía Celery) ──
         # En vez de bloquear el request mientras se envían N correos, despachamos
-        # una task de Celery que itera y envía. En desarrollo sin Redis, EAGER
-        # mode hace que corra inmediatamente sincrónica (mismo comportamiento).
-        send_certificate_issued_bulk.delay(batch_id=lote.id)
-
-        # Si el curso pertenece a un programa, revisamos (async) qué
-        # participantes completaron TODOS los cursos → cert de programa.
-        if sesion.program_id:
-            from core.tasks.program_tasks import issue_program_certificates_for_event
-            issue_program_certificates_for_event.delay(event_id=sesion.id)
+        # una task de Celery que itera y envía. Envolvemos el encolado en
+        # try/except: si el broker (Redis) está lento o caído, NO debe colgar
+        # ni tumbar la respuesta — el lote ya quedó creado.
+        emails_queued = len(certs)
+        try:
+            send_certificate_issued_bulk.delay(batch_id=lote.id)
+            # Si el curso pertenece a un programa, revisamos (async) qué
+            # participantes completaron TODOS los cursos → cert de programa.
+            if sesion.program_id:
+                from core.tasks.program_tasks import issue_program_certificates_for_event
+                issue_program_certificates_for_event.delay(event_id=sesion.id)
+        except Exception as e:
+            logger.warning('No se pudo encolar tareas del lote %s: %s', lote.id, e)
+            emails_queued = 0
 
         return Response({
             'ok': True,
             'batch_id': lote.id,
             'batch_name': lote.name,
             'certificates_created': len(certs),
-            'emails_queued': len(certs),
+            'emails_queued': emails_queued,
             'excluded_no_quiz': excluidos,
         })

@@ -36,13 +36,20 @@
 
             <div>
                 <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Facultad</label>
-                <select name="facultad" class="w-full p-3 rounded-xl bg-gray-50 dark:bg-[#0F163A]/50 border border-gray-200 dark:border-blue-900/30 text-gray-800 dark:text-white font-medium focus:outline-none focus:border-[#F58830]">
-                    <option value="FACI">FACI - Ingeniería</option>
-                    <option value="FACS">FACS - Salud</option>
-                    <option value="FACE">FACE - Educación</option>
-                    <option value="FACSECYD">FACSECYD - Ciencias Sociales</option>
-                    <option value="POSGRADO">Posgrado / Otra</option>
-                </select>
+                <div class="ds-select relative" id="facultadSelect">
+                    <input type="hidden" name="facultad" value="FACI">
+                    <button type="button" class="ds-select-btn w-full flex items-center justify-between gap-2 p-3 rounded-xl bg-gray-50 dark:bg-[#0F163A]/50 border border-gray-200 dark:border-blue-900/30 text-gray-800 dark:text-white font-medium hover:border-[#F58830] focus:outline-none focus:border-[#F58830] transition-colors cursor-pointer">
+                        <span class="ds-select-val">FACI - Ingeniería</span>
+                        <i class="fa-solid fa-chevron-down text-gray-400 text-xs transition-transform"></i>
+                    </button>
+                    <div class="ds-select-menu hidden absolute left-0 right-0 z-40 mt-1.5 rounded-xl bg-white dark:bg-[#162054] border border-gray-100 dark:border-blue-900/40 shadow-xl overflow-hidden py-1">
+                        <button type="button" data-val="FACI" class="ds-select-opt w-full text-left px-4 py-2.5 text-sm font-bold text-[#F58830] bg-[#F58830]/10 transition-colors">FACI - Ingeniería</button>
+                        <button type="button" data-val="FACS" class="ds-select-opt w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-[#F58830]/10 hover:text-[#F58830] transition-colors">FACS - Salud</button>
+                        <button type="button" data-val="FACE" class="ds-select-opt w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-[#F58830]/10 hover:text-[#F58830] transition-colors">FACE - Educación</button>
+                        <button type="button" data-val="FACSECYD" class="ds-select-opt w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-[#F58830]/10 hover:text-[#F58830] transition-colors">FACSECYD - Ciencias Sociales</button>
+                        <button type="button" data-val="POSGRADO" class="ds-select-opt w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-[#F58830]/10 hover:text-[#F58830] transition-colors">Posgrado / Otra</button>
+                    </div>
+                </div>
             </div>
 
             <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-blue-700 dark:text-blue-300 text-sm">
@@ -77,6 +84,38 @@
     const errorBox = document.getElementById('genBatchError');
     const sesionId = form.dataset.sesionId;
     const csrf     = form.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // Select branded (Design System) para la Facultad — reemplaza al nativo.
+    const fac = document.getElementById('facultadSelect');
+    if (fac) {
+        const fBtn  = fac.querySelector('.ds-select-btn');
+        const fMenu = fac.querySelector('.ds-select-menu');
+        const fVal  = fac.querySelector('.ds-select-val');
+        const fInp  = fac.querySelector('input[name=facultad]');
+        const fChev = fBtn.querySelector('i');
+        fBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const open = fMenu.classList.toggle('hidden');
+            if (fChev) fChev.style.transform = open ? '' : 'rotate(180deg)';
+        });
+        fMenu.querySelectorAll('.ds-select-opt').forEach(o => {
+            o.addEventListener('click', () => {
+                fInp.value = o.dataset.val;
+                fVal.textContent = o.textContent;
+                fMenu.querySelectorAll('.ds-select-opt').forEach(x =>
+                    x.classList.remove('text-[#F58830]', 'bg-[#F58830]/10'));
+                o.classList.add('text-[#F58830]', 'bg-[#F58830]/10');
+                fMenu.classList.add('hidden');
+                if (fChev) fChev.style.transform = '';
+            });
+        });
+        document.addEventListener('click', (e) => {
+            if (!fac.contains(e.target)) {
+                fMenu.classList.add('hidden');
+                if (fChev) fChev.style.transform = '';
+            }
+        });
+    }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();

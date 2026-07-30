@@ -29,7 +29,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-_h4c*viqm#nm*7jr($qtcf=rt=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,*').split(',') if h.strip()]
 
 # Railway provides this automatically
 RAILWAY_PUBLIC_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN')
@@ -309,6 +309,12 @@ CELERY_BROKER_URL     = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/1')
 CELERY_TASK_ALWAYS_EAGER  = os.getenv('CELERY_TASK_ALWAYS_EAGER', 'False') == 'True' or DEBUG and not os.getenv('CELERY_BROKER_URL')
 CELERY_TASK_EAGER_PROPAGATES = True
+# Publicar una tarea al broker NUNCA debe colgar la petición web: si Redis está
+# lento o caído, que falle rápido (lo capturamos) en vez de dejar el request
+# colgado esperando la conexión. Esto evita el spinner infinito al generar lotes.
+CELERY_BROKER_TRANSPORT_OPTIONS = {'socket_timeout': 3, 'socket_connect_timeout': 3}
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
+CELERY_BROKER_CONNECTION_MAX_RETRIES = 0
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
