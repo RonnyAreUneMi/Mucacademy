@@ -75,7 +75,30 @@ def _betto_summary(ev):
 
 
 def _q(kind, text, options, correct, expl):
-    return dict(kind=kind, text=text, options=options, correct_idx=correct, explanation=expl)
+    # Formato canónico que consume el cuestionario del evento: type/question.
+    return dict(type=kind, question=text, options=options, correct_idx=correct, explanation=expl)
+
+
+def _normalize_quiz(quiz):
+    """Convierte quizzes con claves viejas (kind/text) al formato del front
+    (type/question). Devuelve (quiz_normalizado, cambió)."""
+    if not isinstance(quiz, list):
+        return quiz, False
+    changed = False
+    out = []
+    for q in quiz:
+        if not isinstance(q, dict):
+            out.append(q)
+            continue
+        nq = dict(q)
+        if 'question' not in nq and 'text' in nq:
+            nq['question'] = nq.pop('text')
+            changed = True
+        if 'type' not in nq and 'kind' in nq:
+            nq['type'] = nq.pop('kind')
+            changed = True
+        out.append(nq)
+    return out, changed
 
 
 # Distractores genéricos (temas claramente ajenos) para las preguntas de opción.
@@ -181,6 +204,7 @@ class Command(BaseCommand):
         creados = 0
         alargados = 0
         quizzes = 0
+        normalizados = 0
         for ev in Event.objects.filter(is_active=True):
             md, key_points, next_steps = _betto_summary(ev)
             summ = existentes.get(ev.id)
@@ -212,6 +236,14 @@ class Command(BaseCommand):
                 summ.quiz = _betto_quiz(ev)
                 dirty = True
                 quizzes += 1
+            else:
+                # Normalizar claves viejas (kind/text → type/question) para que
+                # el cuestionario no muestre "undefined".
+                nq, changed = _normalize_quiz(summ.quiz)
+                if changed:
+                    summ.quiz = nq
+                    dirty = True
+                    normalizados += 1
 
             if dirty:
                 summ.status = ProcessingStatus.READY
@@ -224,4 +256,5 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'Resúmenes de Betto creados: {creados}'))
         self.stdout.write(self.style.SUCCESS(f'Resúmenes cortos alargados: {alargados}'))
         self.stdout.write(self.style.SUCCESS(f'Quizzes de práctica generados: {quizzes}'))
+        self.stdout.write(self.style.SUCCESS(f'Quizzes normalizados (kind/text → type/question): {normalizados}'))
         self.stdout.write(self.style.SUCCESS('Listo. Datos actualizados sin borrar nada.'))
