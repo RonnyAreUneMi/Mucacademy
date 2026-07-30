@@ -8,6 +8,7 @@ Hace dos cosas:
 Es idempotente: se puede correr varias veces sin duplicar ni dañar datos.
 Uso:  python manage.py arreglar_seed
 """
+import random
 import re
 
 from django.core.management.base import BaseCommand
@@ -73,6 +74,66 @@ def _betto_summary(ev):
     return md, key_points, next_steps
 
 
+def _q(kind, text, options, correct, expl):
+    return dict(kind=kind, text=text, options=options, correct_idx=correct, explanation=expl)
+
+
+# Distractores genéricos (temas claramente ajenos) para las preguntas de opción.
+_DISTRACTORES = [
+    'Mantenimiento de hardware de servidores',
+    'Contabilidad de costos empresariales',
+    'Gestión de inventarios físicos',
+    'Redacción de documentos jurídicos',
+    'Diseño de interiores y mobiliario',
+    'Logística de transporte terrestre',
+    'Protocolo y organización de eventos sociales',
+]
+
+
+def _betto_quiz(ev):
+    """Genera un quiz de práctica a partir del título y las habilidades del evento.
+    Determinista por evento (misma semilla → mismo quiz)."""
+    skills = [s for s in (ev.skills if isinstance(ev.skills, list) else []) if s][:3]
+    title = ev.title
+    rnd = random.Random(ev.id)
+    preguntas = []
+
+    for sk in skills:
+        opciones = rnd.sample(_DISTRACTORES, 3) + [sk]
+        rnd.shuffle(opciones)
+        preguntas.append(_q(
+            'mcq',
+            f'¿Cuál de los siguientes fue uno de los temas trabajados en “{title}”?',
+            opciones, opciones.index(sk),
+            f'“{sk}” fue una de las competencias centrales de la sesión.',
+        ))
+
+    if skills:
+        preguntas.append(_q(
+            'boolean',
+            f'En la sesión se abordó **{skills[0]}**.',
+            ['Verdadero', 'Falso'], 0,
+            'Verdadero: fue uno de los ejes de la sesión.',
+        ))
+
+    preguntas.append(_q(
+        'boolean',
+        f'La sesión “{title}” se centró exclusivamente en temas ajenos a su título.',
+        ['Verdadero', 'Falso'], 1,
+        'Falso: la sesión se centró en el tema de su título.',
+    ))
+
+    # Si el evento no tenía habilidades, garantizamos al menos 2 preguntas útiles.
+    if not skills:
+        preguntas.insert(0, _q(
+            'boolean',
+            f'El seminario “{title}” incluyó ejemplos prácticos aplicados.',
+            ['Verdadero', 'Falso'], 0,
+            'Verdadero: se combinó teoría con práctica.',
+        ))
+    return preguntas
+
+
 class Command(BaseCommand):
     help = 'Quita el prefijo "[Seed]" de los nombres y agrega resumen de Betto a los eventos que no tengan.'
 
@@ -114,44 +175,53 @@ class Command(BaseCommand):
         if opts['solo_nombres']:
             return
 
-        # 2) Resumen de Betto: crear los que faltan y ALARGAR los cortos.
+        # 2) Resumen de Betto (crear/alargar) + quiz de práctica en cada evento.
         MIN_LEN = 400   # summaries por debajo de esto se consideran "cortos"
         existentes = {s.event_id: s for s in SessionSummary.objects.all()}
         creados = 0
         alargados = 0
+        quizzes = 0
         for ev in Event.objects.filter(is_active=True):
             md, key_points, next_steps = _betto_summary(ev)
             summ = existentes.get(ev.id)
-
-            texto = summ.summary_md or '' if summ else ''
-            # Genéricas de una versión anterior (frase característica) o muy cortas.
-            es_generica_vieja = 'resume los puntos centrales' in texto
-            if summ is None:
+            nuevo = summ is None
+            if nuevo:
                 summ = SessionSummary(event=ev)
                 summ.quiz = []
-                accion = 'crear'
-            elif es_generica_vieja or len(texto) < MIN_LEN:
-                accion = 'alargar'   # preservamos el quiz existente
-            else:
-                continue
 
-            summ.status = ProcessingStatus.READY
-            summ.summary_md = md
-            summ.key_points = key_points
-            summ.next_steps = next_steps
-            summ.transcript_raw = md
-            summ.transcript_chars = len(md)
-            summ.duration_minutes = (ev.hours or 0) * 60
-            if not summ.ai_model:
-                summ.ai_model = 'gpt-4o-mini'
-            if not summ.processed_at:
-                summ.processed_at = timezone.now()
-            summ.save()
-            if accion == 'crear':
-                creados += 1
-            else:
-                alargados += 1
+            texto = summ.summary_md or ''
+            es_generica_vieja = 'resume los puntos centrales' in texto
+            dirty = False
+
+            # Resumen: crear si es nuevo, o alargar si es corto/genérico viejo.
+            if nuevo or es_generica_vieja or len(texto) < MIN_LEN:
+                summ.summary_md = md
+                summ.key_points = key_points
+                summ.next_steps = next_steps
+                summ.transcript_raw = md
+                summ.transcript_chars = len(md)
+                summ.duration_minutes = (ev.hours or 0) * 60
+                dirty = True
+                if nuevo:
+                    creados += 1
+                else:
+                    alargados += 1
+
+            # Quiz de práctica: generar si está vacío (preserva los existentes).
+            if not (summ.quiz or []):
+                summ.quiz = _betto_quiz(ev)
+                dirty = True
+                quizzes += 1
+
+            if dirty:
+                summ.status = ProcessingStatus.READY
+                if not summ.ai_model:
+                    summ.ai_model = 'gpt-4o-mini'
+                if not summ.processed_at:
+                    summ.processed_at = timezone.now()
+                summ.save()
 
         self.stdout.write(self.style.SUCCESS(f'Resúmenes de Betto creados: {creados}'))
         self.stdout.write(self.style.SUCCESS(f'Resúmenes cortos alargados: {alargados}'))
+        self.stdout.write(self.style.SUCCESS(f'Quizzes de práctica generados: {quizzes}'))
         self.stdout.write(self.style.SUCCESS('Listo. Datos actualizados sin borrar nada.'))
