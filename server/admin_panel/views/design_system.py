@@ -10,7 +10,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from core.models import UIDesignTokens
-from ._shared import superadmin_required, _log_audit
+from ._shared import admin_required, _log_audit
 from core.security.decorators import module_required
 
 
@@ -37,7 +37,7 @@ FLOAT_FIELDS = (
 )
 
 
-@superadmin_required
+@admin_required
 @module_required('design_system')
 def design_system_edit(request):
     """Pantalla del Design System. GET muestra el form; POST guarda."""
@@ -63,7 +63,7 @@ def design_system_edit(request):
     return render(request, 'panel/design_system/edit.html', {'tokens': tokens})
 
 
-@superadmin_required
+@admin_required
 @require_POST
 @module_required('design_system', 'editar')
 def design_system_reset(request):

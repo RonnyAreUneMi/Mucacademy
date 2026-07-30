@@ -12,10 +12,10 @@ from django.views.decorators.http import require_POST
 from core.models import Certificate, Signature, CertificateBatch
 from core.models.catalogs.enums import CertificateKind
 from core.services.pdf_service import generate_certificate_pdf
-from ._shared import superadmin_required, _log_audit
+from ._shared import admin_required, _log_audit
 from core.security.decorators import module_required
 
-@superadmin_required
+@admin_required
 @module_required('diseno')
 def design_global(request):
     """
@@ -118,7 +118,7 @@ def design_global(request):
     })
 
 
-@superadmin_required
+@admin_required
 @require_POST
 @module_required('diseno', 'editar')
 def design_save_firma_pos(request):
@@ -150,7 +150,7 @@ def design_save_firma_pos(request):
     return JsonResponse({'ok': True})
 
 
-@superadmin_required
+@admin_required
 @xframe_options_exempt
 @module_required('diseno')
 def design_global_preview(request):

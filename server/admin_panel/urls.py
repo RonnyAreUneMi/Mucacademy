@@ -62,6 +62,14 @@ def superadmin_page(template, module=None):
     return login_required(user_passes_test(_is_superadmin)(view))
 
 
+def module_page(template, module):
+    """Shell HTML gateado por PERMISO de módulo: login + acceso al panel (admin)
+    + permiso `ver` sobre el módulo. El superadmin siempre pasa; un docente pasa
+    solo si el superadmin le concedió el módulo en la pantalla de Seguridad."""
+    view = module_required(module)(TemplateView.as_view(template_name=template))
+    return login_required(user_passes_test(_is_admin)(view))
+
+
 urlpatterns = [
     # Auth
     path('login/', CustomLoginView.as_view(), name='login'),
@@ -96,7 +104,7 @@ urlpatterns = [
     # Design System (UI tokens — colores, fuentes, botones del panel)
     path('design-system/', design_system_edit, name='design_system'),
     path('design-system/reset/', design_system_reset, name='design_system_reset'),
-    path('design-system/componentes/', superadmin_page('panel/design_system/componentes.html', 'design_system'), name='componentes'),
+    path('design-system/componentes/', module_page('panel/design_system/componentes.html', 'design_system'), name='componentes'),
 
     # Certificates (form add)
     path('batches/<int:id>/add-certificate/', add_certificate, name='add_certificate'),
@@ -144,10 +152,10 @@ urlpatterns = [
     #      name='lideres_remove'),
 
     # Modelado de datos (ERD interactivo)
-    path('modelado/', superadmin_page('panel/sistema/modelado.html', 'modelado'), name='modelado_datos'),
+    path('modelado/', module_page('panel/sistema/modelado.html', 'modelado'), name='modelado_datos'),
 
     # Bitácora del proyecto (backlog / tablero de tareas con estados)
-    path('bitacora/', superadmin_page('panel/sistema/bitacora.html', 'bitacora'), name='bitacora'),
+    path('bitacora/', module_page('panel/sistema/bitacora.html', 'bitacora'), name='bitacora'),
 
     # Títulos académicos (catálogo)
     path('titulos/', titulos_list, name='titulos_list'),
@@ -157,7 +165,7 @@ urlpatterns = [
 
     # ── Pages migradas a shell + API ──────────────────────────
     # Usuarios (superadmin)
-    path('usuarios/', superadmin_page('panel/usuarios/list.html', 'usuarios'), name='usuarios_list'),
+    path('usuarios/', module_page('panel/usuarios/list.html', 'usuarios'), name='usuarios_list'),
     path('usuarios/<int:id>/reset-password/',
          RedirectView.as_view(url='/api/v1/admin/users/%(id)s/reset-password/', permanent=False),
          name='usuario_reset_password'),
@@ -173,7 +181,7 @@ urlpatterns = [
          name='participante_delete'),
 
     # Firmas (list + delete shell; create/edit siguen con forms)
-    path('firmas/', superadmin_page('panel/firmas/list.html', 'firmas'), name='firma_list'),
+    path('firmas/', module_page('panel/firmas/list.html', 'firmas'), name='firma_list'),
     path('firmas/new/', views_firmas.firma_create, name='firma_create'),
     path('firmas/<int:id>/edit/', views_firmas.firma_edit, name='firma_edit'),
     path('firmas/<int:id>/delete/',

@@ -18,12 +18,12 @@ from django.views.decorators.http import require_http_methods
 from core.models import GoogleCredential
 from core.services.meet import oauth as goauth
 
-from ._shared import _is_superadmin, _log_audit
+from ._shared import _is_admin, _is_superadmin, _log_audit
 from core.security.decorators import module_required
 
 
 @login_required
-@user_passes_test(_is_superadmin)
+@user_passes_test(_is_admin)
 @module_required('google')
 def google_config(request):
     """Pantalla de administración de la integración Google Cloud (Meet/Calendar/Drive)."""

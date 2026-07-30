@@ -9,12 +9,12 @@ from django.shortcuts import render
 
 from core.models import AIConfig
 
-from ._shared import _is_superadmin
+from ._shared import _is_admin
 from core.security.decorators import module_required
 
 
 @login_required
-@user_passes_test(_is_superadmin)
+@user_passes_test(_is_admin)
 @module_required('ai_config')
 def ai_config(request):
     """Shell de la config IA. Los datos (proveedores + prompts) los trae el JS

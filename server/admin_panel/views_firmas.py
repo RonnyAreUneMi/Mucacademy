@@ -6,12 +6,12 @@ from core.models import Signature
 from core.security.decorators import module_required
 
 
-def _is_superadmin(user):
-    return user.is_authenticated and user.role == 'superadmin'
+def _is_admin(user):
+    return user.is_authenticated and user.role in ('admin', 'superadmin')
 
 
 @login_required
-@user_passes_test(_is_superadmin)
+@user_passes_test(_is_admin)
 @module_required('firmas', 'crear')
 def firma_create(request):
     return render(request, 'panel/firmas/form.html', {
@@ -20,7 +20,7 @@ def firma_create(request):
 
 
 @login_required
-@user_passes_test(_is_superadmin)
+@user_passes_test(_is_admin)
 @module_required('firmas', 'editar')
 def firma_edit(request, id):
     return render(request, 'panel/firmas/form.html', {
@@ -30,7 +30,7 @@ def firma_edit(request, id):
 
 
 @login_required
-@user_passes_test(_is_superadmin)
+@user_passes_test(_is_admin)
 @module_required('firmas', 'eliminar')
 def firma_delete(request, id):
     """Legacy: eliminar ahora es DELETE al API desde el template de lista."""

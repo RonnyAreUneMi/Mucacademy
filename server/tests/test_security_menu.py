@@ -154,6 +154,35 @@ def test_docente_con_permiso_ve_el_modulo_de_config():
 
 
 @pytest.mark.django_db
+def test_docente_abre_la_pagina_solo_con_permiso(client):
+    """El fix de fondo: la PÁGINA (no solo el menú) respeta el permiso.
+    Sin permiso → redirige al dashboard; con permiso → 200."""
+    docente = UserFactory(role='admin')
+    docente.set_password('x'); docente.save()
+    client.force_login(docente)
+
+    url = '/panel/design-system/componentes/'   # módulo 'design_system'
+
+    # Sin permiso (profesor default = NONE) → rebota al dashboard.
+    r1 = client.get(url)
+    assert r1.status_code == 302
+    assert '/panel/' in r1['Location']
+
+    # El superadmin le concede el módulo → ahora entra (200).
+    _grant('profesor', 'design_system', can_view=True)
+    r2 = client.get(url)
+    assert r2.status_code == 200
+
+
+@pytest.mark.django_db
+def test_superadmin_abre_la_pagina_siempre(client):
+    sa = SuperAdminFactory()
+    sa.set_password('x'); sa.save()
+    client.force_login(sa)
+    assert client.get('/panel/design-system/componentes/').status_code == 200
+
+
+@pytest.mark.django_db
 def test_docente_no_gestiona_la_pantalla_de_seguridad():
     """La asignación de permisos (grupo 'Seguridad') sigue siendo solo del
     superadmin: el docente nunca la ve, aunque reciba otros módulos."""

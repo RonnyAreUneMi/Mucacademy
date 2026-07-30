@@ -7,7 +7,7 @@ from django.views.decorators.http import require_http_methods
 
 from core.models import AccessRequest, User
 from core.security.decorators import module_required
-from ._shared import superadmin_required, _log_audit
+from ._shared import admin_required, superadmin_required, _log_audit
 
 class CustomLoginView(DjangoLoginView):
     """Custom login view that checks for pending access requests"""
@@ -123,7 +123,7 @@ def mi_estado(request):
     return render(request, 'panel/auth/mi_estado.html', context)
 
 
-@superadmin_required
+@admin_required
 @module_required('solicitudes')
 def solicitudes_pendientes(request):
     """Admin view: lista de solicitudes de acceso pendientes"""
@@ -152,7 +152,7 @@ def solicitudes_pendientes(request):
     return render(request, 'panel/solicitudes/pendientes.html', context)
 
 
-@superadmin_required
+@admin_required
 @require_http_methods(["POST"])
 @module_required('solicitudes', 'editar')
 def aprobar_solicitud(request, id):
@@ -214,7 +214,7 @@ def aprobar_solicitud(request, id):
     return redirect('panel:solicitudes_pendientes')
 
 
-@superadmin_required
+@admin_required
 @require_http_methods(["GET", "POST"])
 @module_required('solicitudes', 'editar')
 def rechazar_solicitud(request, id):
