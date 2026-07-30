@@ -83,11 +83,15 @@ def _generate_background(prompt: str) -> bytes:
 
     client = OpenAI(api_key=rt.api_key)
 
-    # Cuentas distintas tienen distinto modelo de imágenes disponible.
-    # gpt-image-1 (nuevo) devuelve siempre b64; dall-e-3 (anterior) acepta size 1792.
+    # Cuentas distintas tienen distinto modelo de imágenes disponible; probamos
+    # del más nuevo al más compatible:
+    #   - gpt-image-1: el más nuevo, pero requiere ORGANIZACIÓN VERIFICADA en OpenAI.
+    #   - dall-e-3: acepta 1792x1024; no todas las cuentas lo tienen habilitado.
+    #   - dall-e-2: disponible en casi todas las cuentas con crédito (fallback seguro).
     attempts = [
         {'model': 'gpt-image-1', 'size': '1536x1024', 'quality': 'medium'},
         {'model': 'dall-e-3', 'size': '1792x1024', 'quality': 'standard'},
+        {'model': 'dall-e-2', 'size': '1024x1024'},
     ]
     last_exc = None
     for opts in attempts:
@@ -105,7 +109,16 @@ def _generate_background(prompt: str) -> bytes:
             import urllib.request
             with urllib.request.urlopen(url, timeout=60) as r:
                 return r.read()
-    raise RuntimeError(f'No se pudo generar la imagen: {last_exc}')
+
+    # Si NINGÚN modelo de imagen funcionó, casi siempre es la key/cuenta de OpenAI:
+    # sin acceso a imágenes, sin créditos, o key que no es de OpenAI.
+    raise RuntimeError(
+        'No se pudo generar la imagen. La cuenta de OpenAI configurada no tiene '
+        'acceso a los modelos de imagen (gpt-image-1 requiere organización '
+        'verificada; dall-e-3/2 requieren una API key real de OpenAI con crédito). '
+        'Revisá la key del proveedor OpenAI en /panel/ai/config/. '
+        f'Detalle técnico: {last_exc}'
+    )
 
 
 def _wrap_title(draw, text: str, font, max_width: int) -> list[str]:
