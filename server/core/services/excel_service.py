@@ -247,11 +247,17 @@ def procesar_archivo_excel_lote_business(lote_id, mapping=None):
                 # Enviar el MISMO correo branded que usa todo el aplicativo
                 # (plantilla + cuenta institucional por Gmail API), de forma
                 # asíncrona y solo DESPUÉS de confirmar la transacción, para que
-                # el worker vea los certificados ya guardados.
+                # el worker vea los certificados ya guardados. El encolado va en
+                # try/except: si el broker falla, no debe colgar ni romper la carga.
                 from core.tasks.email_tasks import send_certificate_issued_bulk
-                transaction.on_commit(
-                    lambda: send_certificate_issued_bulk.delay(batch_id=batch.id)
-                )
+
+                def _dispatch_emails(bid=batch.id):
+                    try:
+                        send_certificate_issued_bulk.delay(batch_id=bid)
+                    except Exception as e:
+                        print(f"No se pudo encolar correos del lote {bid}: {e}")
+
+                transaction.on_commit(_dispatch_emails)
                 
             return True, f"Se procesaron {created_count} participantes exitosamente."
 

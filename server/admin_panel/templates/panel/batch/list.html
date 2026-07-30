@@ -89,12 +89,9 @@
                                     <i class="fa-solid fa-eye mr-1"></i> Ver
                                 </a>
                                 
-                                <form action="{% url 'panel:batch_delete' lote.id %}" method="post" class="inline delete-lote-form">
-                                    {% csrf_token %}
-                                    <button type="button" onclick="confirmDeleteList(this)" class="text-red-500 hover:text-white hover:bg-red-500 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-2 transition-all border border-transparent hover:border-red-500" title="Eliminar Lote">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </form>
+                                <button type="button" onclick="confirmDeleteList({{ lote.id }}, this)" class="text-red-500 hover:text-white hover:bg-red-500 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-2 transition-all border border-transparent hover:border-red-500" title="Eliminar Lote">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -103,12 +100,30 @@
             </table>
             
             <script>
-                function confirmDeleteList(btn) {
-                    const form = btn.closest('form');
+                function confirmDeleteList(id, btn) {
                     showConfirm({
                         title: 'Eliminar Lote',
                         message: '¿Estás seguro de que deseas eliminar este lote? Todos los certificados asociados también serán borrados.',
-                        callback: () => form.submit()
+                        type: 'error',
+                        confirmText: 'Sí, eliminar',
+                        callback: async () => {
+                            const csrf = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+                            try {
+                                const res = await fetch(`/api/v1/admin/batches/${id}/`, {
+                                    method: 'DELETE',
+                                    headers: { 'X-CSRFToken': csrf },
+                                    credentials: 'same-origin',
+                                });
+                                if (res.ok) {
+                                    if (typeof showToast === 'function') showToast('Lote eliminado', 'success');
+                                    btn.closest('tr')?.remove();
+                                } else {
+                                    if (typeof showToast === 'function') showToast('Error al eliminar el lote', 'error');
+                                }
+                            } catch (e) {
+                                if (typeof showToast === 'function') showToast('Error de conexión', 'error');
+                            }
+                        }
                     });
                 }
             </script>

@@ -3,11 +3,20 @@
 # así los cambios en plantillas/Python se ven al instante sin rebuild ni reinicio.
 # No afecta a producción (Railway usa su propia config).
 services:
+  db:
+    # 5433 lo ocupa otro proyecto local; el web usa db:5432 por red interna,
+    # este mapeo externo solo es para conectarse con un cliente SQL.
+    ports:
+      - "5434:5432"
   web:
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py runserver 0.0.0.0:8000"
     environment:
       DEBUG: "True"
+      # En Docker SÍ hay Redis + worker, así que NO usamos modo eager: las
+      # tareas (correos, IA) se encolan y las procesa el worker, sin colgar
+      # el request. (server/.env fuerza eager para correr Django sin Docker.)
+      CELERY_TASK_ALWAYS_EAGER: "False"
     volumes:
       - ./server:/app

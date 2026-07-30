@@ -609,7 +609,7 @@
                 const warn = `Este evento tiene ${n} participante(s). Si lo eliminas, también se borran sus inscripciones y asistencias. ¿Eliminar igual?`;
                 const forceDelete = () => doDelete(true);
                 if (typeof showConfirm === 'function') {
-                    showConfirm('Eliminar con participantes', warn, forceDelete);
+                    showConfirm({ title: 'Eliminar con participantes', message: warn, type: 'danger', callback: forceDelete });
                 } else if (confirm(warn)) {
                     forceDelete();
                 }
@@ -620,7 +620,7 @@
             else alert(msg);
         };
         if (typeof showConfirm === 'function') {
-            showConfirm('Eliminar Sesión', '¿Estás seguro de que deseas eliminar esta sesión?', () => doDelete(false));
+            showConfirm({ title: 'Eliminar Sesión', message: '¿Estás seguro de que deseas eliminar esta sesión?', type: 'danger', callback: () => doDelete(false) });
         } else if (confirm('¿Eliminar sesión?')) {
             doDelete(false);
         }
